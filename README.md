@@ -1,1 +1,39 @@
 # Estimation du déclin des espèces à partir de données génomiques
+
+## Prérequis
+
+L'utilisation de Miniconda3 est fortement recommandée pour l'utilisation de ce programme.
+
+## Quick start
+
+1. Clone du répertoire github
+
+> Lien HTTPS
+
+```
+https://github.com/Pierre-damase/Species_decline_estimation.git
+```
+
+> Lien SSH
+
+```
+git@github.com:Pierre-damase/Species_decline_estimation.git
+```
+
+2. Initialiser l'environnement conda à partir du fichier species-decline.yml
+
+```
+conda env create --file species-decline.yml
+```
+
+3. Activer l'environnement conda
+
+```
+conda activate decline-estimation
+```
+
+4. Utilisation
+
+## Auteur
+
+IMBERT Pierre
