@@ -2,7 +2,7 @@
 Pour exécuter le programme declin.py en tant que module.
 """
 
-from declin.declin import main
+from sei.sei import main
 
 
 if __name__ == "__main__":
