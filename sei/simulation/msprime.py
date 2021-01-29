@@ -1,11 +1,10 @@
 """
-Ce module permet de générer différents scénarios démographiques à partir de simulateur.
+This module allows the generation of different demographic scenarios from simulator msprime.
 
-Il n'est utilisé que msprime à l'heure actuelle.
-
-Les scénarios mis en place sont:
-  -      Population constante: scénario de contrôle
-  - Population déclin brutale: scénario où un déclin de force kappa est observé à un temps tau
+Various scenarios are set up:
+  -       Constant model: control scenario
+  - Sudden decline model: decline of force kappa at a time tau
+  -  Sudden growth model: growth of force kappa at a time tau
 """
 
 import sys
@@ -15,19 +14,19 @@ import numpy as np
 
 def constant_model(sample, pop, tau, kappa):
     """
-    Modèle de population constante - scénario de contrôle.
+    Constant model, i.e. population size is constant - control scenario.
 
     Parameter
     ---------
     size_pop: int
-        la taille de la population - constant au cours du temps
+        population size - constant over time (kappa of 0 or tau of 0 or +inf)
 
     Return
     ------
     configuration_pop: list
-        la configuration de la population constante
+        the configuration of the constant population - size, growth.
     history: None
-        population constante donc pas d'history
+        constant model so no history
     """
     configuration_pop = [
         msprime.PopulationConfiguration(sample_size=sample, initial_size=pop, growth_rate=0)
@@ -41,22 +40,21 @@ def constant_model(sample, pop, tau, kappa):
     return configuration_pop, history
 
 
-def sharp_decline_model(sample, pop, tau, kappa):
+def sudden_decline_model(sample, pop, tau, kappa):
     """
-    Modèle de déclin brutale (de force kappa) de la population à un temps tau.
+    Sudden decline model of the population (force kappa) at at time tau in the past.
 
     Parameter
     ---------
     size_pop: int
-        la taille de la population au temps 0
+        population size at time 0 (nowadays)
 
     Return
     ------
     configuration_pop: list
-        la configuration initiale de la population, i.e. au temps 0
+        the initial configuration of the population, i.e. at time 0
     history: list
-        changement démographique observé dans la population à un temps tau, ici déclin de force
-        kappa
+        the observed demographic change in the population at tau time - decline of force kappa
     """
     configuration_pop = [
         msprime.PopulationConfiguration(sample_size=sample, initial_size=pop, growth_rate=0)
@@ -72,22 +70,21 @@ def sharp_decline_model(sample, pop, tau, kappa):
     return configuration_pop, history
 
 
-def sharp_increase_model(sample, pop, tau, kappa):
+def sudden_growth_model(sample, pop, tau, kappa):
     """
-    Modèle de croissance brutale (de force kappa) de la population à un temps tau.
+    Sudden growth model of the population (force kappa) at at time tau in the past.
 
     Parameter
     ---------
     size_pop: int
-        la taille de la population au temps 0
+        population size at time 0 (nowadays)
 
     Return
     ------
     configuration_pop: list
-        la configuration initiale de la population, i.e. au temps 0
+        the initial configuration of the population, i.e. at time 0
     history: list
-        changement démographique observé dans la population à un temps tau, ici croissance de
-        force kappa
+        the observed demographic change in the population at tau time - growth of force kappa
     """
     configuration_pop = [
         msprime.PopulationConfiguration(sample_size=sample, initial_size=pop, growth_rate=0)
@@ -103,29 +100,29 @@ def sharp_increase_model(sample, pop, tau, kappa):
     return configuration_pop, history
 
 
-def simulation(model, param, tau, kappa):
+def msprime_simulation(model, param, tau, kappa):
     """
-    Simulation d'une population.
+    Population simulation with msprime.
 
     Parameter
     ---------
     model: function
-        le scénario à appliquer (constant, déclin brutal, etc.)
+        (constant, sudden declin, sudden growth, etc.)
     param: dictionary
-        - sample_size: le nombre de génomes échantillonés - int
-        - size_population: la taille de la population - int
-        - rcb_rate: le taux de recombinaison - float
-        - mu: le taux de mutation
-        - length: la taille des séquences simulées
+        - sample_size: the number of sampled monoploid genomes - int
+        - size_population: the effective (diploid) population size - int
+        - rcb_rate: the rate of recombinaison per base per generation - float
+        - mu: the rate of infinite sites mutations per unit of sequence length per generation-float
+        - length: the length of the simulated region in bases - float
     tau: float
-        la date de la modification de la taille de la population
+        the lenght of time ago at which the event (decline, growth) occured
     kappa: float
-        la force de la modification
+        the growth or decline force
 
     Return
     ------
     sfs: list
-        fréquence de mutations des allèles
+        Site frequency Spectrum (sfs) - allele mutation frequency
     """
     demography = model(param["sample_size"], param["size_population"], tau, kappa)
 
@@ -141,10 +138,8 @@ def simulation(model, param, tau, kappa):
         freq_mutation = counts[1]-1
         sfs[freq_mutation] += 1
 
-    somme = sum(sfs)
-
-    return [ele / somme for ele in sfs]
+    return sfs
 
 
 if __name__ == "__main__":
-    sys.exit()  # aucunes actions souhaitées
+    sys.exit()  # No actions desired
