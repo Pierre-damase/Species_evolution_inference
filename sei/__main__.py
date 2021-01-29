@@ -1,5 +1,5 @@
 """
-Pour exécuter le programme declin.py en tant que module.
+To run declin.py as python module.
 """
 
 from sei.sei import main
