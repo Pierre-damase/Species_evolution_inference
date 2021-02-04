@@ -8,11 +8,17 @@ Various scenarios are set up:
 """
 
 import sys
-import msprime
 import numpy as np
+import msprime
 
 
-def constant_model(sample, pop, tau, kappa):
+def msprime_debugger(configuration_pop, history):
+    debugger = msprime.DemographyDebugger(population_configurations=configuration_pop,
+                                          demographic_events=history)
+    debugger.print_history()
+
+
+def constant_model(sample, pop, tau, kappa, debug):
     """
     Constant model, i.e. population size is constant - control scenario.
 
@@ -33,20 +39,19 @@ def constant_model(sample, pop, tau, kappa):
     ]
     history = None
 
-    debugger = msprime.DemographyDebugger(population_configurations=configuration_pop,
-                                          demographic_events=history)
-    debugger.print_history()
+    if debug:
+        msprime_debugger(configuration_pop, history)
 
     return configuration_pop, history
 
 
-def sudden_decline_model(sample, pop, tau, kappa):
+def sudden_decline_model(sample, pop, tau, kappa, debug):
     """
-    Sudden decline model of the population (force kappa) at at time tau in the past.
+    Sudden decline model of the population (force kappa) at a time tau in the past.
 
     Parameter
     ---------
-    size_pop: int
+    pop: int
         population size at time 0 (nowadays)
 
     Return
@@ -63,20 +68,19 @@ def sudden_decline_model(sample, pop, tau, kappa):
         msprime.PopulationParametersChange(time=tau, initial_size=pop*kappa, growth_rate=0)
     ]
 
-    debugger = msprime.DemographyDebugger(population_configurations=configuration_pop,
-                                          demographic_events=history)
-    debugger.print_history()
+    if debug:
+        msprime_debugger(configuration_pop, history)
 
     return configuration_pop, history
 
 
-def sudden_growth_model(sample, pop, tau, kappa):
+def sudden_growth_model(sample, pop, tau, kappa, debug):
     """
-    Sudden growth model of the population (force kappa) at at time tau in the past.
+    Sudden growth model of the population (force kappa) at a time tau in the past.
 
     Parameter
     ---------
-    size_pop: int
+    pop: int
         population size at time 0 (nowadays)
 
     Return
@@ -93,14 +97,13 @@ def sudden_growth_model(sample, pop, tau, kappa):
         msprime.PopulationParametersChange(time=tau, initial_size=pop/kappa, growth_rate=0)
     ]
 
-    debugger = msprime.DemographyDebugger(population_configurations=configuration_pop,
-                                          demographic_events=history)
-    debugger.print_history()
+    if debug:
+        msprime_debugger(configuration_pop, history)
 
     return configuration_pop, history
 
 
-def msprime_simulation(model, param, tau, kappa):
+def msprime_simulation(model, param, tau, kappa, debug):
     """
     Population simulation with msprime.
 
@@ -118,17 +121,18 @@ def msprime_simulation(model, param, tau, kappa):
         the lenght of time ago at which the event (decline, growth) occured
     kappa: float
         the growth or decline force
+    debug: Boolean
+        1: print msprime debugger, 0: nothing
 
     Return
     ------
     sfs: list
         Site frequency Spectrum (sfs) - allele mutation frequency
     """
-    demography = model(param["sample_size"], param["size_population"], tau, kappa)
+    demography = model(param["sample_size"], param["size_population"], tau, kappa, debug)
 
     tree_seq = msprime.simulate(
         length=param["length"], recombination_rate=param["rcb_rate"], mutation_rate=param["mu"],
-        random_seed=2,
         population_configurations=demography[0], demographic_events=demography[1]
     )
 
