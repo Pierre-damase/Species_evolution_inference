@@ -5,7 +5,7 @@ This module allows you to read or write files.
 import sys
 
 
-def dadi_data(sfs):
+def dadi_data(sfs, fichier):
     """
     Create SFS of a scenario in the format compatible with the dadi software.
 
@@ -16,9 +16,16 @@ def dadi_data(sfs):
       2. Why: Spectrum arrays are masked, i.e. certain entries can be set to be ignored
               For example, the two corners [0,0] corresponding to variants observed in zero samples
               or in all samples are ignored
+
+    Parameter
+    ---------
+    sfs: list
+        the original SFS - without corners 0/n & n/n
+    fichier: str
+        file in which the SFS will be written in the format compatible with dadi
     """
-    with open("./Data/CST.fs", "w") as filout:
-        filout.write("{} unfolded \"CST\"\n".format(len(sfs)+2))
+    with open("./Data/{}.fs".format(fichier), "w") as filout:
+        filout.write("{} unfolded \"{}\"\n".format(len(sfs)+2, fichier))
 
         # Write SFS
         sfs.insert(0, 0)         # Add 0/n to the sfs
