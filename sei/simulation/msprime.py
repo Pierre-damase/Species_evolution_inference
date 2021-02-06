@@ -103,7 +103,7 @@ def sudden_growth_model(sample, pop, tau, kappa, debug):
     return configuration_pop, history
 
 
-def msprime_simulation(model, param, tau, kappa, debug):
+def msprime_simulation(model, param, tau=0.0, kappa=0.0, debug=False):
     """
     Population simulation with msprime.
 
