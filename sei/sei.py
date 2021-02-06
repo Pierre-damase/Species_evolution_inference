@@ -48,15 +48,13 @@ def sfs_verification():
     # Constant
     print("Scénario constant")
     sfs_cst = \
-        ms.msprime_simulation(model=ms.constant_model, param=parametres, tau=0.0, kappa=0.0,
-                              debug=True)
+        ms.msprime_simulation(model=ms.constant_model, param=parametres, debug=True)
 
     # Declin
     print("\n\nScénario de déclin")
     sfs_declin = \
         ms.msprime_simulation(model=ms.sudden_decline_model, param=parametres, tau=1.5, kappa=4,
-                              debug=True
-        )
+                              debug=True)
 
     # Growth
     print("\n\nScénario de croissance")
@@ -82,31 +80,42 @@ def grid_optimisation():
     """
     Define the optimal value of the smallest size of the grid point.
     """
-    parameters = {
-        "sample_size": 10, "size_population": 1, "rcb_rate": 2e-3, "mu": 2e-3, "length": 1e6
-    }
-    sfs_cst = \
-        ms.msprime_simulation(model=ms.constant_model, param=parameters, tau=0.0, kappa=0.0,
-                              debug=True)
+    mu_list, log_scale = [2e-3, 4e-3, 8e-3, 12e-3], [1, 2, 4, 6, 10, 20, 40, 60, 100]
 
-    # Theoritical theta - 4.Ne.mu.L
-    theoritical_theta = 4 * parameters["size_population"] * parameters["mu"] * parameters["length"]
+    dico = {}
 
-    # Generate the SFS file compatible with dadi
-    f.dadi_data(sfs_cst, dadi.constant_model.__name__)
+    for mu in mu_list:
+        # Parameters for the simulation
+        params = simulation_parameters(sample=20, ne=1, rcb_rate=mu, mu=mu, length=1e5)
+        print("Msprime simulation - sample size {} & mutation rate {}".format(20, mu))
 
-    # Optimisation grid point for the extrapolation
-    log_scale, ll_list, theta_list = [1, 2, 4, 6, 10, 20, 40, 60, 100, 200, 500], [], []
+        # Msprime simulation
+        sfs = ms.msprime_simulation(model=ms.constant_model, param=params)
 
-    for i in range(len(log_scale)):
-        point = (len(sfs_cst) - 1) * log_scale[i]
-        pts_list = [point, point + 10, point + 20]
+        # Generate the SFS file compatible with dadi
+        f.dadi_data(sfs, dadi.constant_model.__name__)
 
-        ll, estimated_theta = dadi.dadi_inference(pts_list, dadi.constant_model)
-        ll_list.append(ll)
-        theta_list.append(estimated_theta)
+        # Data
+        theoritical_theta = computation_theoritical_theta(ne=1, mu=mu, length=1e5)
+        dico[mu] = {
+            "Likelihood": [], "Estimated theta": [], "Theoritical theta": [theoritical_theta]*9
+        }
 
-    plot.plot_optimisation_grid(ll_list, theta_list, log_scale, theoritical_theta)
+        # Optimisation grid point for the extrapolation
+        for _, scale in enumerate(log_scale):
+            point = (len(sfs) - 1) * scale
+            pts_list = [point, point+10, point+20]
+
+            likelihood, estimated_theta = dadi.dadi_inference(pts_list, dadi.constant_model)
+
+            dico[mu]["Likelihood"].append(likelihood)
+            dico[mu]["Estimated theta"].append(estimated_theta)
+
+    # Change method
+    # Sur meme plot -> Likelihood & estimated theta
+    # 4 sub plot -> les 4 taux de mutations
+    # plot.plot_optimisation_grid(ll_list, theta_list, log_scale, theoritical_theta)
+    plot.plot_optimisation_grid(dico, log_scale)
 
 
 def dadi_params_optimisation():
@@ -119,8 +128,8 @@ def dadi_params_optimisation():
       - mu: the mutation rate
       - n: the number of sampled monoploid genomes
     """
-    sample_list, mu_list = [10, 20, 40, 60, 100], [2e-3, 4e-3, 8e-3, 12e-3, 2e-2,  8e-2,  2e-1]
-    nb_simu = 100
+    sample_list, mu_list = [10, 20, 40, 60, 100], [2e-3, 4e-3, 8e-3, 12e-3]  # , 2e-2,  8e-2,  2e-1]
+    nb_simu = 1  # 100
     dico = {}
 
     for sample in sample_list:
@@ -143,15 +152,13 @@ def dadi_params_optimisation():
 
             for i in range(nb_simu):
                 start_time = time.time()
-                print("Simulation: {}/{}".format(i, nb_simu), end="\r")
+                print("Simulation: {}/{}".format(i+1, nb_simu), end="\r")
 
                 # Simulation for a constant population with msprime
-                sfs_cst = \
-                    ms.msprime_simulation(model=ms.constant_model, param=params, tau=0.0,
-                                          kappa=0.0, debug=False)
+                sfs = ms.msprime_simulation(model=ms.constant_model, param=params)
 
                 # Generate the SFS file compatible with dadi
-                f.dadi_data(sfs_cst, dadi.constant_model.__name__)
+                f.dadi_data(sfs, dadi.constant_model.__name__)
 
                 # Dadi inference
                 _, estimated_theta = dadi.dadi_inference(pts_list, dadi.constant_model)
@@ -180,9 +187,9 @@ def main():
     Le main du programme.
     """
     # sfs_verification()
-    # grid_optimisation()
+    grid_optimisation()
 
-    dadi_params_optimisation()
+    #dadi_params_optimisation()
 
 
 if __name__ == "__main__":

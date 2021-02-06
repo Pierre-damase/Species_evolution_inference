@@ -6,10 +6,12 @@ import sys
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+from matplotlib.lines import Line2D
+
 
 def normalization(data):
     """
-    Data normalization.
+    Data normalization to (0;1).
     """
     somme = sum(data)
     normalized_data = [ele / somme for ele in data]
@@ -57,7 +59,53 @@ def plot_sfs(sfs, label, color, title):
     plt.clf()
 
 
-def plot_optimisation_grid(ll_list, theta_list, log_scale, theoritical_theta):
+def plot_optimisation_grid(data, log_scale):
+    """
+    Plot for a given scenario the likelihood and optimal theta's value for various grid size.
+
+    Parameter
+    ---------
+    data: dictionary
+      - mu the rate of mutation
+        - Likelihood
+        - Estimated theta 
+        - Theoritical theta
+
+    log_scale:
+    """
+    fig, axs = plt.subplots(2, 2)
+
+    cpt = 0
+    mu = list(data.keys())
+    for i in range(2):
+        for j in range(2):
+            axs[i,j].plot(normalization(data[mu[cpt]]["Likelihood"]),
+                          color="red", label="Likelihood")
+            axs[i,j].plot(normalization(data[mu[cpt]]["Estimated theta"]),
+                          color="blue", label="Estimated theta")
+            axs[i,j].set_title("Mutation rate {}".format(mu[cpt]))
+            cpt +=1
+
+    # Add common legend
+    lg_ele = [
+        Line2D([0], [0], linestyle='', marker='.', color='red', label='Likelihood'),
+        Line2D([0], [0], linestyle='', marker='.', color='blue', label='Estimated theta')
+    ]
+    legend = fig.legend(handles=lg_ele, loc='upper center', bbox_to_anchor=(0.5, -0.025),
+                        fontsize='medium', borderaxespad=0., ncol=2)
+    fig.gca().add_artist(legend)
+
+    for ax in axs.flat:
+        ax.set(xlabel='Grid scale')
+        ax.label_outer()
+
+    # Title + save plot to the folder ./Figures
+    fig.suptitle("Likelihood & theta's value for various grid point size", fontsize="xx-large")
+    plt.savefig("./Figures/tmp", bbox_inches="tight")  # optimisation_grid
+    plt.clf()
+
+
+def plot_optimisation_grid_old(ll_list, theta_list, log_scale, theoritical_theta):
     """
     Plot for a given scenario the likelihood and optimal theta's value for various grid size.
 
@@ -94,7 +142,7 @@ def plot_optimisation_grid(ll_list, theta_list, log_scale, theoritical_theta):
     plt.clf()
 
 
-def plot_error_rate(data):
+def plot_error_rate(data, path="./Figures/Error_rate/"):
     """
 
     Plot the error rate of theta estimated for 100 inference with dadi.
@@ -113,8 +161,7 @@ def plot_error_rate(data):
 
         # Title + save plot to folder ./Figures
         plt.title("Error rate for n={} genomes sampled".format(sample_size), fontsize="large")
-        plt.savefig("./Figures/Error_rate/error_rate-{}".format(sample_size),
-                    bbox_inches="tight")
+        plt.savefig("{}/error-rate-{}".format(path, sample_size), bbox_inches="tight")
         plt.clf()
 
 

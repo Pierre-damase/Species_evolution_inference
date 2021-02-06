@@ -56,7 +56,7 @@ def sudden_growth_model(ns, pts, *args):
     return sfs
 
 
-def dadi_inference(pts_list, model_func):
+def dadi_inference(pts_list, model_func, path="./Data/"):
     """
     Dadi inference.
 
@@ -75,7 +75,7 @@ def dadi_inference(pts_list, model_func):
         the optimal value of theta given the model
     """
     # Load the data
-    sfs = dadi.Spectrum.from_file("./Data/{}.fs".format(model_func.__name__))
+    sfs = dadi.Spectrum.from_file("{}/{}.fs".format(path, model_func.__name__))
     ns = sfs.sample_sizes
 
     # Ignore singletons - if yes
