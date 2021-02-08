@@ -24,7 +24,7 @@ def dadi_data(sfs, fichier, path="./Data/"):
     fichier: str
         file in which the SFS will be written in the format compatible with dadi
     """
-    with open("{}/{}.fs".format(path, fichier), "w") as filout:
+    with open("{}{}.fs".format(path, fichier), "w") as filout:
         filout.write("{} unfolded \"{}\"\n".format(len(sfs)+2, fichier))
 
         # Write SFS
