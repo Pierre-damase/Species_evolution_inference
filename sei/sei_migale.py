@@ -97,7 +97,8 @@ def dadi_params_optimisation():
 
         dico[sample]["Execution time"] = execution_time
 
-    plot.plot_error_rate(dico, path="../Figures/Error_rate/")
+    path = "$HOME/work/Species_evolution_inference/Figures/Error_rate/"
+    plot.plot_error_rate(dico, path=path)
 
 
 if __name__ == "__main__":
