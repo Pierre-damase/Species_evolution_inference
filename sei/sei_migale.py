@@ -44,7 +44,7 @@ def dadi_params_optimisation():
       - n: the number of sampled monoploid genomes
     """
     sample_list, mu_list = [10, 20, 40, 60, 100], [2e-3, 4e-3]  #, 8e-3, 12e-3, 2e-2,  8e-2,  2e-1]
-    nb_simu = 3
+    nb_simu = 25
     dico = {}
     path_data = "/home/pimbert/work/Species_evolution_inference/Data/"
     path_figures = "/home/pimbert/work/Species_evolution_inference/Figures/Error_rate/"
