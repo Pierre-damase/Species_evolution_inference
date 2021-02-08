@@ -80,7 +80,7 @@ def grid_optimisation():
     """
     Define the optimal value of the smallest size of the grid point.
     """
-    mu_list, log_scale = [2e-3, 4e-3, 8e-3, 12e-3], [1, 2, 4, 6, 10, 20, 40, 60, 100]
+    mu_list, log_scale = [2e-3, 4e-3, 8e-3, 12e-3], [1, 2, 4, 6, 10, 20, 40, 60]
 
     dico = {}
 
@@ -111,10 +111,6 @@ def grid_optimisation():
             dico[mu]["Likelihood"].append(likelihood)
             dico[mu]["Estimated theta"].append(estimated_theta)
 
-    # Change method
-    # Sur meme plot -> Likelihood & estimated theta
-    # 4 sub plot -> les 4 taux de mutations
-    # plot.plot_optimisation_grid(ll_list, theta_list, log_scale, theoritical_theta)
     plot.plot_optimisation_grid(dico, log_scale)
 
 

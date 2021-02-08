@@ -73,72 +73,65 @@ def plot_optimisation_grid(data, log_scale):
 
     log_scale:
     """
-    fig, axs = plt.subplots(2, 2)
+    fig, axs = plt.subplots(2, 2, sharex=True)
 
     cpt = 0
-    mu = list(data.keys())
+    mu, color = list(data.keys()), ['tab:red', 'tab:blue', 'tab:orange']
+
     for i in range(2):
         for j in range(2):
-            axs[i,j].plot(normalization(data[mu[cpt]]["Likelihood"]),
-                          color="red", label="Likelihood")
-            axs[i,j].plot(normalization(data[mu[cpt]]["Estimated theta"]),
-                          color="blue", label="Estimated theta")
+            ##############################################
+            # Plots with different scale on the same fig #
+            ##############################################
+
+            # Set x_axis value
+            x_ax = []
+            for k in range(len(log_scale)):
+                x_ax.append(k)
+            axs[i, j].set_xticks(x_ax)  # value
+            axs[i, j].set_xticklabels(log_scale)  # labels
+
+            # Likelihood plot
+            axs[i, j].plot(data[mu[cpt]]["Likelihood"], color=color[0])
+            axs[i, j].tick_params(axis='y', labelcolor=color[0])
+
+            # Theta plot
+            ax2 = axs[i, j].twinx()  # instantiate a second axes that shares the same x-axis
+            ax2.plot(data[mu[cpt]]["Estimated theta"], color=color[1])
+            ax2.plot(data[mu[cpt]]["Theoritical theta"], color=color[2], linestyle='dashed')
+            ax2.tick_params(axis='y', labelcolor=color[1])
+
+            # Optimal value for grid size
+            axs[i, j].axvline(x=4, color="tab:gray", linestyle="dashed")
+
+            # Suptitle of each plot
             axs[i,j].set_title("Mutation rate {}".format(mu[cpt]))
+
             cpt +=1
 
     # Add common legend
     lg_ele = [
-        Line2D([0], [0], linestyle='', marker='.', color='red', label='Likelihood'),
-        Line2D([0], [0], linestyle='', marker='.', color='blue', label='Estimated theta')
+        Line2D([0], [0], linestyle='', marker='.', color=color[0], label='Likelihood'),
+        Line2D([0], [0], linestyle='', marker='.', color=color[1], label='Estimated theta'),
+        Line2D([0], [0], linestyle='', marker='.', color=color[2], label='Theoritical theta')
     ]
-    legend = fig.legend(handles=lg_ele, loc='upper center', bbox_to_anchor=(0.5, -0.025),
-                        fontsize='medium', borderaxespad=0., ncol=2)
+    legend = fig.legend(handles=lg_ele, loc='upper center', ncol=3, fontsize='medium',
+                        bbox_to_anchor=(0., 1.05, 1., .102), borderaxespad=0.)
     fig.gca().add_artist(legend)
 
+    fig.tight_layout()  # otherwise the right y-label is slightly clipped
+
+    # Add xlabel for bottom plot only
+    cpt = 0
     for ax in axs.flat:
-        ax.set(xlabel='Grid scale')
-        ax.label_outer()
+        if cpt > 1:
+            ax.set(xlabel='Grid scale')
+        cpt += 1
 
     # Title + save plot to the folder ./Figures
-    fig.suptitle("Likelihood & theta's value for various grid point size", fontsize="xx-large")
-    plt.savefig("./Figures/tmp", bbox_inches="tight")  # optimisation_grid
-    plt.clf()
-
-
-def plot_optimisation_grid_old(ll_list, theta_list, log_scale, theoritical_theta):
-    """
-    Plot for a given scenario the likelihood and optimal theta's value for various grid size.
-
-    Parameter
-    ---------
-    ll_list: list
-        the likelihood of the model for each grid point
-    theta_list: list
-        the optimal value of theta of the model for each grid point
-    """
-    theta = [theoritical_theta] * len(ll_list)
-
-    # Plot
-    # plt.plot(normalization(ll_list), color="orange", label="Likelihood")
-    plt.plot(theta_list, color="blue", label="Theta")
-    plt.plot(theta, color="red", label="Theoritical theta", linestyle="dashed")
-
-    # Caption
-    plt.legend(loc="upper right", fontsize="large")
-
-    # Label axis
-    plt.xlabel("Smallest grid size factor", fontsize="large")
-
-    # X axis values
-    x_ax, x_values = [], []
-    for i, value in enumerate(log_scale):
-        x_ax.append(i)
-        x_values.append(value)
-    plt.xticks(x_ax, x_values)
-
-    # Title + save plot to the folder ./Figures
-    plt.title("Likelihood & theta's value for various grid point size", fontsize="xx-large")
-    plt.savefig("./Figures/optimisation_grid")
+    fig.suptitle("Likelihood & theta's value for various grid point size", fontsize="x-large",
+                 y=-0.05)
+    plt.savefig("./Figures/optimisation_grid", bbox_inches="tight", dpi=300)
     plt.clf()
 
 
