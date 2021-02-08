@@ -6,11 +6,11 @@
 # Short pour un job < 12h
 #$ -q short.q
 
-# Envoie mail - (e)nd & (a)bort
-# - m ea
-
 # Adresse à envoyer
-# -M pierre.imbert@college-de-france.fr
+#$ -M pierre.imbert@college-de-france.fr
+
+# Envoie mail - (e)nd & (a)bort
+#$ -m ea
 
 # Sortie standard
 #$ -o $HOME/work/Out
@@ -18,6 +18,8 @@
 # Sortie d'erreur
 #$ -e $HOME/work/Err
 
-# Lance la commande depuis le répertoire où est lancé le script
-#$ -cwd
+conda activate sei-3.8.5
+python /home/pimbert/work/Species_evolution_inference/sei/sei_migale.py
+conda deactivate
 
+echo "Over"

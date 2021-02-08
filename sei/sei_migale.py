@@ -43,8 +43,9 @@ def dadi_params_optimisation():
       - mu: the mutation rate
       - n: the number of sampled monoploid genomes
     """
-    sample_list, mu_list = [10, 20, 40, 60, 100], [2e-3, 4e-3, 8e-3, 12e-3, 2e-2,  8e-2,  2e-1]
-    nb_simu = 3
+    # sample_list, mu_list = [10, 20, 40, 60, 100], [2e-3, 4e-3, 8e-3, 12e-3, 2e-2,  8e-2,  2e-1]
+    sample_list, mu_list = [10, 20, 40, 60, 100], [2e-3, 4e-3, 8e-3]
+    nb_simu = 25
     dico = {}
 
     for sample in sample_list:
@@ -63,11 +64,11 @@ def dadi_params_optimisation():
 
             # Parameters for the simulation
             params = simulation_parameters(sample=sample, ne=1, rcb_rate=mu, mu=mu, length=1e5)
-            print("Msprime simulation - sample size {} & mutation rate {}".format(sample, mu))
+            # print("Msprime simulation - sample size {} & mutation rate {}".format(sample, mu))
 
             for i in range(nb_simu):
                 start_time = time.time()
-                print("Simulation: {}/{}".format(i, nb_simu), end="\r")
+                # print("Simulation: {}/{}".format(i, nb_simu), end="\r")
 
                 # Simulation for a constant population with msprime
                 sfs_cst = \
@@ -75,11 +76,11 @@ def dadi_params_optimisation():
                                           kappa=0.0, debug=False)
 
                 # Generate the SFS file compatible with dadi
-                f.dadi_data(sfs_cst, dadi.constant_model.__name__, path="../Data/")
+                f.dadi_data(sfs_cst, dadi.constant_model.__name__, path="/home/pimbert/work/Species_evolution_inference/Data/")
 
                 # Dadi inference
                 _, estimated_theta = dadi.dadi_inference(pts_list, dadi.constant_model,
-                                                         path="../Data/")
+                                                         path="/home/pimbert/work/Species_evolution_inference/Data/")
 
                 theoritical_theta = computation_theoritical_theta(ne=1, mu=mu, length=1e5)
                 error_rate = estimated_theta / theoritical_theta
@@ -97,7 +98,7 @@ def dadi_params_optimisation():
 
         dico[sample]["Execution time"] = execution_time
 
-    path = "$HOME/work/Species_evolution_inference/Figures/Error_rate/"
+    path = "/home/pimbert/work/Species_evolution_inference/Figures/Error_rate/"
     plot.plot_error_rate(dico, path=path)
 
 
