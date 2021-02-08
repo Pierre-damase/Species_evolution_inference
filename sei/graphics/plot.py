@@ -154,7 +154,7 @@ def plot_error_rate(data, path="./Figures/Error_rate/"):
 
         # Title + save plot to folder ./Figures
         plt.title("Error rate for n={} genomes sampled".format(sample_size), fontsize="large")
-        plt.savefig("{}/error-rate-{}".format(path, sample_size), bbox_inches="tight")
+        plt.savefig("{}error-rate-{}".format(path, sample_size), bbox_inches="tight")
         plt.clf()
 
 
