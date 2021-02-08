@@ -178,14 +178,42 @@ def dadi_params_optimisation():
     plot.plot_error_rate(dico)
 
 
+def inference(msprime_model=ms.sudden_decline_model, dadi_model=dadi.sudden_decline_model):
+    """
+    
+    """
+    mu, sample = 2e-3, 20
+
+    # Grid point for the extrapolation
+    pts_list = [sample*10, sample*10 + 10, sample*10 + 20]
+
+    # Parameters for the simulation
+    params = simulation_parameters(sample=sample, ne=1, rcb_rate=mu, mu=mu, length=1e5)
+    print("Msprime simulation - sample size {} & mutation rate {}".format(sample, mu))
+
+    # Simulation for a constant population with msprime
+    sfs = ms.msprime_simulation(model=msprime_model, param=params, kappa=10, tau=1.0)
+
+    # Generate the SFS file compatible with dadi
+    f.dadi_data(sfs, dadi_model.__name__)
+
+    # Dadi inference
+    likelihood, estimated_theta = dadi.dadi_inference_tau(pts_list, dadi_model)
+
+    theoritical_theta = computation_theoritical_theta(ne=1, mu=mu, length=1e5)
+    print("Likelihood {}, estimated theta {} & theoritical theta {}"
+          .format(likelihood, estimated_theta, theoritical_theta))
+
+
 def main():
     """
     Le main du programme.
     """
     # sfs_verification()
-    grid_optimisation()
-
+    # grid_optimisation()
     #dadi_params_optimisation()
+
+    inference()
 
 
 if __name__ == "__main__":
