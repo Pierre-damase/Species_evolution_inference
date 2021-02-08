@@ -20,16 +20,16 @@ https://github.com/Pierre-damase/Species_decline_estimation.git
 git@github.com:Pierre-damase/Species_decline_estimation.git
 ```
 
-2. Initialiser l'environnement conda à partir du fichier species-decline.yml
+2. Initialiser l'environnement conda à partir du fichier sei-3.8.5.yml
 
 ```
-conda env create --file species-decline.yml
+conda env create --file sei-3.8.5.yml
 ```
 
 3. Activer l'environnement conda
 
 ```
-conda activate decline-estimation
+conda activate sei-3.8.5
 ```
 
 4. Utilisation
