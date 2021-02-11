@@ -6,16 +6,21 @@ import dadi
 import sys
 
 
+optimization = None
+
+
 def constant_model(ns, pts):
     """
     Constant model, i.e. population size is constant - control scenario.
 
+    It's the standard neutral model.
+
     Parameter
     ---------
     ns: int
-        the number of sampled genomes
+        the number of sampled genomes in resulting spectrum
     pts: list
-        the number of grid points used in calculation
+        the number of grid points to use in integration
     """
     # Define the grid we'll use
     grid = dadi.Numerics.default_grid(pts)
@@ -29,6 +34,16 @@ def constant_model(ns, pts):
     return sfs
 
 
+def params_decline_model(params):
+    global optimization
+    if optimization == "tau":
+        return 10, params  # Fixe kappa
+    elif optimization == "kappa":
+        return params, 1.0  # Fixe tau
+    else:
+        return params
+
+
 def sudden_decline_model(params, ns, pts):
     """
     Sudden growth model of the population.
@@ -38,10 +53,17 @@ def sudden_decline_model(params, ns, pts):
 
     Parameter
     ---------
-    pop: int
-        population size at time 0 (nowadays)
+    kappa: float
+        ratio of contemporary to ancient population size
+    tau: float
+        time in the past at which size change happened
+    ns: int
+        the number of sampled genomes in resulting spectrum
+    pts: list
+        the number of grid points to use in integration
     """
-    tau, kappa = params, 10
+    # kappa, tau = 10, params
+    kappa, tau = params_decline_model(params)
 
     # Define the grid we'll use
     grid = dadi.Numerics.default_grid(pts)
@@ -56,95 +78,40 @@ def sudden_decline_model(params, ns, pts):
     sfs = dadi.Spectrum.from_phi(phi, ns, (grid,))
 
     return sfs
-    
 
-def dadi_inference(pts_list, model_func, path="./Data/"):
+
+def parameters_optimization(p0, sfs, model_func, pts_list, lower_bound, upper_bound, verbose=0):
     """
-    Dadi inference.
+    Parameters optimization.
+
+    The upper_bound and lower_bound lists are use in optimization. Occasionally the optimizer
+    will try wacky parameters values. We in particular want to exclude values with very long
+    times, very small population sizes, or very high migration rates, as they will take a long
+    time to evaluate.
+    Parameters can be (kappa), (tau), (kappa, tau), etc.
 
     Parameter
     ---------
+    p0: list
+        Initial parameters - this is our initial guess, which is somewhat arbitrary.
+    sfs
+        Spectrum with data
+    model_func
+        Function to evaluate model spectrum - extrapolated.
     pts_list: list
         the grid point use for extrapolation
-    model_func: function
-        the custom model_func
+    lower_bound: list
+        Lower bound on parameter values. If not None, must be of same length as p0
+    upper_bound: list
+        Upper bound on parameter values. If not None, must be of same length as p0
 
     Return
     ------
-    ll_model: float
-        likelihood of the data
-    theta: float
-        the optimal value of theta given the model
+    popt: list
+        Optimize log(params) to fit model to data using the BFGS method.
     """
-    # Load the data
-    sfs = dadi.Spectrum.from_file("{}{}.fs".format(path, model_func.__name__))
-    ns = sfs.sample_sizes
-
-    # Ignore singletons - if yes
-    ignore = 'no'
-    if ignore == 'yes':
-        sfs.mask[1] = True
-    
-    # Make the extrapolation version of our demographic model function
-    model_func_extrapolated = dadi.Numerics.make_extrap_log_func(model_func)
-
-    # Simulated frequency spectrum
-    model = model_func_extrapolated(ns, pts_list)
-
-    # Likelihood of the data
-    ll_model = dadi.Inference.ll_multinom(model, sfs)
-
-    # The optimal value of theta given the model
-    theta = dadi.Inference.optimal_sfs_scaling(model, sfs)
-
-    return ll_model, theta
-
-
-def dadi_inference_tau(pts_list, model_func, path="./Data/"):
-    """
-    Dadi inference.
-
-    Parameter
-    ---------
-    pts_list: list
-        the grid point use for extrapolation
-    model_func: function
-        the custom model_func
-
-    Return
-    ------
-    ll_model: float
-        likelihood of the data
-    theta: float
-        the optimal value of theta given the model
-    """
-    # Load the data
-    sfs = dadi.Spectrum.from_file("{}{}.fs".format(path, model_func.__name__))
-    ns = sfs.sample_sizes
-
-    # Ignore singletons - if yes
-    ignore = 'no'
-    if ignore == 'yes':
-        sfs.mask[1] = True
-
-    # Now let's optimize parameters for this model
-
-    # The upper_bound and lower_bound lists are for use in optimization.
-    # Occasionally the optimizer will try wacky parameter values. We in particular want to
-    # exclude values with very long times, very small population sizes, or very high migration
-    # rates, as they will take a long time to evaluate.
-    # Parameters are: (tau)
-    upper_bound = [10]
-    lower_bound = [0]
-
-    # This is our initial guess for the parameters, which is somewhat arbitrary.
-    p0 = [1]
-
-    # Make the extrapolation version of our demographic model function
-    model_func_extrapolated = dadi.Numerics.make_extrap_log_func(model_func)
-
-    # Perturb our parameters before optimization. This does so by taking each
-    # parameter a up to a factor of two up or down.
+    # Perturb our parameters before optimization. This does so by taking each parameter a up
+    # to a factor of two up or down.
     p0 = dadi.Misc.perturb_params(p0, fold=1, upper_bound=upper_bound, lower_bound=lower_bound)
 
     # Do the optimization. By default we assume that theta is a free parameter, since it's
@@ -155,21 +122,77 @@ def dadi_inference_tau(pts_list, model_func, path="./Data/"):
     # also want to run optimization several times using multiple sets of intial parameters, to
     # be confident you've actually found the true maximum likelihood parameters.
 
-    print('Beginning optimization ************************************************')
-    tau = dadi.Inference.optimize_log(p0, sfs, model_func_extrapolated, pts_list,
-                                      lower_bound=lower_bound, upper_bound=upper_bound,
-                                      verbose=1, maxiter=3)
-                                   
-    # The verbose argument controls how often progress of the optimizer should be
-    # printed. It's useful to keep track of optimization process.
-    print('Finished optimization **************************************************')
+    if verbose:
+        print('Beginning optimization ************************************************')
 
-    print('Best-fit parameters: {}'.format(tau))
+    popt = dadi.Inference.optimize_log(p0, sfs, model_func, pts_list,
+                                       lower_bound=lower_bound, upper_bound=upper_bound,
+                                       verbose=verbose, maxiter=3)
 
-    # Simulated frequency spectrum
-    model = model_func_extrapolated(tau, ns, pts_list, )
+    if verbose:
+        # The verbose argument controls how often progress of the optimizer should be
+        # printed. It's useful to keep track of optimization process.
+        print('Finished optimization **************************************************')
+        print('Best-fit parameters: {}'.format(popt))
 
-    # Likelihood of the data
+    return popt
+
+
+def dadi_inference(pts_list, model_func, opt=None, verbose=0, path="./Data/"):
+    """
+    Dadi inference.
+
+    Parameter
+    ---------
+    pts_list: list
+        the grid point use for extrapolation
+    model_func: function
+        the custom model_func
+
+    Return
+    ------
+    ll_model: float
+        likelihood of the data
+    theta: float
+        the optimal value of theta given the model
+    """
+    global optimization
+    optimization = opt
+
+    # Load the data
+    sfs = dadi.Spectrum.from_file("{}SFS.fs".format(path))
+    ns = sfs.sample_sizes
+    
+    # Make the extrapolation version of our demographic model function
+    model_func_extrapolated = dadi.Numerics.make_extrap_log_func(model_func)
+
+    # Optimisation of model parameters
+    if optimization == "tau":
+        p0, lower_bound, upper_bound = [1.0], [0], [10]
+        popt = parameters_optimization(p0, sfs, model_func_extrapolated, pts_list, lower_bound,
+                                       upper_bound, verbose=verbose)
+
+        # Simulated frequency spectrum
+        model = model_func_extrapolated(popt, ns, pts_list)
+    elif optimization == "kappa":
+        p0, lower_bound, upper_bound = [10.0], [3], [30]
+        popt = parameters_optimization(p0, sfs, model_func_extrapolated, pts_list, lower_bound,
+                                       upper_bound, verbose=verbose)
+
+        # Simulated frequency spectrum
+        model = model_func_extrapolated(popt, ns, pts_list)
+    elif optimization == "tau-kappa":
+        p0, lower_bound, upper_bound = [10.0, 1.0], [1, 0], [30, 10]
+        popt = parameters_optimization(p0, sfs, model_func_extrapolated, pts_list, lower_bound,
+                                       upper_bound, verbose=verbose)
+
+        # Simulated frequency spectrum
+        model = model_func_extrapolated(popt, ns, pts_list)
+    else:
+        # Simulated frequency spectrum
+        model = model_func_extrapolated(ns, pts_list)
+
+    # Log-likelihood of the data (sfs) given the model
     ll_model = dadi.Inference.ll_multinom(model, sfs)
 
     # The optimal value of theta given the model
