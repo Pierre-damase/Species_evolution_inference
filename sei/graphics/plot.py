@@ -137,7 +137,6 @@ def plot_optimisation_grid(data, log_scale):
 
 def plot_error_rate(data, path="./Figures/Error_rate/"):
     """
-
     Plot the error rate of theta estimated for 100 inference with dadi.
     """
     for sample_size in data.keys():
@@ -156,6 +155,24 @@ def plot_error_rate(data, path="./Figures/Error_rate/"):
         plt.title("Error rate for n={} genomes sampled".format(sample_size), fontsize="large")
         plt.savefig("{}error-rate-{}".format(path, sample_size), bbox_inches="tight")
         plt.clf()
+
+
+def plot_lrt(data, path="./Figures/"):
+    """
+    Plot the likelihood-ratio test.
+    """
+    # Plot
+    sns.set_theme(style="whitegrid")
+    ax = sns.lineplot(x="Tau", y="Positive hit", data=data)
+    print(data)
+
+    # Set yaxis range
+    ax.set(ylim=(0, max(data["Positive hit"]) + 1))
+
+    # Title + save plot to folder ./Figures
+    plt.title("Likelihood-ratio test")
+    plt.savefig("{}lrt".format(path), bbox_inches="tight")
+    plt.clf()
 
 
 if __name__ == "__main__":
