@@ -19,6 +19,10 @@ def normalization(data):
     return normalized_data
 
 
+######################################################################
+# Plot Site Frequency Spectrum                                       #
+######################################################################
+
 def plot_sfs(sfs, label, color, title):
     """
     Graphic representation of Site Frequency Spectrum (SFS), save to the folder ./Figures.
@@ -58,6 +62,10 @@ def plot_sfs(sfs, label, color, title):
     plt.savefig("./Figures/sfs")
     plt.clf()
 
+
+######################################################################
+# Plot for the optimization of grid size                             #
+######################################################################
 
 def plot_optimisation_grid(data, log_scale):
     """
@@ -135,27 +143,34 @@ def plot_optimisation_grid(data, log_scale):
     plt.clf()
 
 
-def plot_error_rate(data, path="./Figures/Error_rate/"):
+######################################################################
+# Plot of error rate of dadi                                         #
+######################################################################
+
+def plot_error_rate(data, sample, path="./Figures/Error_rate/"):
     """
     Plot the error rate of theta estimated for 100 inference with dadi.
     """
-    for sample_size in data.keys():
-        # Plot
-        sns.set_theme(style="whitegrid")
-        ax = sns.boxplot(x="mu", y="Error rate", hue="Execution time", data=data[sample_size])
+    # Plot
+    sns.set_theme(style="whitegrid")
+    ax = sns.boxplot(x="mu", y="Error rate", hue="Execution time", data=data)
 
-        # Set yaxis range
-        ax.set(ylim=(0.85, 1.15))
+    # Set yaxis range
+    ax.set(ylim=(0.85, 1.15))
 
-        # Legend out of the plot
-        ax.legend(loc='upper left', bbox_to_anchor=(1.04, 1), fontsize='small',
-                  borderaxespad=0., title="Average run time")
+    # Legend out of the plot
+    ax.legend(loc='upper left', bbox_to_anchor=(1.04, 1), fontsize='small',
+              borderaxespad=0., title="Average run time")
 
-        # Title + save plot to folder ./Figures
-        plt.title("Error rate for n={} genomes sampled".format(sample_size), fontsize="large")
-        plt.savefig("{}error-rate-{}".format(path, sample_size), bbox_inches="tight")
-        plt.clf()
+    # Title + save plot to folder ./Figures
+    plt.title("Error rate for n={} genomes sampled".format(sample), fontsize="large")
+    plt.savefig("{}error-rate-{}".format(path, sample), bbox_inches="tight")
+    plt.clf()
 
+
+######################################################################
+# Plot likelihood-ratio test                                         #
+######################################################################
 
 def plot_lrt(data, path="./Figures/"):
     """

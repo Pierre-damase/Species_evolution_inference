@@ -9,6 +9,7 @@ import numpy as np
 from collections import Counter
 from scipy.stats import chi2
 
+import sei.arguments.arguments as arg
 import sei.files.files as f
 import sei.graphics.plot as plot
 import sei.inference.dadi as dadi
@@ -130,7 +131,7 @@ def grid_optimisation():
 # Optimization of dadi parameters                                    #
 ######################################################################
 
-def dadi_params_optimisation():
+def dadi_params_optimisation(sample):
     """
     Determine the error rate of the inference of 100 observed - simulated with msprime.
 
@@ -139,70 +140,73 @@ def dadi_params_optimisation():
 
       - mu: the mutation rate
       - n: the number of sampled monoploid genomes
+
+    Parameter
+    ---------
+    sample: int
+        it's n
     """
-    sample_list, mu_list = [10, 20, 40, 60, 100], [2e-3, 4e-3, 8e-3, 12e-3]  # , 2e-2,  8e-2,  2e-1]
-    nb_simu = 1  # 100
-    dico = {}
+    mu_list = [2e-3, 4e-3, 8e-3, 12e-3, 2e-2]  # ,  8e-2,  2e-1]
+    nb_simu = 100
 
-    for sample in sample_list:
-        # Grid point for the extrapolation
-        pts_list = [sample*10, sample*10 + 10, sample*10 + 20]
+    # Grid point for the extrapolation
+    pts_list = [sample*10, sample*10 + 10, sample*10 + 20]
 
-        # Set up the Pandas DataFrame
-        col = ["Theoritical theta", "Error rate", "mu"]
-        dico[sample] = pd.DataFrame(columns = col)
+    # Set up the Pandas DataFrame
+    col = ["Theoritical theta", "Error rate", "mu"]
+    data = pd.DataFrame(columns=col)
 
-        # List of execution time of each simulation
-        execution_time = []
+    # List of execution time of each simulation
+    execution_time = []
 
-        for mu in mu_list:
-            tmp = []
+    for mu in mu_list:
+        tmp = []
 
-            # Parameters for the simulation
-            params = simulation_parameters(sample=sample, ne=1, rcb_rate=mu, mu=mu, length=1e5)
-            print("Msprime simulation - sample size {} & mutation rate {}".format(sample, mu))
+        # Parameters for the simulation
+        params = simulation_parameters(sample=sample, ne=1, rcb_rate=mu, mu=mu, length=1e5)
+        print("Msprime simulation - sample size {} & mutation rate {}".format(sample, mu))
 
-            for i in range(nb_simu):
-                start_time = time.time()
-                print("Simulation: {}/{}".format(i+1, nb_simu), end="\r")
+        for i in range(nb_simu):
+            start_time = time.time()
+            print("Simulation: {}/{}".format(i+1, nb_simu), end="\r")
 
-                # Simulation for a constant population with msprime
-                sfs = ms.msprime_simulation(model=ms.constant_model, param=params)
+            # Simulation for a constant population with msprime
+            sfs = ms.msprime_simulation(model=ms.constant_model, param=params)
 
-                # Generate the SFS file compatible with dadi
-                f.dadi_data(sfs, dadi.constant_model.__name__)
+            # Generate the SFS file compatible with dadi
+            f.dadi_data(sfs, dadi.constant_model.__name__)
 
-                # Dadi inference
-                _, estimated_theta = dadi.dadi_inference(pts_list, dadi.constant_model)
+            # Dadi inference
+            _, estimated_theta = dadi.dadi_inference(pts_list, dadi.constant_model)
 
-                theoritical_theta = computation_theoritical_theta(ne=1, mu=mu, length=1e5)
-                error_rate = estimated_theta / theoritical_theta
+            theoritical_theta = computation_theoritical_theta(ne=1, mu=mu, length=1e5)
+            error_rate = estimated_theta / theoritical_theta
 
-                row = {
-                    "Theoritical theta": theoritical_theta, "Error rate": error_rate, "mu": mu
-                }
-                dico[sample] = dico[sample].append(row, ignore_index=True)
+            row = {
+                "Theoritical theta": theoritical_theta, "Error rate": error_rate, "mu": mu
+            }
+            data = data.append(row, ignore_index=True)
 
-                tmp.append(time.time() - start_time)
+            tmp.append(time.time() - start_time)
 
-            # Mean execution time for the 100 simulation with the same genome length and mu
-            mean_time = round(sum(tmp) / nb_simu, 3)
-            execution_time.extend([mean_time for _ in range(nb_simu)])
+        # Mean execution time for the 100 simulation with the same genome length and mu
+        mean_time = round(sum(tmp) / nb_simu, 3)
+        execution_time.extend([mean_time for _ in range(nb_simu)])
 
-        dico[sample]["Execution time"] = execution_time
+        data["Execution time"] = execution_time
 
-    plot.plot_error_rate(dico)
+    plot.plot_error_rate(data, sample)
 
 
 ######################################################################
 # Likelihood-ratio test                                              #
 ######################################################################
 
-def likelihood_ratio(likelihood, control_ll):
+def log_likelihood_ratio(likelihood, control_ll):
     """
-    Likelihood-ratio test.
+    Log-likelihood ratio test.
 
-    S = 2 * (LL1 - LL0) with
+    lrt = 2 * (LL1 - LL0) with
 
       - LL1: log-likelihood of M1
       - LL0: log-likelihood of M0
@@ -255,12 +259,14 @@ def likelihood_ratio_test(tau, kappa, msprime_model, dadi_model, control_model, 
     Return
     ------
     data: list
-        List of 0 and 1.
-          - 0: negative hit - ratio > 0.05 
-          - 1: positive hit - ratio <= 0.05
+        List of 0 (negative run) & 1 (positive run)
+    ll_list: list
+        List of log-likelihood to keep track for each simulation
+          - Model0: log-likelihood for the model with less parameters
+          - Model1: nbest log-likelihood for the model with more parameters
     """
     mu, sample = 2e-5, 20
-    ll_ratio = []
+    ll_list, ll_ratio = {"Model0": [], "Model1": []}, []
 
     # Grid point for the extrapolation
     pts_list = [sample*10, sample*10 + 10, sample*10 + 20]
@@ -277,30 +283,34 @@ def likelihood_ratio_test(tau, kappa, msprime_model, dadi_model, control_model, 
         f.dadi_data(sfs, dadi_model.__name__)
 
         # Dadi inference - run x inference with dadi from the same observed data
-        likelihood_list = []
+        tmp = []
         control_ll, _ = dadi.dadi_inference(pts_list, control_model)
 
         for _ in range(nb_simu):
-            likelihood, _ = dadi.dadi_inference(pts_list, dadi_model, opt=optimization,
-                                                verbose=0)
-            likelihood_list.append(likelihood)
+            ll, _ = dadi.dadi_inference(pts_list, dadi_model, opt=optimization,
+                                        verbose=0)
+            tmp.append(ll)
 
         # Select the best one, i.e. the one with the highest likelihood
-        # Compute the likelihood-ratio
-        ll_ratio.append(likelihood_ratio(likelihood_list, control_ll))
-        # print("\nObserved {} & Estimated {}\n".format(control_ll, max(likelihood_list)))
+        # Compute the log-likelihood ratio
+        ll_ratio.append(log_likelihood_ratio(tmp, control_ll))
+
+        # Keep track of log-likelihood for each simulation
+        ll_list["Model0"].append(control_ll)
+        ll_list["Model1"].append(max(tmp))
+        #print("\nObserved {} & Estimated {}\n".format(control_ll, max(tmp)))
 
     # Likelihood-ratio test
-    data = [1] * len(ll_ratio)
+    lrt = [1] * len(ll_ratio)
     for i, chi_stat in enumerate(ll_ratio):
         p_value = chi2.sf(chi_stat, 1)  # 1 -> degree of freedom
         if p_value > 0.05:
-            data[i] = 0
+            lrt[i] = 0
 
-    return data
+    return lrt, ll_list 
 
 
-def inference(msprime_model, dadi_model, control_model, optimization):
+def inference(msprime_model, dadi_model, control_model, optimization, value):
     """
 
     Parameter
@@ -315,20 +325,23 @@ def inference(msprime_model, dadi_model, control_model, optimization):
         parameter to optimize - (kappa), (tau), (kappa, tau), etc.
     """
     col = ["Tau", "Kappa", "Positive hit"]
-    data = pd.DataFrame(columns = col)
+    data = pd.DataFrame(columns=col)
 
     if optimization == "tau":
         print("Optimization of {} for {}".format(optimization, dadi_model.__name__))
-        for scale in np.arange(-3, 1.1, 0.5):  # pas de 0.1
-            kappa, tau = 10, np.float_power(10, scale)  # Kappa fixed
-            print("Simulation: kappa {} & tau {}".format(kappa, tau), end="\r")
 
-            tmp = likelihood_ratio_test(tau, kappa, msprime_model, dadi_model, control_model,
-                                        optimization, nb_simu=15)  # 1000
-            row = {
-                "Tau": tau, "Kappa": kappa, "Positive hit": Counter(tmp)[1]
-            }
-            data = data.append(row, ignore_index=True)
+        # for scale in np.arange(-3, 1.1, 0.5):  # pas de 0.1
+
+        kappa, tau = 10, np.float_power(10, value[0])  # Kappa fixed
+        print("Simulation: kappa {} & tau {}".format(kappa, tau))
+
+        lrt, ll_list = likelihood_ratio_test(tau, kappa, msprime_model, dadi_model,
+                                             control_model, optimization, nb_simu=10)  # 1000
+        row = {
+            "Tau": tau, "Kappa": kappa, "Positive hit": Counter(lrt)[1],
+            "Model0 ll": ll_list["Model0"], "Model1 ll": ll_list["Model1"]
+        }
+        data = data.append(row, ignore_index=True)
 
     elif optimization == "kappa":
         print("Optimization of {} for {}".format(optimization, dadi_model.__name__))
@@ -357,7 +370,8 @@ def inference(msprime_model, dadi_model, control_model, optimization):
                 }
                 data = data.append(row, ignore_index=True)
 
-    plot.plot_lrt(data)
+    #plot.plot_lrt(data)
+    print(data)
 
 
 ######################################################################
@@ -370,10 +384,15 @@ def main():
     """
     # sfs_verification()
     # grid_optimisation()
-    # dadi_params_optimisation()
+    # 
 
-    inference(msprime_model=ms.sudden_decline_model, dadi_model=dadi.sudden_decline_model,
-              control_model=dadi.constant_model, optimization="tau")
+    args = arg.arguments()
+
+    if args.analyse == 'opt':
+        dadi_params_optimisation(args.number)
+    elif args.analyse == 'lrt':
+        inference(msprime_model=ms.sudden_decline_model, dadi_model=dadi.sudden_decline_model,
+                  control_model=dadi.constant_model, optimization=args.param, value=args.value)
 
 
 if __name__ == "__main__":
