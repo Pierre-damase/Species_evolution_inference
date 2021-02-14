@@ -243,10 +243,12 @@ def inference(msprime_model, dadi_model, control_model, optimization):
 
 if __name__ == "__main__":
     # dadi_params_optimisation()
+
     # inference(msprime_model=ms.sudden_decline_model, dadi_model=dadi.sudden_decline_model,
     #           control_model=dadi.constant_model, optimization="tau")
 
     args = arg.arguments()
 
     if args.analyse == 'opt':
-        dadi_params_optimisation(args.number)
+        sample = [10, 20, 40, 60, 100]
+        dadi_params_optimisation(sample[args.number-1])
