@@ -138,7 +138,7 @@ def parameters_optimization(p0, sfs, model_func, pts_list, lower_bound, upper_bo
     return popt
 
 
-def dadi_inference(pts_list, model_func, opt=None, verbose=0, path="./Data/"):
+def dadi_inference(pts_list, model_func, opt=None, verbose=0, path="./Data/", name="SFS"):
     """
     Dadi inference.
 
@@ -160,7 +160,7 @@ def dadi_inference(pts_list, model_func, opt=None, verbose=0, path="./Data/"):
     optimization = opt
 
     # Load the data
-    sfs = dadi.Spectrum.from_file("{}SFS.fs".format(path))
+    sfs = dadi.Spectrum.from_file("{}{}.fs".format(path, name))
     ns = sfs.sample_sizes
     
     # Make the extrapolation version of our demographic model function

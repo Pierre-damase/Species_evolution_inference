@@ -147,7 +147,7 @@ def dadi_params_optimisation(sample):
         it's n
     """
     mu_list = [2e-3, 4e-3, 8e-3, 12e-3, 2e-2]  # ,  8e-2,  2e-1]
-    nb_simu = 100
+    nb_simu = 3
 
     # Grid point for the extrapolation
     pts_list = [sample*10, sample*10 + 10, sample*10 + 20]
@@ -174,10 +174,11 @@ def dadi_params_optimisation(sample):
             sfs = ms.msprime_simulation(model=ms.constant_model, param=params)
 
             # Generate the SFS file compatible with dadi
-            f.dadi_data(sfs, dadi.constant_model.__name__)
+            f.dadi_data(sfs, dadi.constant_model.__name__, name="SFS-{}".format(sample))
 
             # Dadi inference
-            _, estimated_theta = dadi.dadi_inference(pts_list, dadi.constant_model)
+            _, estimated_theta = dadi.dadi_inference(pts_list, dadi.constant_model,
+                                                     name="SFS-{}".format(sample))
 
             theoritical_theta = computation_theoritical_theta(ne=1, mu=mu, length=1e5)
             error_rate = estimated_theta / theoritical_theta
@@ -195,7 +196,8 @@ def dadi_params_optimisation(sample):
 
         data["Execution time"] = execution_time
 
-    plot.plot_error_rate(data, sample)
+    # plot.plot_error_rate(data, sample)
+    data.to_csv("./Data/Error_rate/error-rate-{}.csv".format(sample), sep='\t', index=False)
 
 
 ######################################################################
@@ -221,6 +223,7 @@ def log_likelihood_ratio(likelihood, control_ll):
     control_ll: float
         Likelihood for model M0
     """
+
     # return max(likelihood) / control_ll
     return 2 * (max(likelihood) - control_ll)
 

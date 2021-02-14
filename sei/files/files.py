@@ -5,7 +5,7 @@ This module allows you to read or write files.
 import sys
 
 
-def dadi_data(sfs, fichier, path="./Data/"):
+def dadi_data(sfs, fichier, path="./Data/", name="SFS"):
     """
     Create SFS of a scenario in the format compatible with the dadi software.
 
@@ -24,7 +24,7 @@ def dadi_data(sfs, fichier, path="./Data/"):
     fichier: str
         file in which the SFS will be written in the format compatible with dadi
     """
-    with open("{}SFS.fs".format(path), "w") as filout:
+    with open("{}{}.fs".format(path, name), "w") as filout:
         filout.write("{} unfolded \"{}\"\n".format(len(sfs)+2, fichier))
 
         # Write SFS

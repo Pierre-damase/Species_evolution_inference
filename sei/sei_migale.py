@@ -88,11 +88,14 @@ def dadi_params_optimisation(sample):
             sfs = ms.msprime_simulation(model=ms.constant_model, param=params)
 
             # Generate the SFS file compatible with dadi
-            f.dadi_data(sfs, dadi.constant_model.__name__, path=path_data)
+            f.dadi_data(
+                sfs, dadi.constant_model.__name__, path=path_data, name="SFS-{}".format(sample)
+            )
 
             # Dadi inference
-            _, estimated_theta = dadi.dadi_inference(pts_list, dadi.constant_model,
-                                                     path=path_data)
+            _, estimated_theta = dadi.dadi_inference(
+                pts_list, dadi.constant_model, path=path_data, name="SFS-{}".format(sample)
+            )
 
             theoritical_theta = computation_theoritical_theta(ne=1, mu=mu, length=1e5)
             error_rate = estimated_theta / theoritical_theta
