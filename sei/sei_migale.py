@@ -110,7 +110,8 @@ def dadi_params_optimisation(sample):
 
         data["Execution time"] = execution_time
 
-    plot.plot_error_rate(data, sample, path=path_figures)
+    #plot.plot_error_rate(data, sample, path=path_figures)
+    data.to_csv("{}error-rate-{}".format(path_figures, sample), sep='\t', index=False)
 
 
 ######################################################################
