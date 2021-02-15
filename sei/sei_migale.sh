@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Nom du job
-#$ -N DADI_OPTIMISATION
+#$ -N dadi_opt
 
 # Number of separate submissions to the cluster
 #$ -t 1-5

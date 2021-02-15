@@ -56,8 +56,8 @@ def dadi_params_optimisation(sample):
     sample: int
         it's n
     """
-    mu_list = [2e-3, 4e-3, 8e-3, 12e-3]  #, 2e-2,  8e-2,  2e-1]
-    nb_simu = 3  # 100
+    mu_list = [2e-3, 4e-3, 8e-3, 12e-3, 2e-2, 8e-2, 2e-1]
+    nb_simu = 100
 
     # Grid point for the extrapolation
     pts_list = [sample*10, sample*10 + 10, sample*10 + 20]
@@ -71,7 +71,7 @@ def dadi_params_optimisation(sample):
 
     # Path
     path_data = "/home/pimbert/work/Species_evolution_inference/Data/"
-    path_figures = "/home/pimbert/work/Species_evolution_inference/Figures/Error_rate/"
+    # path_figures = "/home/pimbert/work/Species_evolution_inference/Figures/Error_rate/"
 
     for mu in mu_list:
         tmp = []
@@ -114,7 +114,7 @@ def dadi_params_optimisation(sample):
         data["Execution time"] = execution_time
 
     #plot.plot_error_rate(data, sample, path=path_figures)
-    data.to_csv("{}error-rate-{}".format(path_figures, sample), sep='\t', index=False)
+    data.to_csv("{}Error_rate/error-rate-{}.csv".format(path_data, sample), sep='\t', index=False)
 
 
 ######################################################################
