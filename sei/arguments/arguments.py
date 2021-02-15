@@ -14,7 +14,7 @@ def arguments():
     # Optimisation
     opt = subparsers.add_parser('opt')
     opt.add_argument(
-        '--nb', dest='number', type=int, choices=[10, 20, 40, 60, 100], required=True,
+        '--nb', dest='number', type=int, required=True,
         help="""Determine for a given number of sampled genomes n, the error rate of the
         inference of 100 observed for various mutation rate mu"""
     )
