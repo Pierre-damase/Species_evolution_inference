@@ -4,9 +4,11 @@ Migale version.
 
 import os
 import time
+import warnings
 import pandas as pd
 import numpy as np
 from collections import Counter
+from scipy.stats import chi2
 
 from arguments import arguments as arg
 from files import files as f
@@ -188,7 +190,7 @@ def likelihood_ratio_test(tau, kappa, msprime_model, dadi_model, control_model, 
           - Model0: log-likelihood for the model with less parameters
           - Model1: nbest log-likelihood for the model with more parameters
     """
-    mu, sample = 8e-3, 20  # 8e-2
+    mu, sample = 8e-2, 20
     ll_list, ll_ratio = {"Model0": [], "Model1": []}, []
 
     # Grid point for the extrapolation
@@ -264,7 +266,7 @@ def inference(msprime_model, dadi_model, control_model, optimization, scale):
 
         lrt, ll_list = likelihood_ratio_test(
             tau, kappa, msprime_model, dadi_model, control_model, optimization,
-            nb_simu=3, dof=1
+            nb_simu=1000, dof=1
         )  # 1000 simulations
         row = {
             "Tau": tau, "Kappa": kappa, "Positive hit": Counter(lrt)[1],
@@ -280,7 +282,7 @@ def inference(msprime_model, dadi_model, control_model, optimization, scale):
 
         lrt, ll_list = likelihood_ratio_test(
             tau, kappa, msprime_model, dadi_model, control_model, optimization,
-            nb_simu=3, dof=1
+            nb_simu=1000, dof=1
         )  # 1000 simulations
         row = {
             "Tau": tau, "Kappa": kappa, "Positive hit": Counter(lrt)[1],
@@ -298,7 +300,7 @@ def inference(msprime_model, dadi_model, control_model, optimization, scale):
 
         lrt, ll_list = likelihood_ratio_test(
             tau, kappa, msprime_model, dadi_model, control_model, optimization,
-            nb_simu=3, dof=2
+            nb_simu=1000, dof=2
         )
         row = {
             "Tau": tau, "Kappa": kappa, "Positive hit": Counter(lrt)[1],
@@ -329,11 +331,12 @@ if __name__ == "__main__":
         dadi_params_optimisation(sample[args.number-1])
     elif args.analyse == 'lrt':
         if args.param == 'tau':
-            scale = [np.arange(-3, 1.1, 0.1)[args.value]]
+            print(args.value)
+            scale = [np.arange(-3, 1.1, 0.1)[int(args.value[0])-1]]
         elif args.param == 'kappa':
-            scale = [np.arange(-2.5, 1.6, 0.1)[args.value]]
+            scale = [np.arange(-2.5, 1.6, 0.1)[int(args.value[0])-1]]
         else:
-            scale = [np.arange(-3, 1.1, 0.1)[args.value], np.arange(-2.5, 1.6, 0.1)[args.value]]
+            scale = [np.arange(-3, 1.1, 0.1)[int(args.value[0])-1], np.arange(-2.5, 1.6, 0.1)[int(args.value[1])-1]]
         inference(
             msprime_model=ms.sudden_decline_model, dadi_model=dadi.sudden_decline_model,
             control_model=dadi.constant_model, optimization=args.param, scale=scale
