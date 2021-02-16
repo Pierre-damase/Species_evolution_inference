@@ -234,7 +234,6 @@ def likelihood_ratio_test(tau, kappa, msprime_model, dadi_model, control_model, 
         index = tmp["LL"].index(max(tmp["LL"]))  # Get index of the best inference (higher ll)
         sfs = tmp["SFS"][index]
         sfs.to_file("{}Optimization_{}/{}".format(path_data, optimization, name))
-    del tmp
 
     # Delete sfs file
     os.remove("{}{}.fs".format(path_data, name))
@@ -271,8 +270,8 @@ def inference(msprime_model, dadi_model, control_model, optimization, scale, sav
 
         lrt, ll_list = likelihood_ratio_test(
             tau, kappa, msprime_model, dadi_model, control_model, optimization, save,
-            nb_simu=1000, dof=1
-        )
+            nb_simu=3, dof=1
+        )  # 1000
         row = {
             "Tau": tau, "Kappa": kappa, "Positive hit": Counter(lrt)[1],
             "Model0 ll": ll_list["Model0"], "Model1 ll": ll_list["Model1"]
@@ -284,8 +283,8 @@ def inference(msprime_model, dadi_model, control_model, optimization, scale, sav
 
         lrt, ll_list = likelihood_ratio_test(
             tau, kappa, msprime_model, dadi_model, control_model, optimization, save,
-            nb_simu=1000, dof=1
-        )
+            nb_simu=3, dof=1
+        )  # 1000
         row = {
             "Tau": tau, "Kappa": kappa, "Positive hit": Counter(lrt)[1],
             "Model0 ll": ll_list["Model0"], "Model1 ll": ll_list["Model1"]
@@ -297,8 +296,8 @@ def inference(msprime_model, dadi_model, control_model, optimization, scale, sav
 
         lrt, ll_list = likelihood_ratio_test(
             tau, kappa, msprime_model, dadi_model, control_model, optimization, save,
-            nb_simu=1000, dof=2
-        )
+            nb_simu=3, dof=2
+        )  # 1000
         row = {
             "Tau": tau, "Kappa": kappa, "Positive hit": Counter(lrt)[1],
             "Model0 ll": ll_list["Model0"], "Model1 ll": ll_list["Model1"]

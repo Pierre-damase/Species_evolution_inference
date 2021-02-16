@@ -278,7 +278,7 @@ def likelihood_ratio_test(tau, kappa, msprime_model, dadi_model, control_model, 
           - Model0: log-likelihood for the model with less parameters
           - Model1: nbest log-likelihood for the model with more parameters
     """
-    mu, sample = 8e-3, 20  # 8e-2
+    mu, sample = 8e-4, 20  # 8e-2
     ll_list, ll_ratio = {"Model0": [], "Model1": []}, []
 
     # Grid point for the extrapolation
@@ -329,7 +329,6 @@ def likelihood_ratio_test(tau, kappa, msprime_model, dadi_model, control_model, 
         index = ll_list["Model1"].index(max(ll_list["Model1"]))
         sfs = list_sfs[index]
         sfs.to_file("{}Optimization_{}/{}".format(path_data, optimization, name))
-    del tmp
 
     # Delete sfs file
     os.remove("{}{}.fs".format(path_data, name))
@@ -369,7 +368,7 @@ def inference(msprime_model, dadi_model, control_model, optimization, scale, sav
 
         lrt, ll_list = likelihood_ratio_test(
             tau, kappa, msprime_model, dadi_model, control_model, optimization, save,
-            nb_simu=3, dof=1
+            nb_simu=10, dof=1
         )  # 1000 simulations
         row = {
             "Tau": tau, "Kappa": kappa, "Positive hit": Counter(lrt)[1],
@@ -385,7 +384,7 @@ def inference(msprime_model, dadi_model, control_model, optimization, scale, sav
 
         lrt, ll_list = likelihood_ratio_test(
             tau, kappa, msprime_model, dadi_model, control_model, optimization, save,
-            nb_simu=3, dof=1
+            nb_simu=10, dof=1
         )  # 1000 simulations
         row = {
             "Tau": tau, "Kappa": kappa, "Positive hit": Counter(lrt)[1],
@@ -401,7 +400,7 @@ def inference(msprime_model, dadi_model, control_model, optimization, scale, sav
 
         lrt, ll_list = likelihood_ratio_test(
             tau, kappa, msprime_model, dadi_model, control_model, optimization, save,
-            nb_simu=3, dof=2
+            nb_simu=10, dof=2
         )
         row = {
             "Tau": tau, "Kappa": kappa, "Positive hit": Counter(lrt)[1],
