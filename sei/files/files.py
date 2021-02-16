@@ -41,5 +41,14 @@ def dadi_data(sfs, fichier, path="./Data/", name="SFS"):
                 filout.write("0 ")
 
 
+def export_sfs(path, name):
+    """
+    Export SFS file in the format compatible with the dadi software into list.
+    """
+    with open("{}{}.fs".format(path, name), "r") as filin:
+        lines = filin.readlines()
+    return [int(ele) for ele in lines[1].strip().split(' ') if ele != "0"]
+
+
 if __name__ == "__main__":
     sys.exit()  # No actions desired

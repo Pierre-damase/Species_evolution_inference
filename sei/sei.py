@@ -421,6 +421,7 @@ def main():
     elif args.analyse == 'er':
         for sample in [10, 20, 40, 60, 100]:
             plot.plot_error_rate(sample)
+            plot.plot_sfs_from_dadi(sample, name="SFS-{}".format(sample))
 
 
 if __name__ == "__main__":

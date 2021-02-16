@@ -9,6 +9,8 @@ import seaborn as sns
 import pandas as pd
 from matplotlib.lines import Line2D
 
+import sei.files.files as f
+
 
 def normalization(data):
     """
@@ -154,11 +156,17 @@ def plot_error_rate(sample):
     """
     # Read a csv file into a pandas DataFrame
     data = pd.read_csv("./Data/Error_rate/error-rate-{}.csv".format(sample), sep='\t')
-    print(data.loc[[310]])
+
+    # Round value in execution time - some values not round for an unexpected reason
+    tmp = pd.DataFrame(
+        {"Execution time": [round(ele, 3) for ele in data['Execution time'].to_list()]}
+    )
+    data.update(tmp)
 
     # Plot
     sns.set_theme(style="whitegrid")
-    ax = sns.boxplot(x="mu", y="Error rate", hue="Execution time", data=data)
+    ax = sns.boxplot(x="mu", y="Error rate", hue="Execution time", data=data,
+                     width=0.45, dodge=False)
 
     # Set yaxis range
     ax.set(ylim=(0.85, 1.15))
@@ -171,6 +179,12 @@ def plot_error_rate(sample):
     plt.title("Error rate for n={} genomes sampled".format(sample), fontsize="large")
     plt.savefig("./Figures/Error_rate/error-rate-{}".format(sample), bbox_inches="tight")
     plt.clf()
+
+
+def plot_sfs_from_dadi(sample, path="./Data/", name="SFS"):
+    # Export SFS into list
+    data = f.export_sfs(path, name)
+    # print(data)
 
 
 ######################################################################
