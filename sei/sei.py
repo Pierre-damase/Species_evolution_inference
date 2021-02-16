@@ -81,7 +81,7 @@ def sfs_verification():
     plot.plot_sfs(
         sfs=[sfs_cst, sfs_theorique, sfs_declin, sfs_croissance],
         label=["Constant", "Theoretical", "Declin", "Growth"],
-        color=["blue", "orange","red", "green"],
+        color=["tab:blue", "tab:orange","tab:red", "tab:green"],
         title="Unfold SFS for various scenarios"
     )
 
@@ -339,7 +339,7 @@ def inference(msprime_model, dadi_model, control_model, optimization, scale):
     optimization
         parameter to optimize - (kappa), (tau), (kappa, tau), etc.
     """
-    col = ["Tau", "Kappa", "Positive hit"]
+    col = ["Tau", "Kappa", "Positive hit", "Model0 ll", "Model1 ll"]
     data = pd.DataFrame(columns=col)
 
     if optimization == "tau":
@@ -376,9 +376,7 @@ def inference(msprime_model, dadi_model, control_model, optimization, scale):
 
     else:
         print("Optimization of {} for {}".format(optimization, dadi_model.__name__))
-        # for t_scale in np.arange(-3, 1.1, 0.1):
-        #     for k_scale in np.arange(-2, 1.6, 0.1):
-        #         pass
+
         kappa, tau = np.float_power(10, scale[1]), np.float_power(10, scale[0])
         print("Simulation: kappa {} & tau {}".format(kappa, tau), end="\r")
 
@@ -395,7 +393,7 @@ def inference(msprime_model, dadi_model, control_model, optimization, scale):
     #plot.plot_lrt(data)
     # Export data to csv file
     data.to_csv("./Data/Optimization_{}/opt-tau={}_kappa={}.csv"
-                .format(optimization, tau, kappa), sep='\t', index=False)
+                .format(optimization, tau, kappa), index=False)
 
 
 ######################################################################
@@ -413,16 +411,47 @@ def main():
 
     if args.analyse == 'opt':
         dadi_params_optimisation(args.number)
+
     elif args.analyse == 'lrt':
         inference(
             msprime_model=ms.sudden_decline_model, dadi_model=dadi.sudden_decline_model,
             control_model=dadi.constant_model, optimization=args.param, scale=args.value
         )
+
     elif args.analyse == 'er':
         for sample in [10, 20, 40, 60, 100]:
             plot.plot_error_rate(sample)
-            plot.plot_sfs_from_dadi(sample, name="SFS-{}".format(sample))
 
+            # SFS - constant model
+            sfs_cst = f.export_sfs(path="./Data/Error_rate/", name="SFS-{}".format(sample))
+
+            # Theoretical SFS for any constant population
+            sfs_theorique = [0] * (sample - 1)
+            for i in range(len(sfs_theorique)):
+                sfs_theorique[i] = 1 / (i+1)
+
+            # Plot
+            plot.plot_sfs(
+                sfs=[sfs_cst, sfs_theorique],
+                label=["Constant", "Theoretical"],
+                color=["tab:blue", "tab:orange"],
+                title="SFS", path_figure="./Figures/Error_rate/", name="sfs_{}".format(sample)
+            )
+
+        optimization = ["tau-kappa"]
+        for opt in optimization:
+            path_data = "./Data/Optimization_{}/".format(opt)
+            files = os.listdir(path_data)
+
+            # Pandas DataFrame
+            col = ["Tau", "Kappa", "Positive hit", "Model0 ll", "Model1 ll"]
+            data = pd.DataFrame(columns=col)
+
+            # Append value to data
+            for fichier in files:
+                data = data.append(
+                    pd.read_csv("{}{}".format(path_data, fichier), sep="\t"), ignore_index=True
+                )
 
 if __name__ == "__main__":
     warnings.filterwarnings('ignore')

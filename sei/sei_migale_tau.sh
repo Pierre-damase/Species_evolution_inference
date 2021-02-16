@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Nom du job
-#$ -N dadi_opt
+#$ -N dadi_opt_tau
 
 # Number of separate submissions to the cluster
 #$ -t 1-41
@@ -23,6 +23,4 @@
 
 conda activate sei-3.8.5
 python /home/pimbert/work/Species_evolution_inference/sei/sei_migale.py lrt --param tau --value $SGE_TASK_ID
-#python /home/pimbert/work/Species_evolution_inference/sei/sei_migale.py lrt --param kappa --value $SGE_TASK_ID
-#python /home/pimbert/work/Species_evolution_inference/sei/sei_migale.py lrt --param tau-kappa --value $SGE_TASK_ID $SGE_TASK_ID
 conda deactivate

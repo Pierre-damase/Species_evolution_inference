@@ -26,7 +26,7 @@ def normalization(data):
 # Plot Site Frequency Spectrum                                       #
 ######################################################################
 
-def plot_sfs(sfs, label, color, title):
+def plot_sfs(sfs, label, color, title, path_figure="./Figures/", name="sfs"):
     """
     Graphic representation of Site Frequency Spectrum (SFS), save to the folder ./Figures.
 
@@ -38,6 +38,8 @@ def plot_sfs(sfs, label, color, title):
         the label of each sfs
     color: list
         the color of each curve
+    style: list
+        the linestyle
     title: string
         title of the plot
     """
@@ -62,7 +64,7 @@ def plot_sfs(sfs, label, color, title):
 
     # Title + save plot to the folder ./Figures
     plt.title(title, fontsize="xx-large")
-    plt.savefig("./Figures/sfs")
+    plt.savefig("{}{}.png".format(path_figure, name))
     plt.clf()
 
 
@@ -176,15 +178,15 @@ def plot_error_rate(sample):
               borderaxespad=0., title="Average run time")
 
     # Title + save plot to folder ./Figures
-    plt.title("Error rate for n={} genomes sampled".format(sample), fontsize="large")
+    title = \
+        """Error rate of 100 inferences with dadi for various mutation rate mu
+        with n={} genomes sampled\n
+        Each simulation is a constant model population
+        """.format(sample)
+
+    plt.title(title, fontsize="large", loc="center", wrap=True)
     plt.savefig("./Figures/Error_rate/error-rate-{}".format(sample), bbox_inches="tight")
     plt.clf()
-
-
-def plot_sfs_from_dadi(sample, path="./Data/", name="SFS"):
-    # Export SFS into list
-    data = f.export_sfs(path, name)
-    # print(data)
 
 
 ######################################################################

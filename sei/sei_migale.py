@@ -190,7 +190,7 @@ def likelihood_ratio_test(tau, kappa, msprime_model, dadi_model, control_model, 
           - Model0: log-likelihood for the model with less parameters
           - Model1: nbest log-likelihood for the model with more parameters
     """
-    mu, sample = 8e-2, 20
+    mu, sample = 8e-5, 20  # 8e-2
     ll_list, ll_ratio = {"Model0": [], "Model1": []}, []
 
     # Grid point for the extrapolation
@@ -255,19 +255,16 @@ def inference(msprime_model, dadi_model, control_model, optimization, scale):
     optimization
         parameter to optimize - (kappa), (tau), (kappa, tau), etc.
     """
-    col = ["Tau", "Kappa", "Positive hit"]
+    col = ["Tau", "Kappa", "Positive hit", "Model0 ll", "Model1 ll"]
     data = pd.DataFrame(columns=col)
 
     if optimization == "tau":
-        print("Optimization of {} for {}".format(optimization, dadi_model.__name__))
-
         kappa, tau = 10, np.float_power(10, scale[0])  # Kappa fixed
-        print("Simulation: kappa {} & tau {}".format(kappa, tau))
 
         lrt, ll_list = likelihood_ratio_test(
             tau, kappa, msprime_model, dadi_model, control_model, optimization,
             nb_simu=1000, dof=1
-        )  # 1000 simulations
+        )
         row = {
             "Tau": tau, "Kappa": kappa, "Positive hit": Counter(lrt)[1],
             "Model0 ll": ll_list["Model0"], "Model1 ll": ll_list["Model1"]
@@ -275,15 +272,12 @@ def inference(msprime_model, dadi_model, control_model, optimization, scale):
         data = data.append(row, ignore_index=True)
 
     elif optimization == "kappa":
-        print("Optimization of {} for {}".format(optimization, dadi_model.__name__))
-
         kappa, tau = np.float_power(10, scale[0]), 1.0  # Tau fixed
-        print("Simulation: kappa {} & tau {}".format(kappa, tau), end="\r")
 
         lrt, ll_list = likelihood_ratio_test(
             tau, kappa, msprime_model, dadi_model, control_model, optimization,
             nb_simu=1000, dof=1
-        )  # 1000 simulations
+        )
         row = {
             "Tau": tau, "Kappa": kappa, "Positive hit": Counter(lrt)[1],
             "Model0 ll": ll_list["Model0"], "Model1 ll": ll_list["Model1"]
@@ -291,12 +285,7 @@ def inference(msprime_model, dadi_model, control_model, optimization, scale):
         data = data.append(row, ignore_index=True)
 
     else:
-        print("Optimization of {} for {}".format(optimization, dadi_model.__name__))
-        # for t_scale in np.arange(-3, 1.1, 0.1):
-        #     for k_scale in np.arange(-2, 1.6, 0.1):
-        #         pass
         kappa, tau = np.float_power(10, scale[1]), np.float_power(10, scale[0])
-        print("Simulation: kappa {} & tau {}".format(kappa, tau), end="\r")
 
         lrt, ll_list = likelihood_ratio_test(
             tau, kappa, msprime_model, dadi_model, control_model, optimization,
@@ -311,7 +300,7 @@ def inference(msprime_model, dadi_model, control_model, optimization, scale):
     # Export data to csv file
     path_data = "/home/pimbert/work/Species_evolution_inference/Data/"
     data.to_csv("{}Optimization_{}/opt-tau={}_kappa={}.csv"
-                .format(path_data, optimization, tau, kappa), sep='\t', index=False)
+                .format(path_data, optimization, tau, kappa), index=False)
 
 
 ######################################################################
@@ -336,7 +325,10 @@ if __name__ == "__main__":
         elif args.param == 'kappa':
             scale = [np.arange(-2.5, 1.6, 0.1)[int(args.value[0])-1]]
         else:
-            scale = [np.arange(-3, 1.1, 0.1)[int(args.value[0])-1], np.arange(-2.5, 1.6, 0.1)[int(args.value[1])-1]]
+            scale = [
+                np.arange(-3, 1.1, 0.1)[int(args.value[0])-1],
+                np.arange(-2.5, 1.6, 0.1)[int(args.value[1])-1]
+            ]
         inference(
             msprime_model=ms.sudden_decline_model, dadi_model=dadi.sudden_decline_model,
             control_model=dadi.constant_model, optimization=args.param, scale=scale
