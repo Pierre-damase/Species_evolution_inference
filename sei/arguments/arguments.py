@@ -12,15 +12,15 @@ def arguments():
     subparsers = parser.add_subparsers(dest='analyse', required=True)
 
     # Optimisation
-    opt = subparsers.add_parser('opt')
+    opt = subparsers.add_parser('opt', help="Compute optimisation of dadi's parameters")
     opt.add_argument(
-        '--nb', dest='number', type=int, choices=[10, 20, 40, 60, 100], required=True,
+        '--nb', dest='number', type=int, required=True,
         help="""Determine for a given number of sampled genomes n, the error rate of the
         inference of 100 observed for various mutation rate mu"""
     )
 
     # Likelihood-ratio test
-    lrt = subparsers.add_parser('lrt')
+    lrt = subparsers.add_parser('lrt', help="Comute likelihood-ratio test for dadi inference")
     lrt.add_argument(
         '--param', dest='param', default='tau', choices=['tau', 'kappa', 'tau-kappa'],
         required=True,
@@ -30,5 +30,8 @@ def arguments():
         '--value', dest='value', type=float, required=True, nargs='*',
         help="Simulation for a given parameter p"
     )
+
+    # Plot error rate
+    er = subparsers.add_parser('er', help="Plot error rate of simulation with dadi")
 
     return parser.parse_args()
