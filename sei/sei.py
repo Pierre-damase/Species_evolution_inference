@@ -5,9 +5,9 @@ Programme pour inférer l'évolution d'une population à partir de données gén
 import os
 import time
 import warnings
+from collections import Counter
 import pandas as pd
 import numpy as np
-from collections import Counter
 from scipy.stats import chi2
 
 import sei.arguments.arguments as arg
@@ -26,7 +26,7 @@ def computation_theoritical_theta(ne, mu, length):
       - mu: the mutation rate
       - L: the size of the simulated genomes
     """
-    return (4 * ne * mu * length)
+    return 4 * ne * mu * length
 
 
 def simulation_parameters(sample, ne, rcb_rate, mu, length):
@@ -43,7 +43,8 @@ def simulation_parameters(sample, ne, rcb_rate, mu, length):
 ######################################################################
 # SFS verification                                                   #
 ######################################################################
-def sfs_verification():
+
+def sfs_shape_verification():
     """
     Method to check the SFS obtained with msprime.
 
@@ -51,29 +52,27 @@ def sfs_verification():
      - The SFS of a constant population fits well to the theoretical SFS of any constant population
      - The SFS of an increasing or decreasing population
     """
-    parametres = {
-        "sample_size": 6, "size_population": 1, "rcb_rate": 2e-3, "mu": 2e-3, "length": 1e5
-    }
+    params = simulation_parameters(sample=10, ne=1, rcb_rate=2e-2, mu=2e-2, length=1e5)
 
     # Constant
     print("Scénario constant")
     sfs_cst = \
-        ms.msprime_simulation(model=ms.constant_model, param=parametres, debug=True)
+        ms.msprime_simulation(model=ms.constant_model, param=params, debug=True)
 
     # Declin
     print("\n\nScénario de déclin")
     sfs_declin = \
-        ms.msprime_simulation(model=ms.sudden_decline_model, param=parametres, tau=1.5, kappa=4,
+        ms.msprime_simulation(model=ms.sudden_decline_model, param=params, tau=1.0, kappa=10,
                               debug=True)
 
     # Growth
     print("\n\nScénario de croissance")
     sfs_croissance = \
-        ms.msprime_simulation(model=ms.sudden_growth_model, param=parametres, tau=1.5, kappa=4,
+        ms.msprime_simulation(model=ms.sudden_growth_model, param=params, tau=1.0, kappa=10,
                               debug=True)
 
     # Theoretical SFS for any constant population
-    sfs_theorique = [0] * (parametres["sample_size"] - 1)
+    sfs_theorique = [0] * (params["sample_size"] - 1)
     for i in range(len(sfs_theorique)):
         sfs_theorique[i] = 1 / (i+1)
 
@@ -81,7 +80,7 @@ def sfs_verification():
     plot.plot_sfs(
         sfs=[sfs_cst, sfs_theorique, sfs_declin, sfs_croissance],
         label=["Constant", "Theoretical", "Declin", "Growth"],
-        color=["tab:blue", "tab:orange","tab:red", "tab:green"],
+        color=["tab:blue", "tab:orange", "tab:red", "tab:green"],
         title="Unfold SFS for various scenarios"
     )
 
@@ -175,11 +174,14 @@ def dadi_params_optimisation(sample):
             sfs = ms.msprime_simulation(model=ms.constant_model, param=params)
 
             # Generate the SFS file compatible with dadi
-            f.dadi_data(sfs, dadi.constant_model.__name__, name="SFS-{}".format(sample))
+            f.dadi_data(sfs, dadi.constant_model.__name__, path="./Data/Error_rate/",
+                        name="SFS-{}".format(sample))
 
             # Dadi inference
-            _, estimated_theta = dadi.dadi_inference(pts_list, dadi.constant_model,
-                                                     name="SFS-{}".format(sample))
+            _, estimated_theta = dadi.dadi_inference(
+                pts_list, dadi.constant_model, path="./Data/Error_rate/",
+                name="SFS-{}".format(sample)
+            )
 
             theoritical_theta = computation_theoritical_theta(ne=1, mu=mu, length=1e5)
             error_rate = estimated_theta / theoritical_theta
@@ -196,6 +198,9 @@ def dadi_params_optimisation(sample):
         execution_time.extend([mean_time for _ in range(nb_simu)])
 
         data["Execution time"] = execution_time
+
+    # Delete sfs file
+    os.remove("./Data/Error_rate/SFS-{}.fs".format(sample))
 
     # Export data to csv file
     data.to_csv("./Data/Error_rate/error-rate-{}.csv".format(sample), sep='\t', index=False)
@@ -409,7 +414,10 @@ def main():
 
     args = arg.arguments()
 
-    if args.analyse == 'opt':
+    if args.analyse == 'msprime':
+        sfs_shape_verification()
+
+    elif args.analyse == 'opt':
         dadi_params_optimisation(args.number)
 
     elif args.analyse == 'lrt':
@@ -422,24 +430,7 @@ def main():
         for sample in [10, 20, 40, 60, 100]:
             plot.plot_error_rate(sample)
 
-            # SFS - constant model
-            sfs_cst = f.export_sfs(path="./Data/Error_rate/", name="SFS-{}".format(sample))
-
-            # Theoretical SFS for any constant population
-            sfs_theorique = [0] * (sample - 1)
-            for i in range(len(sfs_theorique)):
-                sfs_theorique[i] = 1 / (i+1)
-
-            # Plot
-            plot.plot_sfs(
-                sfs=[sfs_cst, sfs_theorique],
-                label=["Constant", "Theoretical"],
-                color=["tab:blue", "tab:orange"],
-                title="SFS", path_figure="./Figures/Error_rate/", name="sfs_{}".format(sample)
-            )
-
-        optimization = ["tau-kappa"]
-        for opt in optimization:
+        for opt in ["tau-kappa"]:
             path_data = "./Data/Optimization_{}/".format(opt)
             files = os.listdir(path_data)
 
@@ -452,6 +443,7 @@ def main():
                 data = data.append(
                     pd.read_csv("{}{}".format(path_data, fichier), sep="\t"), ignore_index=True
                 )
+
 
 if __name__ == "__main__":
     warnings.filterwarnings('ignore')
