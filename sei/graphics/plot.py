@@ -6,7 +6,10 @@ import sys
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+import pandas as pd
 from matplotlib.lines import Line2D
+
+import sei.files.files as f
 
 
 def normalization(data):
@@ -18,6 +21,10 @@ def normalization(data):
 
     return normalized_data
 
+
+######################################################################
+# Plot Site Frequency Spectrum                                       #
+######################################################################
 
 def plot_sfs(sfs, label, color, title):
     """
@@ -58,6 +65,10 @@ def plot_sfs(sfs, label, color, title):
     plt.savefig("./Figures/sfs")
     plt.clf()
 
+
+######################################################################
+# Plot for the optimization of grid size                             #
+######################################################################
 
 def plot_optimisation_grid(data, log_scale):
     """
@@ -135,27 +146,67 @@ def plot_optimisation_grid(data, log_scale):
     plt.clf()
 
 
-def plot_error_rate(data, path="./Figures/Error_rate/"):
-    """
+######################################################################
+# Plot of error rate of dadi                                         #
+######################################################################
 
+def plot_error_rate(sample):
+    """
     Plot the error rate of theta estimated for 100 inference with dadi.
     """
-    for sample_size in data.keys():
-        # Plot
-        sns.set_theme(style="whitegrid")
-        ax = sns.boxplot(x="mu", y="Error rate", hue="Execution time", data=data[sample_size])
+    # Read a csv file into a pandas DataFrame
+    data = pd.read_csv("./Data/Error_rate/error-rate-{}.csv".format(sample), sep='\t')
 
-        # Set yaxis range
-        ax.set(ylim=(0.85, 1.15))
+    # Round value in execution time - some values not round for an unexpected reason
+    tmp = pd.DataFrame(
+        {"Execution time": [round(ele, 3) for ele in data['Execution time'].to_list()]}
+    )
+    data.update(tmp)
 
-        # Legend out of the plot
-        ax.legend(loc='upper left', bbox_to_anchor=(1.04, 1), fontsize='small',
-                  borderaxespad=0., title="Average run time")
+    # Plot
+    sns.set_theme(style="whitegrid")
+    ax = sns.boxplot(x="mu", y="Error rate", hue="Execution time", data=data,
+                     width=0.45, dodge=False)
 
-        # Title + save plot to folder ./Figures
-        plt.title("Error rate for n={} genomes sampled".format(sample_size), fontsize="large")
-        plt.savefig("{}/error-rate-{}".format(path, sample_size), bbox_inches="tight")
-        plt.clf()
+    # Set yaxis range
+    ax.set(ylim=(0.85, 1.15))
+
+    # Legend out of the plot
+    ax.legend(loc='upper left', bbox_to_anchor=(1.04, 1), fontsize='small',
+              borderaxespad=0., title="Average run time")
+
+    # Title + save plot to folder ./Figures
+    plt.title("Error rate for n={} genomes sampled".format(sample), fontsize="large")
+    plt.savefig("./Figures/Error_rate/error-rate-{}".format(sample), bbox_inches="tight")
+    plt.clf()
+
+
+def plot_sfs_from_dadi(sample, path="./Data/", name="SFS"):
+    # Export SFS into list
+    data = f.export_sfs(path, name)
+    # print(data)
+
+
+######################################################################
+# Plot likelihood-ratio test                                         #
+######################################################################
+
+def plot_lrt(data, path="./Figures/"):
+    """
+    Plot the likelihood-ratio test.
+    """
+    # Plot
+    sns.set_theme(style="whitegrid")
+    ax = sns.lineplot(x="Tau", y="Positive hit", data=data)
+    print(data)
+
+    # Set yaxis range
+    ax.set(ylim=(0, max(data["Positive hit"]) + 1))
+
+    # Title + save plot to folder ./Figures
+    plt.title("Likelihood-ratio test")
+    plt.savefig("{}lrt".format(path), bbox_inches="tight")
+    plt.clf()
 
 
 if __name__ == "__main__":
