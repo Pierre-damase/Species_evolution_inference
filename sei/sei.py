@@ -119,7 +119,7 @@ def grid_optimisation():
             point = (len(sfs) - 1) * scale
             pts_list = [point, point+10, point+20]
 
-            likelihood, estimated_theta = dadi.dadi_inference(pts_list, dadi.constant_model)
+            likelihood, estimated_theta, _ = dadi.dadi_inference(pts_list, dadi.constant_model)
 
             dico[mu]["Likelihood"].append(likelihood)
             dico[mu]["Estimated theta"].append(estimated_theta)
@@ -178,7 +178,7 @@ def dadi_params_optimisation(sample):
                         name="SFS-{}".format(sample))
 
             # Dadi inference
-            _, estimated_theta = dadi.dadi_inference(
+            _, estimated_theta, _ = dadi.dadi_inference(
                 pts_list, dadi.constant_model, path="./Data/Error_rate/",
                 name="SFS-{}".format(sample)
             )
@@ -235,7 +235,7 @@ def log_likelihood_ratio(likelihood, control_ll):
 
 
 def likelihood_ratio_test(tau, kappa, msprime_model, dadi_model, control_model, optimization,
-                          nb_simu, dof):
+                          save, nb_simu, dof):
     """
     Likelihood-ratio test to assesses the godness fit of two model.
 
@@ -292,7 +292,7 @@ def likelihood_ratio_test(tau, kappa, msprime_model, dadi_model, control_model, 
     name = "SFS-tau={}_kappa={}".format(tau, kappa)
 
     # Generate x genomic data for the same kappa and tau
-    for _ in range(nb_simu):
+    for i in range(nb_simu):
         # Simulation with msprime
         sfs = ms.msprime_simulation(model=msprime_model, param=params, kappa=kappa, tau=tau)
 
@@ -300,22 +300,30 @@ def likelihood_ratio_test(tau, kappa, msprime_model, dadi_model, control_model, 
         f.dadi_data(sfs, dadi_model.__name__, path=path_data, name=name)
 
         # Dadi inference - run x inference with dadi from the same observed data
-        tmp = []
-        control_ll, _ = dadi.dadi_inference(pts_list, control_model, path=path_data, name=name)
+        tmp = {"LL": [], "SFS": []}
+        control_ll, *_ = dadi.dadi_inference(pts_list, control_model, path=path_data, name=name)
 
         for _ in range(nb_simu):
-            ll, _ = dadi.dadi_inference(pts_list, dadi_model, opt=optimization, path=path_data,
-                                        name=name)
-            tmp.append(ll)
+            ll, _, model = dadi.dadi_inference(
+                pts_list, dadi_model, opt=optimization, path=path_data, name=name)
+            tmp["LL"].append(ll)
+            tmp["SFS"].append(model)
 
         # Select the best one, i.e. the one with the highest likelihood
         # Compute the log-likelihood ratio
-        ll_ratio.append(log_likelihood_ratio(tmp, control_ll))
+        ll_ratio.append(log_likelihood_ratio(tmp["LL"], control_ll))
 
         # Keep track of log-likelihood for each simulation
         ll_list["Model0"].append(control_ll)
-        ll_list["Model1"].append(max(tmp))
+        ll_list["Model1"].append(max(tmp["LL"]))
         #print("\nObserved {} & Estimated {}\n".format(control_ll, max(tmp)))
+
+    # Keep track of some SFS generated from dadi
+    if save:
+        index = tmp["LL"].index(max(tmp["LL"]))  # Get index of the best inference (higher ll)
+        sfs = tmp["SFS"][index]
+        sfs.to_file("{}Optimization_{}/{}".format(path_data, optimization, name))
+    del tmp
 
     # Delete sfs file
     os.remove("{}{}.fs".format(path_data, name))
@@ -330,7 +338,7 @@ def likelihood_ratio_test(tau, kappa, msprime_model, dadi_model, control_model, 
     return lrt, ll_list
 
 
-def inference(msprime_model, dadi_model, control_model, optimization, scale):
+def inference(msprime_model, dadi_model, control_model, optimization, scale, save=False):
     """
 
     Parameter
@@ -354,7 +362,7 @@ def inference(msprime_model, dadi_model, control_model, optimization, scale):
         print("Simulation: kappa {} & tau {}".format(kappa, tau))
 
         lrt, ll_list = likelihood_ratio_test(
-            tau, kappa, msprime_model, dadi_model, control_model, optimization,
+            tau, kappa, msprime_model, dadi_model, control_model, optimization, save,
             nb_simu=3, dof=1
         )  # 1000 simulations
         row = {
@@ -370,7 +378,7 @@ def inference(msprime_model, dadi_model, control_model, optimization, scale):
         print("Simulation: kappa {} & tau {}".format(kappa, tau), end="\r")
 
         lrt, ll_list = likelihood_ratio_test(
-            tau, kappa, msprime_model, dadi_model, control_model, optimization,
+            tau, kappa, msprime_model, dadi_model, control_model, optimization, save,
             nb_simu=3, dof=1
         )  # 1000 simulations
         row = {
@@ -386,7 +394,7 @@ def inference(msprime_model, dadi_model, control_model, optimization, scale):
         print("Simulation: kappa {} & tau {}".format(kappa, tau), end="\r")
 
         lrt, ll_list = likelihood_ratio_test(
-            tau, kappa, msprime_model, dadi_model, control_model, optimization,
+            tau, kappa, msprime_model, dadi_model, control_model, optimization, save,
             nb_simu=3, dof=2
         )
         row = {
@@ -422,8 +430,8 @@ def main():
 
     elif args.analyse == 'lrt':
         inference(
-            msprime_model=ms.sudden_decline_model, dadi_model=dadi.sudden_decline_model,
-            control_model=dadi.constant_model, optimization=args.param, scale=args.value
+            ms.sudden_decline_model, dadi.sudden_decline_model, dadi.constant_model,
+            optimization=args.param, scale=args.value, save=True
         )
 
     elif args.analyse == 'er':

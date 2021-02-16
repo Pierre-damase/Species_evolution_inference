@@ -147,7 +147,7 @@ def log_likelihood_ratio(likelihood, control_ll):
 
 
 def likelihood_ratio_test(tau, kappa, msprime_model, dadi_model, control_model, optimization,
-                          nb_simu, dof):
+                          save, nb_simu, dof):
     """
     Likelihood-ratio test to assesses the godness fit of two model.
 
@@ -212,21 +212,29 @@ def likelihood_ratio_test(tau, kappa, msprime_model, dadi_model, control_model, 
         f.dadi_data(sfs, dadi_model.__name__, path=path_data, name=name)
 
         # Dadi inference - run x inference with dadi from the same observed data
-        tmp = []
-        control_ll, _ = dadi.dadi_inference(pts_list, control_model, path=path_data, name=name)
+        tmp = {"LL": [], "SFS": []}
+        control_ll, *_ = dadi.dadi_inference(pts_list, control_model, path=path_data, name=name)
 
         for _ in range(nb_simu):
-            ll, _ = dadi.dadi_inference(pts_list, dadi_model, opt=optimization, path=path_data,
-                                        name=name)
-            tmp.append(ll)
+            ll, _, model = dadi.dadi_inference(
+                pts_list, dadi_model, opt=optimization, path=path_data, name=name)
+            tmp["LL"].append(ll)
+            tmp["SFS"].append(model)
 
         # Select the best one, i.e. the one with the highest likelihood
         # Compute the log-likelihood ratio
-        ll_ratio.append(log_likelihood_ratio(tmp, control_ll))
+        ll_ratio.append(log_likelihood_ratio(tmp["LL"], control_ll))
 
         # Keep track of log-likelihood for each simulation
         ll_list["Model0"].append(control_ll)
-        ll_list["Model1"].append(max(tmp))
+        ll_list["Model1"].append(max(tmp["LL"]))
+
+    # Keep track of some SFS generated from dadi
+    if save:
+        index = tmp["LL"].index(max(tmp["LL"]))  # Get index of the best inference (higher ll)
+        sfs = tmp["SFS"][index]
+        sfs.to_file("{}Optimization_{}/{}".format(path_data, optimization, name))
+    del tmp
 
     # Delete sfs file
     os.remove("{}{}.fs".format(path_data, name))
@@ -241,7 +249,7 @@ def likelihood_ratio_test(tau, kappa, msprime_model, dadi_model, control_model, 
     return lrt, ll_list
 
 
-def inference(msprime_model, dadi_model, control_model, optimization, scale):
+def inference(msprime_model, dadi_model, control_model, optimization, scale, save=False):
     """
 
     Parameter
@@ -262,7 +270,7 @@ def inference(msprime_model, dadi_model, control_model, optimization, scale):
         kappa, tau = 10, np.float_power(10, scale[0])  # Kappa fixed
 
         lrt, ll_list = likelihood_ratio_test(
-            tau, kappa, msprime_model, dadi_model, control_model, optimization,
+            tau, kappa, msprime_model, dadi_model, control_model, optimization, save,
             nb_simu=1000, dof=1
         )
         row = {
@@ -275,7 +283,7 @@ def inference(msprime_model, dadi_model, control_model, optimization, scale):
         kappa, tau = np.float_power(10, scale[0]), 1.0  # Tau fixed
 
         lrt, ll_list = likelihood_ratio_test(
-            tau, kappa, msprime_model, dadi_model, control_model, optimization,
+            tau, kappa, msprime_model, dadi_model, control_model, optimization, save,
             nb_simu=1000, dof=1
         )
         row = {
@@ -288,7 +296,7 @@ def inference(msprime_model, dadi_model, control_model, optimization, scale):
         kappa, tau = np.float_power(10, scale[1]), np.float_power(10, scale[0])
 
         lrt, ll_list = likelihood_ratio_test(
-            tau, kappa, msprime_model, dadi_model, control_model, optimization,
+            tau, kappa, msprime_model, dadi_model, control_model, optimization, save,
             nb_simu=1000, dof=2
         )
         row = {
@@ -320,7 +328,6 @@ if __name__ == "__main__":
         dadi_params_optimisation(sample[args.number-1])
     elif args.analyse == 'lrt':
         if args.param == 'tau':
-            print(args.value)
             scale = [np.arange(-3, 1.1, 0.1)[int(args.value[0])-1]]
         elif args.param == 'kappa':
             scale = [np.arange(-2.5, 1.6, 0.1)[int(args.value[0])-1]]
@@ -329,7 +336,13 @@ if __name__ == "__main__":
                 np.arange(-3, 1.1, 0.1)[int(args.value[0])-1],
                 np.arange(-2.5, 1.6, 0.1)[int(args.value[1])-1]
             ]
+
+        if np.mod(args.value, 5) == 0:
+            save = True
+        else:
+            save = False
+
         inference(
             msprime_model=ms.sudden_decline_model, dadi_model=dadi.sudden_decline_model,
-            control_model=dadi.constant_model, optimization=args.param, scale=scale
+            control_model=dadi.constant_model, optimization=args.param, scale=scale, save=save
         )

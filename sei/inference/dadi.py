@@ -6,7 +6,7 @@ import dadi
 import sys
 
 
-optimization = None
+OPTIMIZATION = None
 
 
 def constant_model(ns, pts):
@@ -35,10 +35,10 @@ def constant_model(ns, pts):
 
 
 def params_decline_model(params):
-    global optimization
-    if optimization == "tau":
+    global OPTIMIZATION
+    if OPTIMIZATION == "tau":
         return 10, params  # Fixe kappa
-    elif optimization == "kappa":
+    elif OPTIMIZATION == "kappa":
         return params, 1.0  # Fixe tau
     else:
         return params
@@ -138,7 +138,8 @@ def parameters_optimization(p0, sfs, model_func, pts_list, lower_bound, upper_bo
     return popt
 
 
-def dadi_inference(pts_list, model_func, opt=None, verbose=0, path="./Data/", name="SFS"):
+def dadi_inference(pts_list, model_func, opt=None, verbose=0, path="./Data/",
+                   name="SFS"):
     """
     Dadi inference.
 
@@ -155,33 +156,35 @@ def dadi_inference(pts_list, model_func, opt=None, verbose=0, path="./Data/", na
         likelihood of the data
     theta: float
         the optimal value of theta given the model
+    model: list
+        the sfs
     """
-    global optimization
-    optimization = opt
+    global OPTIMIZATION
+    OPTIMIZATION = opt
 
     # Load the data
     sfs = dadi.Spectrum.from_file("{}{}.fs".format(path, name))
     ns = sfs.sample_sizes
-    
+
     # Make the extrapolation version of our demographic model function
     model_func_extrapolated = dadi.Numerics.make_extrap_log_func(model_func)
 
     # Optimisation of model parameters
-    if optimization == "tau":
+    if OPTIMIZATION == "tau":
         p0, lower_bound, upper_bound = [1.0], [0], [10]
         popt = parameters_optimization(p0, sfs, model_func_extrapolated, pts_list, lower_bound,
                                        upper_bound, verbose=verbose)
 
         # Simulated frequency spectrum
         model = model_func_extrapolated(popt, ns, pts_list)
-    elif optimization == "kappa":
+    elif OPTIMIZATION == "kappa":
         p0, lower_bound, upper_bound = [10.0], [3], [30]
         popt = parameters_optimization(p0, sfs, model_func_extrapolated, pts_list, lower_bound,
                                        upper_bound, verbose=verbose)
 
         # Simulated frequency spectrum
         model = model_func_extrapolated(popt, ns, pts_list)
-    elif optimization == "tau-kappa":
+    elif OPTIMIZATION == "tau-kappa":
         p0, lower_bound, upper_bound = [10.0, 1.0], [1, 0], [30, 10]
         popt = parameters_optimization(p0, sfs, model_func_extrapolated, pts_list, lower_bound,
                                        upper_bound, verbose=verbose)
@@ -198,8 +201,8 @@ def dadi_inference(pts_list, model_func, opt=None, verbose=0, path="./Data/", na
     # The optimal value of theta given the model
     theta = dadi.Inference.optimal_sfs_scaling(model, sfs)
 
-    return ll_model, theta
+    return ll_model, theta, model
 
 
 if __name__ == "__main__":
-   pass  # No actions desired
+    sys.exit()  # No actions desired
