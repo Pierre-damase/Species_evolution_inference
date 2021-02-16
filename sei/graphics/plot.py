@@ -9,8 +9,6 @@ import seaborn as sns
 import pandas as pd
 from matplotlib.lines import Line2D
 
-import sei.files.files as f
-
 
 def normalization(data):
     """
