@@ -11,6 +11,11 @@ def arguments():
     # Define the subparser
     subparsers = parser.add_subparsers(dest='analyse', required=True)
 
+    # Msprime verification
+    msprime = subparsers.add_parser(
+        'msprime', help="Check unfolded sfs generated with msprime for various scenarios"
+    )
+
     # Optimisation
     opt = subparsers.add_parser('opt', help="Compute optimisation of dadi's parameters")
     opt.add_argument(
