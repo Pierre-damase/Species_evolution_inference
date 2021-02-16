@@ -6,6 +6,7 @@ import sys
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+import pandas as pd
 from matplotlib.lines import Line2D
 
 
@@ -147,10 +148,14 @@ def plot_optimisation_grid(data, log_scale):
 # Plot of error rate of dadi                                         #
 ######################################################################
 
-def plot_error_rate(data, sample, path="./Figures/Error_rate/"):
+def plot_error_rate(sample):
     """
     Plot the error rate of theta estimated for 100 inference with dadi.
     """
+    # Read a csv file into a pandas DataFrame
+    data = pd.read_csv("./Data/Error_rate/error-rate-{}.csv".format(sample), sep='\t')
+    print(data.loc[[310]])
+
     # Plot
     sns.set_theme(style="whitegrid")
     ax = sns.boxplot(x="mu", y="Error rate", hue="Execution time", data=data)
@@ -164,7 +169,7 @@ def plot_error_rate(data, sample, path="./Figures/Error_rate/"):
 
     # Title + save plot to folder ./Figures
     plt.title("Error rate for n={} genomes sampled".format(sample), fontsize="large")
-    plt.savefig("{}error-rate-{}".format(path, sample), bbox_inches="tight")
+    plt.savefig("./Figures/Error_rate/error-rate-{}".format(sample), bbox_inches="tight")
     plt.clf()
 
 
