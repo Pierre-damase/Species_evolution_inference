@@ -190,8 +190,8 @@ def likelihood_ratio_test(tau, kappa, msprime_model, dadi_model, control_model, 
           - Model0: log-likelihood for the model with less parameters
           - Model1: nbest log-likelihood for the model with more parameters
     """
-    mu, sample = 8e-5, 20  # 8e-2
-    ll_list, ll_ratio = {"Model0": [], "Model1": []}, []
+    mu, sample = 8e-2, 20  # 8e-2
+    ll_list, ll_ratio, model_list = {"Model0": [], "Model1": []}, [], {"LL": [], "SFS": []}
 
     # Grid point for the extrapolation
     pts_list = [sample*10, sample*10 + 10, sample*10 + 20]
@@ -200,7 +200,8 @@ def likelihood_ratio_test(tau, kappa, msprime_model, dadi_model, control_model, 
     params = simulation_parameters(sample=sample, ne=1, rcb_rate=mu, mu=mu, length=1e5)
 
     # Path & name
-    path_data = "/home/pimbert/work/Species_evolution_inference/Data/"
+    path_data = "/home/pimbert/work/Species_evolution_inference/Data/Optimization_{}/"\
+        .format(optimization)
     name = "SFS-tau={}_kappa={}".format(tau, kappa)
 
     # Generate x genomic data for the same kappa and tau
@@ -229,14 +230,20 @@ def likelihood_ratio_test(tau, kappa, msprime_model, dadi_model, control_model, 
         ll_list["Model0"].append(control_ll)
         ll_list["Model1"].append(max(tmp["LL"]))
 
+        # Keep track of the SFS of the best inference, i.e. with the highest llog-likelihood
+        if save:
+            index = tmp["LL"].index(max(tmp["LL"]))
+            model_list["LL"].append(tmp["LL"])
+            model_list["SFS"].append(tmp["SFS"][index])
+
     # Keep track of some SFS generated from dadi
     if save:
-        index = tmp["LL"].index(max(tmp["LL"]))  # Get index of the best inference (higher ll)
-        sfs = tmp["SFS"][index]
-        sfs.to_file("{}Optimization_{}/{}".format(path_data, optimization, name))
-
-    # Delete sfs file
-    os.remove("{}{}.fs".format(path_data, name))
+        index = model_list["LL"].index(max(model_list["LL"]))
+        sfs = model_list["SFS"][index]
+        sfs.to_file("{}{}-inferred.fs".format(path_data, name))
+    else:
+        # Delete sfs file
+        os.remove("{}{}.fs".format(path_data, name))
 
     # Likelihood-ratio test
     lrt = [1] * len(ll_ratio)
@@ -270,7 +277,7 @@ def inference(msprime_model, dadi_model, control_model, optimization, scale, sav
 
         lrt, ll_list = likelihood_ratio_test(
             tau, kappa, msprime_model, dadi_model, control_model, optimization, save,
-            nb_simu=3, dof=1
+            nb_simu=100, dof=1
         )  # 1000
         row = {
             "Tau": tau, "Kappa": kappa, "Positive hit": Counter(lrt)[1],
@@ -283,7 +290,7 @@ def inference(msprime_model, dadi_model, control_model, optimization, scale, sav
 
         lrt, ll_list = likelihood_ratio_test(
             tau, kappa, msprime_model, dadi_model, control_model, optimization, save,
-            nb_simu=3, dof=1
+            nb_simu=100, dof=1
         )  # 1000
         row = {
             "Tau": tau, "Kappa": kappa, "Positive hit": Counter(lrt)[1],
@@ -296,7 +303,7 @@ def inference(msprime_model, dadi_model, control_model, optimization, scale, sav
 
         lrt, ll_list = likelihood_ratio_test(
             tau, kappa, msprime_model, dadi_model, control_model, optimization, save,
-            nb_simu=3, dof=2
+            nb_simu=100, dof=2
         )  # 1000
         row = {
             "Tau": tau, "Kappa": kappa, "Positive hit": Counter(lrt)[1],
@@ -304,10 +311,14 @@ def inference(msprime_model, dadi_model, control_model, optimization, scale, sav
         }
         data = data.append(row, ignore_index=True)
 
-    # Export data to csv file
-    path_data = "/home/pimbert/work/Species_evolution_inference/Data/"
-    data.to_csv("{}Optimization_{}/opt-tau={}_kappa={}.csv"
-                .format(path_data, optimization, tau, kappa), index=False)
+    # Export data to json file
+    path_data = "/home/pimbert/work/Species_evolution_inference/Data/Optimization_{}/"\
+        .format(optimization)
+    data.to_json("{}opt-tau={}_kappa={}.json".format(path_data, tau, kappa))
+
+    # Export data to the standard out stdout
+    for i, col in enumerate(data.columns):
+        print("{}: {}".format(col, data.iloc[0, i]))
 
 
 ######################################################################
@@ -336,7 +347,7 @@ if __name__ == "__main__":
                 np.arange(-2.5, 1.6, 0.1)[int(args.value[1])-1]
             ]
 
-        if np.mod(args.value, 5) == 0:
+        if np.mod(args.value[0]-1, 5) == 0:
             save = True
         else:
             save = False

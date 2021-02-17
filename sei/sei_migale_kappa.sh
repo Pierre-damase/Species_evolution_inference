@@ -4,7 +4,7 @@
 #$ -N dadi_opt_kappa
 
 # Number of separate submissions to the cluster
-#$ -t 1-11
+#$ -t 1-41
 
 # Short pour un job < 12h
 #$ -q short.q
