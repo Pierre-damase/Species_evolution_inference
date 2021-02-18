@@ -200,7 +200,7 @@ def likelihood_ratio_test(tau, kappa, msprime_model, dadi_model, control_model, 
     params = simulation_parameters(sample=sample, ne=1, rcb_rate=mu, mu=mu, length=1e5)
 
     # Path & name
-    path_data = "/home/pimbert/work/Species_evolution_inference/Data/Optimization_ {}/"\
+    path_data = "/home/pimbert/work/Species_evolution_inference/Data/Optimization_{}/"\
         .format(optimization)
     name = "SFS-tau={}_kappa={}".format(tau, kappa)
 
@@ -291,15 +291,15 @@ def inference(msprime_model, dadi_model, control_model, optimization, scale, sav
     data = data.append(row, ignore_index=True)
 
     # Export data to csv file
-    path_data = "/home/pimbert/work/Species_evolution_inference/Data/"
-    data.to_csv("{}Optimization_{}/opt-tau={}_kappa={}.csv"
-                .format(path_data, optimization, tau, kappa), index=False)
+    path_data = "/home/pimbert/work/Species_evolution_inference/Data/Optimization_{}/"\
+        .format(optimization)
+    data.to_json("{}opt-tau={}_kappa={}.json".format(path_data, tau, kappa))
 
     # Export data to standard output
     for i, col in enumerate(data.columns):
         print("{}: {}".format(i, data.iloc[0, i]))
 
-        
+
 ######################################################################
 # Main                                                               #
 ######################################################################

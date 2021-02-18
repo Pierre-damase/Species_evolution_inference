@@ -285,7 +285,7 @@ def likelihood_ratio_test(tau, kappa, msprime_model, dadi_model, control_model, 
 
     # Parameters for the simulation
     params = simulation_parameters(sample=sample, ne=1, rcb_rate=mu, mu=mu, length=1e5)
-
+    
     # Path & name
     path_data = "./Data/Optimization_{}/".format(optimization)
     name = "SFS-tau={}_kappa={}".format(tau, kappa)
@@ -385,7 +385,7 @@ def inference(msprime_model, dadi_model, control_model, optimization, scale, sav
     #plot.plot_lrt(data)
     # Export data to csv file
     path_data = "./Data/Optimization_{}/".format(optimization)
-    data.to_csv("{}opt-tau={}_kappa={}.json".format(path_data, tau, kappa), index=False)
+    data.to_json("{}opt-tau={}_kappa={}.json".format(path_data, tau, kappa))
 
 
 ######################################################################
@@ -402,7 +402,17 @@ def main():
     args = arg.arguments()
 
     if args.analyse == 'msprime':
-        sfs_shape_verification()
+        # sfs_shape_verification()
+
+        mu, sample = 2e-2, 20
+        # Parameters for the simulation
+        params = simulation_parameters(sample=sample, ne=1, rcb_rate=mu, mu=mu, length=1e5)
+        # Simulation with msprime
+        sfs = ms.msprime_migration_simulation(
+            model=ms.simple_migration_model, param=params, migration_rate=0.1, kappa=10,
+            debug=True
+        )
+        print(sfs)
 
     elif args.analyse == 'opt':
         dadi_params_optimisation(args.number)
@@ -431,6 +441,19 @@ def main():
                     pd.read_csv("{}{}".format(path_data, fichier), sep="\t"), ignore_index=True
                 )
 
+    elif args.analyse == 'ases':
+        path_data = "./Data/Optimization_{}/".format(args.param)
+
+        spectrums = sorted([ele for ele in os.listdir(path_data) if ele.startswith("SFS")])
+
+        col = ["Tau", "Kappa", "Positive hit", "Model0 ll", "Model1 ll"]
+        data = pd.DataFrame(columns=col)
+
+        for fichier in sorted([ele for ele in os.listdir(path_data) if ele.startswith("opt")]):
+            res = pd.read_json(path_or_buf="{}{}".format(path_data, fichier), typ='frame')
+            data = data.append(res, ignore_index=True)
+
+        print(data["Kappa"])
 
 if __name__ == "__main__":
     warnings.filterwarnings('ignore')
