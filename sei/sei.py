@@ -3,6 +3,7 @@ Programme pour inférer l'évolution d'une population à partir de données gén
 """
 
 import os
+import sys
 import time
 import warnings
 from collections import Counter
@@ -382,7 +383,6 @@ def inference(msprime_model, dadi_model, control_model, optimization, scale, sav
     }
     data = data.append(row, ignore_index=True)
 
-    #plot.plot_lrt(data)
     # Export data to csv file
     path_data = "./Data/Optimization_{}/".format(optimization)
     data.to_json("{}opt-tau={}_kappa={}.json".format(path_data, tau, kappa))
@@ -444,16 +444,49 @@ def main():
     elif args.analyse == 'ases':
         path_data = "./Data/Optimization_{}/".format(args.param)
 
-        spectrums = sorted([ele for ele in os.listdir(path_data) if ele.startswith("SFS")])
+        spectrums = sorted([ele for ele in os.listdir(path_data) if ele.startswith("SFS") \
+                            and not ele.endswith("inferred.fs")])
 
-        col = ["Tau", "Kappa", "Positive hit", "Model0 ll", "Model1 ll"]
-        data = pd.DataFrame(columns=col)
+        sfs = []
+        for spectr in spectrums:
+            with open("{}{}".format(path_data, spectr), "r") as filin:
+                lines = filin.readlines()
+                sfs.append([int(ele) for ele in lines[1].strip().split(" ")[1: -1]])
+            with open("{}{}-inferred.fs".format(path_data, spectr.split('.fs')[0]), "r") as filin:
+                lines = filin.readlines()
+                sfs.append([float(ele) for ele in lines[1].strip().split(" ")[1: -1]])
+
+            # Plot
+            # Theoretical SFS for any constant population
+            sfs_theorique = [0] * (20 - 1)
+            for i in range(len(sfs_theorique)):
+                sfs_theorique[i] = 1 / (i+1)
+            sfs.append(sfs_theorique)
+
+            plot.plot_sfs(
+                sfs=sfs,
+                label=["Observed", "Inferred", "Théorique"],
+                color=["tab:blue", "tab:orange", "tab:red"],
+                title="Unfold SFS for various scenarios",
+                name="Test-sfs"
+            )
+            break
+        sys.exit()
+
+        # Generate plot puissance
+        dico = {
+            "Tau": np.array([], dtype=float), "Kapp": np.array([], dtype=float),
+            "Positive hit": np.array([], dtype=int),
+            "Model0 ll": np.array([], dtype=list), "Model1 ll": np.array([], dtype=list)
+        }
+        data = pd.DataFrame(dico)
 
         for fichier in sorted([ele for ele in os.listdir(path_data) if ele.startswith("opt")]):
             res = pd.read_json(path_or_buf="{}{}".format(path_data, fichier), typ='frame')
             data = data.append(res, ignore_index=True)
 
-        print(data["Kappa"])
+        plot.plot_lrt(data)
+
 
 if __name__ == "__main__":
     warnings.filterwarnings('ignore')
