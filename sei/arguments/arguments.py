@@ -39,4 +39,16 @@ def arguments():
     # Plot error rate
     er = subparsers.add_parser('er', help="Plot error rate of simulation with dadi")
 
+    # Assessment of inferences
+    ases = subparsers.add_parser('ases', help="Evaluation of inference")
+    # ases.add_argument(
+    #     '--tool', dest='tool', required=True,
+    #     help"Tools to evaluate - dadi, stairway plot, etc."
+    # )
+    ases.add_argument(
+        '--param', dest='param', default='tau', choices=['tau', 'kappa', 'tau-kappa'],
+        required=True,
+        help="Parameter to evaluate - (tau) - default, (kappa), (kappa, tau)"
+    )
+
     return parser.parse_args()

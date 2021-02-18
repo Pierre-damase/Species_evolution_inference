@@ -186,11 +186,13 @@ def msprime_simulation(model, param, tau=0.0, kappa=0.0, debug=False):
     return sfs
 
 
-def msprime_migration_simulation(model, param, migration_rate=0.0, kappa=0.0):
+def msprime_migration_simulation(model, param, migration_rate=0.0, kappa=0.0, debug=False):
     """
 
     """
-    demography = model(param["sample_size"], param["size_population"], migration_rate, kappa)
+    demography = model(
+        param["sample_size"], param["size_population"], migration_rate, kappa, debug
+    )
 
     tree_seq = msprime.simulate(
         length=param["length"], recombination_rate=param["rcb_rate"], mutation_rate=param["mu"],
