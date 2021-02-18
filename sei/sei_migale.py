@@ -190,7 +190,7 @@ def likelihood_ratio_test(tau, kappa, msprime_model, dadi_model, control_model, 
           - Model0: log-likelihood for the model with less parameters
           - Model1: nbest log-likelihood for the model with more parameters
     """
-    mu, sample = 8e-5, 20  # 8e-2
+    mu, sample = 2e-2, 20  # 8e-2
     ll_list, ll_ratio, model_list = {"Model0": [], "Model1": []}, [], {"LL": [], "SFS": []}
 
     # Grid point for the extrapolation
@@ -240,7 +240,7 @@ def likelihood_ratio_test(tau, kappa, msprime_model, dadi_model, control_model, 
     if save:
         index = model_list["LL"].index(max(model_list["LL"]))
         sfs = tmp["SFS"][index]
-        sfs.to_file("{}{}-inferred.fs".format(path_data, optimization, name))
+        sfs.to_file("{}{}-inferred.fs".format(path_data, name))
     else:
         # Delete sfs file
         os.remove("{}{}.fs".format(path_data, name))
@@ -315,13 +315,13 @@ if __name__ == "__main__":
         dadi_params_optimisation(sample[args.number-1])
     elif args.analyse == 'lrt':
         if args.param == 'tau':
-            scale = [np.arange(-3, 1.1, 0.1)[int(args.value[0])-1]]
+            scale = [np.arange(-4, 2.1, 0.1)[int(args.value[0])-1]]
         elif args.param == 'kappa':
-            scale = [np.arange(-2.5, 1.6, 0.1)[int(args.value[0])-1]]
+            scale = [np.arange(-2, 3.1, 0.1)[int(args.value[0])-1]]
         else:
             scale = [
-                np.arange(-3, 1.1, 0.1)[int(args.value[0])-1],
-                np.arange(-2.5, 1.6, 0.1)[int(args.value[1])-1]
+                np.arange(-4, 2.1, 0.1)[int(args.value[0])-1],
+                np.arange(-2, 3.1, 0.1)[int(args.value[1])-1]
             ]
 
         if np.mod(args.value, 10) == 0:

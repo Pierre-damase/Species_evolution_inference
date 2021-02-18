@@ -197,13 +197,13 @@ def plot_lrt(data, path="./Figures/"):
     """
     # Plot
     sns.set_theme(style="whitegrid")
-    ax = sns.lineplot(x="Kappa", y="Positive hit", data=data)
+    ax = sns.lineplot(x="Tau", y="Positive hit", data=data)
 
     # Set yaxis range
     ax.set(ylim=(0, max(data["Positive hit"]) + 5))
 
     # Title + save plot to folder ./Figures
-    plt.title("Likelihood-ratio test")
+    plt.title("Likelihood-ratio test - mu = 8e-5")
     plt.savefig("{}lrt".format(path), bbox_inches="tight")
     plt.clf()
 

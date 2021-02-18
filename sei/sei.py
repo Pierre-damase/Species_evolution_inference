@@ -471,11 +471,11 @@ def main():
                 name="Test-sfs"
             )
             break
-        sys.exit()
+        #sys.exit()
 
         # Generate plot puissance
         dico = {
-            "Tau": np.array([], dtype=float), "Kapp": np.array([], dtype=float),
+            "Tau": np.array([], dtype=float), "Kappa": np.array([], dtype=float),
             "Positive hit": np.array([], dtype=int),
             "Model0 ll": np.array([], dtype=list), "Model1 ll": np.array([], dtype=list)
         }
