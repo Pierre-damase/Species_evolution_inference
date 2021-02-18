@@ -13,8 +13,9 @@ import msprime
 
 
 def msprime_debugger(configuration_pop, history):
-    debugger = msprime.DemographyDebugger(population_configurations=configuration_pop,
-                                          demographic_events=history)
+    debugger = msprime.DemographyDebugger(
+        population_configurations=configuration_pop, demographic_events=history
+    )
     debugger.print_history()
 
 
@@ -103,6 +104,46 @@ def sudden_growth_model(sample, pop, tau, kappa, debug):
     return configuration_pop, history
 
 
+def simple_migration_model(sample, pop, migration_rate, kappa, debug):
+    """
+    Migration model with msprime.
+
+    Populations:
+      - Population 1 of size n1 - we only choose samples from this population
+      - Population 2 of size n2 with n2 = kappa * n1.
+
+    Migration
+      - There is no migration between population 1 & 2
+      - There is some migrations between population 2 & 1 with tau the migration rate
+
+    Parameter
+    ---------
+    tau: float
+        in this model it's the migration rate between the population 2 and 1
+    """
+    # The list of PopulationConfiguration instances describing the sampling configuration, the
+    # relative sizes and growth rates of the population to be simulated.
+    configuration_pop = [
+        msprime.PopulationConfiguration(sample_size=sample, initial_size=pop, growth_rate=0),
+        msprime.PopulationConfiguration(sample_size=0, initial_size=kappa*pop, growth_rate=0)
+    ]
+
+    # The matrix describing the rates of migration between all pairs of populations.
+    # It's an N*N matrix with N the number of populations defined in configuration_pop.
+    migration_matrix = [
+        [0, 0],
+        [migration_rate, 0]
+    ]
+
+    if debug:
+        debugger = msprime.DemographyDebugger(
+            population_configurations=configuration_pop, migration_matrix=migration_matrix
+        )
+        debugger.print_history()
+
+    return configuration_pop, migration_matrix
+
+
 def msprime_simulation(model, param, tau=0.0, kappa=0.0, debug=False):
     """
     Population simulation with msprime.
@@ -134,6 +175,26 @@ def msprime_simulation(model, param, tau=0.0, kappa=0.0, debug=False):
     tree_seq = msprime.simulate(
         length=param["length"], recombination_rate=param["rcb_rate"], mutation_rate=param["mu"],
         population_configurations=demography[0], demographic_events=demography[1]
+    )
+
+    sfs = [0] * (param["sample_size"] - 1)
+    for variant in tree_seq.variants():
+        _, counts = np.unique(variant.genotypes, return_counts=True)
+        freq_mutation = counts[1]-1
+        sfs[freq_mutation] += 1
+
+    return sfs
+
+
+def msprime_migration_simulation(model, param, migration_rate=0.0, kappa=0.0):
+    """
+
+    """
+    demography = model(param["sample_size"], param["size_population"], migration_rate, kappa)
+
+    tree_seq = msprime.simulate(
+        length=param["length"], recombination_rate=param["rcb_rate"], mutation_rate=param["mu"],
+        population_configurations=demography[0], migration_matrix=demography[1]
     )
 
     sfs = [0] * (param["sample_size"] - 1)

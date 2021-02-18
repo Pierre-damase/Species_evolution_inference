@@ -191,7 +191,7 @@ def likelihood_ratio_test(tau, kappa, msprime_model, dadi_model, control_model, 
           - Model1: nbest log-likelihood for the model with more parameters
     """
     mu, sample = 8e-5, 20  # 8e-2
-    ll_list, ll_ratio = {"Model0": [], "Model1": []}, []
+    ll_list, ll_ratio, model_list = {"Model0": [], "Model1": []}, [], {"LL": [], "SFS": []}
 
     # Grid point for the extrapolation
     pts_list = [sample*10, sample*10 + 10, sample*10 + 20]
@@ -200,7 +200,8 @@ def likelihood_ratio_test(tau, kappa, msprime_model, dadi_model, control_model, 
     params = simulation_parameters(sample=sample, ne=1, rcb_rate=mu, mu=mu, length=1e5)
 
     # Path & name
-    path_data = "/home/pimbert/work/Species_evolution_inference/Data/"
+    path_data = "/home/pimbert/work/Species_evolution_inference/Data/Optimization_ {}/"\
+        .format(optimization)
     name = "SFS-tau={}_kappa={}".format(tau, kappa)
 
     # Generate x genomic data for the same kappa and tau
@@ -211,11 +212,11 @@ def likelihood_ratio_test(tau, kappa, msprime_model, dadi_model, control_model, 
         # Generate the SFS file compatible with dadi
         f.dadi_data(sfs, dadi_model.__name__, path=path_data, name=name)
 
-        # Dadi inference - run x inference with dadi from the same observed data
+        # Dadi inference
         tmp = {"LL": [], "SFS": []}
         control_ll, *_ = dadi.dadi_inference(pts_list, control_model, path=path_data, name=name)
 
-        for _ in range(nb_simu):
+        for _ in range(nb_simu):  # run x inference with dadi from the same observed data
             ll, _, model = dadi.dadi_inference(
                 pts_list, dadi_model, opt=optimization, path=path_data, name=name)
             tmp["LL"].append(ll)
@@ -229,15 +230,20 @@ def likelihood_ratio_test(tau, kappa, msprime_model, dadi_model, control_model, 
         ll_list["Model0"].append(control_ll)
         ll_list["Model1"].append(max(tmp["LL"]))
 
+        # Keep track of the SFS of the best inference, i.e. with the highest log-likelihood
+        if save:
+            index = tmp["LL"].index(max(tmp["LL"]))
+            model_list["LL"].append(tmp["LL"][index])
+            model_list["SFS"].append(tmp["SFS"][index])
+
     # Keep track of some SFS generated from dadi
     if save:
-        index = tmp["LL"].index(max(tmp["LL"]))  # Get index of the best inference (higher ll)
+        index = model_list["LL"].index(max(model_list["LL"]))
         sfs = tmp["SFS"][index]
-        sfs.to_file("{}Optimization_{}/{}".format(path_data, optimization, name))
-    del tmp
-
-    # Delete sfs file
-    os.remove("{}{}.fs".format(path_data, name))
+        sfs.to_file("{}{}-inferred.fs".format(path_data, optimization, name))
+    else:
+        # Delete sfs file
+        os.remove("{}{}.fs".format(path_data, name))
 
     # Likelihood-ratio test
     lrt = [1] * len(ll_ratio)
@@ -266,58 +272,39 @@ def inference(msprime_model, dadi_model, control_model, optimization, scale, sav
     col = ["Tau", "Kappa", "Positive hit", "Model0 ll", "Model1 ll"]
     data = pd.DataFrame(columns=col)
 
+    # Set up tau & kappa for the simulation and inference
     if optimization == "tau":
-        kappa, tau = 10, np.float_power(10, scale[0])  # Kappa fixed
-
-        lrt, ll_list = likelihood_ratio_test(
-            tau, kappa, msprime_model, dadi_model, control_model, optimization, save,
-            nb_simu=1000, dof=1
-        )
-        row = {
-            "Tau": tau, "Kappa": kappa, "Positive hit": Counter(lrt)[1],
-            "Model0 ll": ll_list["Model0"], "Model1 ll": ll_list["Model1"]
-        }
-        data = data.append(row, ignore_index=True)
-
+        kappa, tau, dof = 10, np.float_power(10, scale[0]), 1  # Kappa fixed
     elif optimization == "kappa":
-        kappa, tau = np.float_power(10, scale[0]), 1.0  # Tau fixed
-
-        lrt, ll_list = likelihood_ratio_test(
-            tau, kappa, msprime_model, dadi_model, control_model, optimization, save,
-            nb_simu=1000, dof=1
-        )
-        row = {
-            "Tau": tau, "Kappa": kappa, "Positive hit": Counter(lrt)[1],
-            "Model0 ll": ll_list["Model0"], "Model1 ll": ll_list["Model1"]
-        }
-        data = data.append(row, ignore_index=True)
-
+        kappa, tau, dof = np.float_power(10, scale[0]), 1.0, 1  # Tau fixed
     else:
-        kappa, tau = np.float_power(10, scale[1]), np.float_power(10, scale[0])
+        kappa, tau, dof = np.float_power(10, scale[1]), np.float_power(10, scale[0]), 2
 
-        lrt, ll_list = likelihood_ratio_test(
-            tau, kappa, msprime_model, dadi_model, control_model, optimization, save,
-            nb_simu=1000, dof=2
-        )
-        row = {
-            "Tau": tau, "Kappa": kappa, "Positive hit": Counter(lrt)[1],
-            "Model0 ll": ll_list["Model0"], "Model1 ll": ll_list["Model1"]
-        }
-        data = data.append(row, ignore_index=True)
+    lrt, ll_list = likelihood_ratio_test(
+        tau, kappa, msprime_model, dadi_model, control_model, optimization, save,
+        nb_simu=100, dof=dof
+    )  # 1000 simulations
+    row = {
+        "Tau": tau, "Kappa": kappa, "Positive hit": Counter(lrt)[1],
+        "Model0 ll": ll_list["Model0"], "Model1 ll": ll_list["Model1"]
+    }
+    data = data.append(row, ignore_index=True)
 
     # Export data to csv file
     path_data = "/home/pimbert/work/Species_evolution_inference/Data/"
     data.to_csv("{}Optimization_{}/opt-tau={}_kappa={}.csv"
                 .format(path_data, optimization, tau, kappa), index=False)
 
+    # Export data to standard output
+    for i, col in enumerate(data.columns):
+        print("{}: {}".format(i, data.iloc[0, i]))
 
+        
 ######################################################################
 # Main                                                               #
 ######################################################################
 
 if __name__ == "__main__":
-    # dadi_params_optimisation()
-
     # inference(msprime_model=ms.sudden_decline_model, dadi_model=dadi.sudden_decline_model,
     #           control_model=dadi.constant_model, optimization="tau")
 
@@ -337,7 +324,7 @@ if __name__ == "__main__":
                 np.arange(-2.5, 1.6, 0.1)[int(args.value[1])-1]
             ]
 
-        if np.mod(args.value, 5) == 0:
+        if np.mod(args.value, 10) == 0:
             save = True
         else:
             save = False
