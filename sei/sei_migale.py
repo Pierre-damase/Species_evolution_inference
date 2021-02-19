@@ -190,7 +190,7 @@ def likelihood_ratio_test(tau, kappa, msprime_model, dadi_model, control_model, 
           - Model0: log-likelihood for the model with less parameters
           - Model1: nbest log-likelihood for the model with more parameters
     """
-    mu, sample = 2e-2, 20  # 8e-2
+    mu, sample = 8e-2, 20
     ll_list, ll_ratio, model_list = {"Model0": [], "Model1": []}, [], {"LL": [], "SFS": []}
 
     # Grid point for the extrapolation
@@ -282,8 +282,8 @@ def inference(msprime_model, dadi_model, control_model, optimization, scale, sav
 
     lrt, ll_list = likelihood_ratio_test(
         tau, kappa, msprime_model, dadi_model, control_model, optimization, save,
-        nb_simu=100, dof=dof
-    )  # 1000 simulations
+        nb_simu=1000, dof=dof
+    )
     row = {
         "Tau": tau, "Kappa": kappa, "Positive hit": Counter(lrt)[1],
         "Model0 ll": ll_list["Model0"], "Model1 ll": ll_list["Model1"]
@@ -315,12 +315,12 @@ if __name__ == "__main__":
         dadi_params_optimisation(sample[args.number-1])
     elif args.analyse == 'lrt':
         if args.param == 'tau':
-            scale = [np.arange(-4.5, 1.5, 0.07)[int(args.value[0])-1]]
+            scale = [np.arange(-4, 4.1, 0.1)[int(args.value[0])-1]]
         elif args.param == 'kappa':
             scale = [np.arange(-2, 3.1, 0.1)[int(args.value[0])-1]]
         else:
             scale = [
-                np.arange(-4.5, 1.5, 0.07)[int(args.value[0])-1],
+                np.arange(-4, 4.1, 0.1)[int(args.value[0])-1],
                 np.arange(-2, 3.1, 0.1)[int(args.value[1])-1]
             ]
 

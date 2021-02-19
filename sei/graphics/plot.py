@@ -24,7 +24,8 @@ def normalization(data):
 # Plot Site Frequency Spectrum                                       #
 ######################################################################
 
-def plot_sfs(sfs, label, color, title, path_figure="./Figures/", name="sfs"):
+def plot_sfs(sfs, label, color, title, style, transparency, axis=False,
+             path_figure="./Figures/", name="sfs"):
     """
     Graphic representation of Site Frequency Spectrum (SFS), save to the folder ./Figures.
 
@@ -44,7 +45,8 @@ def plot_sfs(sfs, label, color, title, path_figure="./Figures/", name="sfs"):
     # Plot
     for i, spectrum in enumerate(sfs):
         normalized_spectrum = normalization(spectrum)  # normalization of each sfs
-        plt.plot(normalized_spectrum, color=color[i], label=label[i])
+        plt.plot(normalized_spectrum, color=color[i], linestyle=style[i], label=label[i],
+                 alpha=transparency[i])
 
     # Caption
     plt.legend(loc="upper right", fontsize="large")
@@ -54,11 +56,12 @@ def plot_sfs(sfs, label, color, title, path_figure="./Figures/", name="sfs"):
     plt.ylabel("Percent of SNPs", fontsize="large")
 
     # X axis values
-    x_ax, x_values = [], []
-    for i in range(len(sfs[0])):
-        x_ax.append(i)
-        x_values.append("{}/{}".format(i+1, len(sfs[0])+1))
-    plt.xticks(x_ax, x_values)
+    if axis:
+        x_ax, x_values = [], []
+        for i in range(len(sfs[0])):
+            x_ax.append(i)
+            x_values.append("{}/{}".format(i+1, len(sfs[0])+1))
+        plt.xticks(x_ax, x_values)
 
     # Title + save plot to the folder ./Figures
     plt.title(title, fontsize="xx-large")
@@ -203,7 +206,7 @@ def plot_lrt(data, path="./Figures/"):
     ax.set(ylim=(0, max(data["Positive hit"]) + 5))
 
     # Title + save plot to folder ./Figures
-    plt.title("Likelihood-ratio test - mu = 8e-5")
+    plt.title("Likelihood-ratio test - mu = 2e-2")
     plt.savefig("{}lrt".format(path), bbox_inches="tight")
     plt.clf()
 

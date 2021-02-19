@@ -447,7 +447,7 @@ def main():
         spectrums = sorted([ele for ele in os.listdir(path_data) if ele.startswith("SFS") \
                             and not ele.endswith("inferred.fs")])
 
-        sfs = []
+        sfs, label, color, style, transparency = [], [], [], [], []
         for spectr in spectrums:
             with open("{}{}".format(path_data, spectr), "r") as filin:
                 lines = filin.readlines()
@@ -456,22 +456,17 @@ def main():
                 lines = filin.readlines()
                 sfs.append([float(ele) for ele in lines[1].strip().split(" ")[1: -1]])
 
-            # Plot
-            # Theoretical SFS for any constant population
-            sfs_theorique = [0] * (20 - 1)
-            for i in range(len(sfs_theorique)):
-                sfs_theorique[i] = 1 / (i+1)
-            sfs.append(sfs_theorique)
-
-            plot.plot_sfs(
-                sfs=sfs,
-                label=["Observed", "Inferred", "Théorique"],
-                color=["tab:blue", "tab:orange", "tab:red"],
-                title="Unfold SFS for various scenarios",
-                name="Test-sfs"
-            )
-            break
-        #sys.exit()
+        plot.plot_sfs(
+            sfs=sfs,
+            label=['O1', 'I1', 'O2', 'I2', 'O3', 'I3', 'O4', 'I4', 'O5', 'I5', 'O6', 'I6'],
+            color=['tab:blue', 'tab:blue', 'tab:red', 'tab:red', 'tab:orange', 'tab:orange',
+                   'tab:green', 'tab:green', 'tab:purple', 'tab:purple', 'tab:gray', 'tab:gray'],
+            style=['dashed', 'dotted', 'dashed', 'dotted', 'dashed', 'dotted', 'dashed',
+                   'dotted', 'dashed', 'dotted', 'dashed', 'dotted'],
+            transparency=[1.0, 0.75, 1.0, 0.75, 1.0, 0.75, 1.0, 0.75, 1.0, 0.75, 1.0, 0.75],
+            title="Unfold SFS for various scenarios",
+            name="Test-sfs"
+        )
 
         # Generate plot puissance
         dico = {
@@ -483,6 +478,7 @@ def main():
 
         for fichier in [ele for ele in os.listdir(path_data) if ele.startswith("opt")]:
             res = pd.read_json(path_or_buf="{}{}".format(path_data, fichier), typ='frame')
+            res['Tau'] = np.log10(res['Tau'])
             data = data.append(res, ignore_index=True)
 
         plot.plot_lrt(data)
