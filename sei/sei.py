@@ -481,7 +481,7 @@ def main():
         }
         data = pd.DataFrame(dico)
 
-        for fichier in sorted([ele for ele in os.listdir(path_data) if ele.startswith("opt")]):
+        for fichier in [ele for ele in os.listdir(path_data) if ele.startswith("opt")]:
             res = pd.read_json(path_or_buf="{}{}".format(path_data, fichier), typ='frame')
             data = data.append(res, ignore_index=True)
 
