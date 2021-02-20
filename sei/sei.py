@@ -278,7 +278,7 @@ def likelihood_ratio_test(tau, kappa, msprime_model, dadi_model, control_model, 
           - Model0: log-likelihood for the model with less parameters
           - Model1: nbest log-likelihood for the model with more parameters
     """
-    mu, sample = 8e-6, 20  # 8e-2
+    mu, sample = 8e-4, 20  # 8e-2
     ll_list, ll_ratio, model_list = {"Model0": [], "Model1": []}, [], {"LL": [], "SFS": []}
 
     # Grid point for the extrapolation
@@ -286,10 +286,17 @@ def likelihood_ratio_test(tau, kappa, msprime_model, dadi_model, control_model, 
 
     # Parameters for the simulation
     params = simulation_parameters(sample=sample, ne=1, rcb_rate=mu, mu=mu, length=1e5)
-    
+
     # Path & name
     path_data = "./Data/Optimization_{}/".format(optimization)
     name = "SFS-tau={}_kappa={}".format(tau, kappa)
+
+    for _ in range(nb_simu):
+        sfs = ms.msprime_simulation(model=msprime_model, param=params, kappa=kappa, tau=tau)
+        print("SFS: ", sfs, "\tSomme: ", sum(sfs), "\tTheta: ",
+              computation_theoritical_theta(1, mu, 1e5))
+
+    sys.exit()
 
     # Generate x genomic data for the same kappa and tau
     for _ in range(nb_simu):

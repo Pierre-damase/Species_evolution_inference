@@ -282,7 +282,7 @@ def inference(msprime_model, dadi_model, control_model, optimization, scale, sav
 
     lrt, ll_list = likelihood_ratio_test(
         tau, kappa, msprime_model, dadi_model, control_model, optimization, save,
-        nb_simu=1000, dof=dof
+        nb_simu=100, dof=dof
     )
     row = {
         "Tau": tau, "Kappa": kappa, "Positive hit": Counter(lrt)[1],

@@ -130,6 +130,8 @@ def simple_migration_model(sample, pop, migration_rate, kappa, debug):
 
     # The matrix describing the rates of migration between all pairs of populations.
     # It's an N*N matrix with N the number of populations defined in configuration_pop.
+    # Each element of the matrix Mj,k defines the fraction of population j that consists of
+    # migrants from population k in each generation.
     migration_matrix = [
         [0, 0],
         [migration_rate, 0]
