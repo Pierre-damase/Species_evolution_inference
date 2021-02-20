@@ -280,6 +280,9 @@ def inference(msprime_model, dadi_model, control_model, optimization, scale, sav
     else:
         kappa, tau, dof = np.float_power(10, scale[1]), np.float_power(10, scale[0]), 2
 
+    print("Likelihood ratio test - optimization of ({}) with x = 100 simulations"
+          .format(optimization))
+
     lrt, ll_list = likelihood_ratio_test(
         tau, kappa, msprime_model, dadi_model, control_model, optimization, save,
         nb_simu=100, dof=dof
@@ -290,12 +293,15 @@ def inference(msprime_model, dadi_model, control_model, optimization, scale, sav
     }
     data = data.append(row, ignore_index=True)
 
+    print("Likelihood ratio test done !!!\n")
+
     # Export data to csv file
     path_data = "/home/pimbert/work/Species_evolution_inference/Data/Optimization_{}/"\
         .format(optimization)
     data.to_json("{}opt-tau={}_kappa={}.json".format(path_data, tau, kappa))
 
     # Export data to standard output
+    print("Likelihood ratio test data:")
     for i, col in enumerate(data.columns):
         print("{}: {}".format(i, data.iloc[0, i]))
 
@@ -315,12 +321,12 @@ if __name__ == "__main__":
         dadi_params_optimisation(sample[args.number-1])
     elif args.analyse == 'lrt':
         if args.param == 'tau':
-            scale = [np.arange(-4, 4.1, 0.1)[int(args.value[0])-1]]
+            scale = [np.arange(-4, 3.1, 0.1)[int(args.value[0])-1]]
         elif args.param == 'kappa':
             scale = [np.arange(-2, 3.1, 0.1)[int(args.value[0])-1]]
         else:
             scale = [
-                np.arange(-4, 4.1, 0.1)[int(args.value[0])-1],
+                np.arange(-4, 3.1, 0.1)[int(args.value[0])-1],
                 np.arange(-2, 3.1, 0.1)[int(args.value[1])-1]
             ]
 

@@ -4,7 +4,7 @@
 #$ -N dadi_opt_tau
 
 # Number of separate submissions to the cluster
-#$ -t 1-81
+#$ -t 1-71
 
 # Short pour un job < 12h
 #$ -q short.q
