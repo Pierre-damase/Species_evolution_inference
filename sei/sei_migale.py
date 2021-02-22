@@ -312,11 +312,11 @@ if __name__ == "__main__":
         if args.param == 'tau':
             scale = [np.arange(-4, 4.1, 0.1)[int(args.value[0])-1]]
         elif args.param == 'kappa':
-            scale = [np.arange(-4, 4.1, 0.1)[int(args.value[0])-1]]
+            scale = [np.arange(0, 8.1, 0.1)[int(args.value[0])-1]]
         else:
             scale = [
                 np.arange(-4, 4.1, 0.1)[int(args.value[0])-1],
-                np.arange(-4, 4.1, 0.1)[int(args.value[1])-1]
+                np.arange(0, 8.1, 0.1)[int(args.value[1])-1]
             ]
 
         models = {
