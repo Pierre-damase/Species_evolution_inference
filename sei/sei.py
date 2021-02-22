@@ -397,7 +397,7 @@ def main():
         params = simulation_parameters(sample=sample, ne=1, rcb_rate=mu, mu=mu, length=1e5)
         # Simulation with msprime
         sfs = ms.msprime_migration_simulation(
-            model=ms.simple_migration_model, param=params, migration_rate=0.1, kappa=10,
+            model=ms.two_pops_migration_model, param=params, m12=0.1, m21=0.0, kappa=10,
             debug=True
         )
         print(sfs)

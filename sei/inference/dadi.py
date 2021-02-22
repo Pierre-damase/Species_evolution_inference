@@ -46,23 +46,22 @@ def params_decline_model(params):
 
 def sudden_decline_model(params, ns, pts):
     """
-    Sudden growth model of the population.
+    Sudden decline model of the population.
 
-    At time tau in the past, an equilibrium population of size nu undergoing a sudden growth,
+    At time tau in the past, an equilibrium population of size nu undergoing a sudden decline,
     reaching size nu * kappa with kappa the force.
 
     Parameter
     ---------
-    kappa: float
-        ratio of contemporary to ancient population size
-    tau: float
-        time in the past at which size change happened
+    params
+      - kappa: ratio of contemporary population's size to ancient population's size
+      - tau: time in the past at which size change happened
     ns: int
         the number of sampled genomes in resulting spectrum
     pts: list
         the number of grid points to use in integration
     """
-    # kappa, tau = 10, params
+    # Params (kappa, tau)
     kappa, tau = params_decline_model(params)
 
     # Define the grid we'll use
@@ -76,6 +75,45 @@ def sudden_decline_model(params, ns, pts):
 
     # Calculate the spectrum from phi
     sfs = dadi.Spectrum.from_phi(phi, ns, (grid,))
+
+    return sfs
+
+
+def params_migration_model(params):
+    global OPTIMIZATION
+    if OPTIMIZATION == "migration":
+        return params, 0  # No migration from population 1 to population 2
+
+
+def two_pops_migration_model(params, ns, pts):
+    """
+
+    Parameter
+    ---------
+    params
+      - kappa: ratio of population's 1 size to population's 2 size
+      - tau: time in the past of split
+      - m12: migration rate from population 2 to 1
+      - m21: migration rate from population 1 to 2
+    ns: int
+        the number of sampled genomes in resulting spectrum
+    pts: list
+        the number of grid points to use in integration
+    """
+    kappa, tau, m12, m21 = params_migration_model(params)
+
+    # Define the grid we'll use
+    grid = dadi.Numerics.default_grid(pts)
+
+    # Define the phi_ancestral, i.e. phi for the equilibrium ancestral population
+    phi_ancestral = dadi.PhiManip.phi_1D(grid)
+
+    # Define the sudden decline event at a time tau in past
+    phi = dadi.Integration.two_pops(phi_ancestral, grid, tau, nu1=1.0, nu2=1.0*kappa, m12=m12,
+                                    m21=m21)
+
+    # Calculate the spectrum from phi
+    sfs = dadi.Spectrum.from_phi(phi, ns, (grid, grid))
 
     return sfs
 
@@ -138,8 +176,7 @@ def parameters_optimization(p0, sfs, model_func, pts_list, lower_bound, upper_bo
     return popt
 
 
-def dadi_inference(pts_list, model_func, opt=None, verbose=0, path="./Data/",
-                   name="SFS"):
+def dadi_inference(pts_list, model_func, opt=None, verbose=0, path="./Data/", name="SFS"):
     """
     Dadi inference.
 
@@ -171,26 +208,36 @@ def dadi_inference(pts_list, model_func, opt=None, verbose=0, path="./Data/",
 
     # Optimisation of model parameters
     if OPTIMIZATION == "tau":
-        p0, lower_bound, upper_bound = [1.0], [0], [10]
+        #  [1.0], [0], [10]
+        p0, lower_bound, upper_bound = [1.0], [1e-4], [1e5]
         popt = parameters_optimization(p0, sfs, model_func_extrapolated, pts_list, lower_bound,
                                        upper_bound, verbose=verbose)
-
         # Simulated frequency spectrum
         model = model_func_extrapolated(popt, ns, pts_list)
+
     elif OPTIMIZATION == "kappa":
-        p0, lower_bound, upper_bound = [10.0], [3], [30]
+        # [10.0], [3], [30]
+        p0, lower_bound, upper_bound =[10.0], [1.0], [1e8]
         popt = parameters_optimization(p0, sfs, model_func_extrapolated, pts_list, lower_bound,
                                        upper_bound, verbose=verbose)
-
         # Simulated frequency spectrum
         model = model_func_extrapolated(popt, ns, pts_list)
+
     elif OPTIMIZATION == "tau-kappa":
-        p0, lower_bound, upper_bound = [10.0, 1.0], [1, 0], [30, 10]
+        # [10.0, 1.0], [1, 0], [30, 10]
+        p0, lower_bound, upper_bound = [10.0, 1.0], [1.0, 1e-4], [1e8, 1e5]
         popt = parameters_optimization(p0, sfs, model_func_extrapolated, pts_list, lower_bound,
                                        upper_bound, verbose=verbose)
-
         # Simulated frequency spectrum
         model = model_func_extrapolated(popt, ns, pts_list)
+
+    elif OPTIMIZATION == "migration":
+        p0, lower_bound, upper_bound = [10.0, 1.0, 1.0], [1.0, 1e-4, 0.0], [1e8, 1e5, 10.0]
+        popt = parameters_optimization(p0, sfs, model_func_extrapolated, pts_list, lower_bound,
+                                       upper_bound, verbose=verbose)
+        # Simulated frequency spectrum
+        model = model_func_extrapolated(popt, ns, pts_list)
+
     else:
         # Simulated frequency spectrum
         model = model_func_extrapolated(ns, pts_list)

@@ -104,7 +104,7 @@ def sudden_growth_model(sample, pop, tau, kappa, debug):
     return configuration_pop, history
 
 
-def simple_migration_model(sample, pop, migration_rate, kappa, debug):
+def two_pops_migration_model(sample, pop, m12, m21, kappa, debug):
     """
     Migration model with msprime.
 
@@ -113,13 +113,15 @@ def simple_migration_model(sample, pop, migration_rate, kappa, debug):
       - Population 2 of size n2 with n2 = kappa * n1.
 
     Migration
-      - There is no migration between population 1 & 2
-      - There is some migrations between population 2 & 1 with tau the migration rate
+      - There is no migration from population 1 to 2
+      - There is some migrations from population 2 to 1
 
     Parameter
     ---------
-    tau: float
-        in this model it's the migration rate between the population 2 and 1
+    m12: float
+        migration rate from population 2 to 1
+    m21: float
+        migration rate from population 1 to 2
     """
     # The list of PopulationConfiguration instances describing the sampling configuration, the
     # relative sizes and growth rates of the population to be simulated.
@@ -133,8 +135,8 @@ def simple_migration_model(sample, pop, migration_rate, kappa, debug):
     # Each element of the matrix Mj,k defines the fraction of population j that consists of
     # migrants from population k in each generation.
     migration_matrix = [
-        [0, 0],
-        [migration_rate, 0]
+        [0, m21],
+        [m12, 0]
     ]
 
     if debug:
@@ -188,13 +190,26 @@ def msprime_simulation(model, param, tau=0.0, kappa=0.0, debug=False):
     return sfs
 
 
-def msprime_migration_simulation(model, param, migration_rate=0.0, kappa=0.0, debug=False):
+def msprime_migration_simulation(model, param, m12=0.0, m21=0.0, kappa=0.0, debug=False):
     """
-
+    model: function
+        (two_pops_migration_model)
+    param: dictionary
+        - sample_size: the number of sampled monoploid genomes - int
+        - size_population: the effective (diploid) population size - int
+        - rcb_rate: the rate of recombinaison per base per generation - float
+        - mu: the rate of infinite sites mutations per unit of sequence length per generation-float
+        - length: the length of the simulated region in bases - float
+    m12: float
+        migration rate from population 2 to 1
+    m21: float
+        migration rate from population 2 to 1
+    kappa: float
+        ratio of population's 1 size to population's 2 size
+    debug: Boolean
+        1: print msprime debugger, 0: nothing
     """
-    demography = model(
-        param["sample_size"], param["size_population"], migration_rate, kappa, debug
-    )
+    demography = model(param["sample_size"], param["size_population"], m12, m21, kappa, debug)
 
     tree_seq = msprime.simulate(
         length=param["length"], recombination_rate=param["rcb_rate"], mutation_rate=param["mu"],
