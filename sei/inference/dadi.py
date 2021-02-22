@@ -201,7 +201,7 @@ def dadi_inference(pts_list, model_func, opt=None, verbose=0, path="./Data/",
     # The optimal value of theta given the model
     theta = dadi.Inference.optimal_sfs_scaling(model, sfs)
 
-    return ll_model, theta, model
+    return ll_model, theta
 
 
 if __name__ == "__main__":

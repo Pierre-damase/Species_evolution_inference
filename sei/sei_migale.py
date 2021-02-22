@@ -146,8 +146,7 @@ def log_likelihood_ratio(likelihood, control_ll):
     return 2 * (max(likelihood) - control_ll)
 
 
-def likelihood_ratio_test(tau, kappa, msprime_model, dadi_model, control_model, optimization,
-                          save, nb_simu, dof):
+def likelihood_ratio_test(tau, kappa, models, optimization, nb_simu, dof):
     """
     Likelihood-ratio test to assesses the godness fit of two model.
 
@@ -190,8 +189,8 @@ def likelihood_ratio_test(tau, kappa, msprime_model, dadi_model, control_model, 
           - Model0: log-likelihood for the model with less parameters
           - Model1: nbest log-likelihood for the model with more parameters
     """
-    mu, sample = 8e-2, 20
-    ll_list, ll_ratio, model_list = {"Model0": [], "Model1": []}, [], {"LL": [], "SFS": []}
+    mu, sample = 8e-6, 20
+    ll_list, ll_ratio = {"Model0": [], "Model1": []}, []
 
     # Grid point for the extrapolation
     pts_list = [sample*10, sample*10 + 10, sample*10 + 20]
@@ -207,43 +206,35 @@ def likelihood_ratio_test(tau, kappa, msprime_model, dadi_model, control_model, 
     # Generate x genomic data for the same kappa and tau
     for _ in range(nb_simu):
         # Simulation with msprime
-        sfs = ms.msprime_simulation(model=msprime_model, param=params, kappa=kappa, tau=tau)
+        sfs = ms.msprime_simulation(
+            model=models["Simulation"], param=params, kappa=kappa, tau=tau
+        )
 
         # Generate the SFS file compatible with dadi
-        f.dadi_data(sfs, dadi_model.__name__, path=path_data, name=name)
+        f.dadi_data(sfs, models["Inference"].__name__, path=path_data, name=name)
 
         # Dadi inference
-        tmp = {"LL": [], "SFS": []}
-        control_ll, *_ = dadi.dadi_inference(pts_list, control_model, path=path_data, name=name)
+        tmp = []
+        control_ll, _ = dadi.dadi_inference(
+            pts_list, models["Control"], path=path_data, name=name
+        )
 
         for _ in range(nb_simu):  # run x inference with dadi from the same observed data
-            ll, _, model = dadi.dadi_inference(
-                pts_list, dadi_model, opt=optimization, path=path_data, name=name)
-            tmp["LL"].append(ll)
-            tmp["SFS"].append(model)
+            ll, _ = dadi.dadi_inference(
+                pts_list, models["Inference"], opt=optimization, path=path_data, name=name
+            )
+            tmp.append(ll)
 
         # Select the best one, i.e. the one with the highest likelihood
         # Compute the log-likelihood ratio
-        ll_ratio.append(log_likelihood_ratio(tmp["LL"], control_ll))
+        ll_ratio.append(log_likelihood_ratio(tmp, control_ll))
 
         # Keep track of log-likelihood for each simulation
         ll_list["Model0"].append(control_ll)
-        ll_list["Model1"].append(max(tmp["LL"]))
+        ll_list["Model1"].append(max(tmp))
 
-        # Keep track of the SFS of the best inference, i.e. with the highest log-likelihood
-        if save:
-            index = tmp["LL"].index(max(tmp["LL"]))
-            model_list["LL"].append(tmp["LL"][index])
-            model_list["SFS"].append(tmp["SFS"][index])
-
-    # Keep track of some SFS generated from dadi
-    if save:
-        index = model_list["LL"].index(max(model_list["LL"]))
-        sfs = tmp["SFS"][index]
-        sfs.to_file("{}{}-inferred.fs".format(path_data, name))
-    else:
-        # Delete sfs file
-        os.remove("{}{}.fs".format(path_data, name))
+    # Delete sfs file
+    os.remove("{}{}.fs".format(path_data, name))
 
     # Likelihood-ratio test
     lrt = [1] * len(ll_ratio)
@@ -255,17 +246,15 @@ def likelihood_ratio_test(tau, kappa, msprime_model, dadi_model, control_model, 
     return lrt, ll_list
 
 
-def inference(msprime_model, dadi_model, control_model, optimization, scale, save=False):
+def inference(models, optimization, scale):
     """
 
     Parameter
     ---------
-    msprime_model: function
-        the custom model to generate genomic data
-    dadi_model: function
-        the custom model to infer demography history
-    control_model: function
-        control model
+    models: dictionary
+      - Simulation: the custom model to generate genomic data
+      - Inference: the custom model to infer demography history
+      - Control: the control model - model with less parameters
     optimization
         parameter to optimize - (kappa), (tau), (kappa, tau), etc.
     """
@@ -284,16 +273,16 @@ def inference(msprime_model, dadi_model, control_model, optimization, scale, sav
           .format(optimization))
 
     lrt, ll_list = likelihood_ratio_test(
-        tau, kappa, msprime_model, dadi_model, control_model, optimization, save,
-        nb_simu=100, dof=dof
-    )
+        tau, kappa, models, optimization, nb_simu=2, dof=dof
+    )  # 1000 simulations
+
+    print("Likelihood ratio test done !!!\n")
+
     row = {
         "Tau": tau, "Kappa": kappa, "Positive hit": Counter(lrt)[1],
         "Model0 ll": ll_list["Model0"], "Model1 ll": ll_list["Model1"]
     }
     data = data.append(row, ignore_index=True)
-
-    print("Likelihood ratio test done !!!\n")
 
     # Export data to csv file
     path_data = "/home/pimbert/work/Species_evolution_inference/Data/Optimization_{}/"\
@@ -330,12 +319,8 @@ if __name__ == "__main__":
                 np.arange(-2, 3.1, 0.1)[int(args.value[1])-1]
             ]
 
-        if np.mod(args.value, 10) == 0:
-            save = True
-        else:
-            save = False
-
-        inference(
-            msprime_model=ms.sudden_decline_model, dadi_model=dadi.sudden_decline_model,
-            control_model=dadi.constant_model, optimization=args.param, scale=scale, save=save
-        )
+        models = {
+            "Simulation": ms.sudden_decline_model, "Inference": dadi.sudden_decline_model,
+            "Control": dadi.constant_model
+        }
+        inference(models=models, optimization=args.param, scale=scale)
