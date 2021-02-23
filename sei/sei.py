@@ -53,31 +53,33 @@ def sfs_shape_verification():
      - The SFS of a constant population fits well to the theoretical SFS of any constant population
      - The SFS of an increasing or decreasing population
     """
-    params = simulation_parameters(sample=10, ne=1, rcb_rate=2e-2, mu=2e-2, length=1e5)
+    # Fixed parameters for the simulation
+    fixed_params = simulation_parameters(sample=10, ne=1, rcb_rate=2e-2, mu=2e-2, length=1e5)
+
 
     # Constant scenario
     print("Scénario constant")
-    sfs_cst = ms.msprime_simulation(model=ms.constant_model, param=params, debug=True)
+    sfs_cst = ms.msprime_simulation(
+        model=ms.constant_model, fixed_params=fixed_params, debug=True)
 
-    # Declin / growth scenario
-    tmp = {"Tau": 1.0, "Kappa": 10.0}
+    # Define tau & kappa for decline/growth scenario
+    params = {"Tau": 1.0, "Kappa": 10.0}
 
     print("\n\nScénario de déclin")
-    sfs_declin = \
-        ms.msprime_simulation(model=ms.sudden_decline_model, param=params, tmp=tmp, debug=True)
+    sfs_declin = ms.msprime_simulation(
+        model=ms.sudden_decline_model, fixed_params=fixed_params, params=params, debug=True)
 
     print("\n\nScénario de croissance")
-    sfs_croissance = \
-        ms.msprime_simulation(model=ms.sudden_growth_model, param=params, tmp=tmp, debug=True)
+    sfs_croissance = ms.msprime_simulation(
+        model=ms.sudden_growth_model, fixed_params=fixed_params, params=params, debug=True)
 
     # Migration scenario
-    tmp = {"Kappa": 10.0, "m12": 1.0, "m21": 0}
-    sfs_migration = \
-        ms.msprime_simulation(model=ms.two_pops_migration_model, param=params, tmp=tmp,
-                              debug=True)
+    params = {"Kappa": 10.0, "m12": 1.0, "m21": 0}
+    sfs_migration = ms.msprime_simulation(
+        model=ms.two_pops_migration_model, fixed_params=fixed_params, params=params, debug=True)
 
     # Theoretical SFS for any constant population
-    sfs_theorique = [0] * (params["sample_size"] - 1)
+    sfs_theorique = [0] * (fixed_params["sample_size"] - 1)
     for i in range(len(sfs_theorique)):
         sfs_theorique[i] = 1 / (i+1)
 
@@ -86,7 +88,7 @@ def sfs_shape_verification():
         sfs=[sfs_cst, sfs_theorique, sfs_declin, sfs_croissance, sfs_migration],
         label=["Constant", "Theoretical", "Declin", "Growth", "Migration"],
         color=["tab:blue", "tab:orange", "tab:red", "tab:green", "tab:gray"],
-        style=["solid", "dashed", "solid", "solid", "dashed"],
+        style=["solid", "solid", "solid", "solid", "dashed"],
         title="Unfold SFS for various scenarios", axis=True
     )
 
@@ -105,11 +107,11 @@ def grid_optimisation():
 
     for mu in mu_list:
         # Parameters for the simulation
-        params = simulation_parameters(sample=20, ne=1, rcb_rate=mu, mu=mu, length=1e5)
+        fixed_params = simulation_parameters(sample=20, ne=1, rcb_rate=mu, mu=mu, length=1e5)
         print("Msprime simulation - sample size {} & mutation rate {}".format(20, mu))
 
         # Msprime simulation
-        sfs = ms.msprime_simulation(model=ms.constant_model, param=params)
+        sfs = ms.msprime_simulation(model=ms.constant_model, fixed_params=fixed_params)
 
         # Generate the SFS file compatible with dadi
         f.dadi_data(sfs, dadi.constant_model.__name__)
@@ -239,7 +241,7 @@ def log_likelihood_ratio(likelihood, control_ll):
     return 2 * (max(likelihood) - control_ll)
 
 
-def likelihood_ratio_test(tau, kappa, models, optimization, nb_simu, dof):
+def likelihood_ratio_test(params, models, optimization, nb_simu, dof, name):
     """
     Likelihood-ratio test to assesses the godness fit of two model.
 
@@ -266,10 +268,10 @@ def likelihood_ratio_test(tau, kappa, models, optimization, nb_simu, dof):
 
     Parameter
     ---------
-    tau: float
-        the lenght of time ago at which the event (decline, growth) occured
-    kappa: float
-        the growth or decline force
+    params: dictionary
+
+    models: dictionary
+
     dof: int
         degrees of freedom
 
@@ -292,17 +294,18 @@ def likelihood_ratio_test(tau, kappa, models, optimization, nb_simu, dof):
     pts_list = [sample*10, sample*10 + 10, sample*10 + 20]
 
     # Parameters for the simulation
-    params = simulation_parameters(sample=sample, ne=1, rcb_rate=mu, mu=mu, length=1e5)
-    tmp = {"Tau": tau, "Kappa": kappa}
+    fixed_params = simulation_parameters(sample=sample, ne=1, rcb_rate=mu, mu=mu, length=1e5)
 
     # Path & name
     path_data = "./Data/Optimization_{}/".format(optimization)
-    name = "SFS-tau={}_kappa={}".format(tau, kappa)
+    name = "SFS-{}".format(name)
 
     # Generate x genomic data for the same kappa and tau
     for _ in range(nb_simu):
         # Simulation with msprime
-        sfs_observed = ms.msprime_simulation(model=models["Simulation"], param=params, tmp=tmp)
+        sfs_observed = ms.msprime_simulation(
+            model=models["Simulation"], fixed_params=fixed_params, params=params
+        )
         data['SNPs'].append(sum(sfs_observed))
 
         # Generate the SFS file compatible with dadi
@@ -341,7 +344,7 @@ def likelihood_ratio_test(tau, kappa, models, optimization, nb_simu, dof):
     return data
 
 
-def inference(models, optimization, scale):
+def inference(models, optimization, scale, name):
     """
 
     Parameter
@@ -353,36 +356,36 @@ def inference(models, optimization, scale):
     optimization
         parameter to optimize - (kappa), (tau), (kappa, tau), etc.
     """
-    col = ["Tau", "Kappa", "Positive hit", "Model0 ll", "Model1 ll", "SNPs"]
+    col = ["Parameters", "Positive hit", "Model0 ll", "Model1 ll", "SNPs"]
     data = pd.DataFrame(columns=col)
 
     # Set up tau & kappa for the simulation and inference
     if optimization == "tau":
-        kappa, tau, dof = 10, np.float_power(10, scale[0]), 1  # Kappa fixed
+        params = {"Kappa": 10, "Tau": np.float_power(10, scale[0])}  # Kappa fixed
+        dof = 1
     elif optimization == "kappa":
-        kappa, tau, dof = np.float_power(10, scale[0]), 1.0, 1  # Tau fixed
+        params = {"Kappa": np.float_power(10, scale[0]), "Tau": 1.0}  # Tau fixed
+        dof = 1
     elif optimization == "tau-kappa":
-        kappa, tau, dof = np.float_power(10, scale[1]), np.float_power(10, scale[0]), 2
+        params = {"Kappa": np.float_power(10, scale[1]), "Tau": np.float_power(10, scale[0])}
+        dof = 2
 
     print("Likelihood ratio test - optimization of ({}) with x = 100 simulations"
           .format(optimization))
 
-    values = likelihood_ratio_test(
-        tau, kappa, models, optimization, nb_simu=2, dof=dof
-    )  # 1000 simulations
+    values = likelihood_ratio_test(params, models, optimization, nb_simu=2, dof=dof, name=name)
 
     print("Likelihood ratio test done !!!\n")
 
     row = {
-        "Tau": tau, "Kappa": kappa, "Positive hit": Counter(values['LRT'])[1],
-        "Model0 ll": values['LL']['M0'], "Model1 ll": values['LL']['M1'],
-        "SNPs": values['SNPs']
+        "Parameters": params, "Positive hit": Counter(values['LRT'])[1], "SNPs": values['SNPs'],
+        "Model0 ll": values['LL']['M0'], "Model1 ll": values['LL']['M1']
     }
     data = data.append(row, ignore_index=True)
 
     # Export data to csv file
     path_data = "./Data/Optimization_{}/".format(optimization)
-    data.to_json("{}opt-tau={}_kappa={}.json".format(path_data, tau, kappa))
+    data.to_json("{}opt_{}.json".format(path_data, name))
 
 
 ######################################################################
@@ -405,29 +408,26 @@ def main():
         dadi_params_optimisation(args.number)
 
     elif args.analyse == 'lrt':
+        if args.param == 'tau':
+            scale = [np.arange(-4, 4.1, 0.1)[int(args.value[0])-1]]
+        elif args.param == 'kappa':
+            scale = [np.arange(0.05, 4.1, 0.05)[int(args.value[0])-1]]
+        else:
+            scale = [
+                np.arange(-4, 4.1, 0.1)[int(args.value[0])-1],
+                np.arange(0.05, 4.1, 0.05)[int(args.value[1])-1]
+            ]
         models = {
             "Simulation": ms.sudden_decline_model, "Inference": dadi.sudden_decline_model,
             "Control": dadi.constant_model
         }
-        inference(models=models, optimization=args.param, scale=args.value)
+        name = "{}-{}".format(args.param, args.value[0])
+        
+        inference(models=models, optimization=args.param, scale=scale, name=name)
 
     elif args.analyse == 'er':
         for sample in [10, 20, 40, 60, 100]:
             plot.plot_error_rate(sample)
-
-        for opt in ["tau-kappa"]:
-            path_data = "./Data/Optimization_{}/".format(opt)
-            files = os.listdir(path_data)
-
-            # Pandas DataFrame
-            col = ["Tau", "Kappa", "Positive hit", "Model0 ll", "Model1 ll"]
-            data = pd.DataFrame(columns=col)
-
-            # Append value to data
-            for fichier in files:
-                data = data.append(
-                    pd.read_csv("{}{}".format(path_data, fichier), sep="\t"), ignore_index=True
-                )
 
     elif args.analyse == 'ases':
         path_data = "./Data/Optimization_{}/".format(args.param)
