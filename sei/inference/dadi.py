@@ -193,8 +193,6 @@ def dadi_inference(pts_list, model_func, opt=None, verbose=0, path="./Data/", na
         likelihood of the data
     theta: float
         the optimal value of theta given the model
-    model: list
-        the sfs
     """
     global OPTIMIZATION
     OPTIMIZATION = opt

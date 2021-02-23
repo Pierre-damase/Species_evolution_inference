@@ -32,7 +32,7 @@ def computation_theoritical_theta(ne, mu, length):
 
 def simulation_parameters(sample, ne, rcb_rate, mu, length):
     """
-    Set up the parametres for the simulation
+    Set up the parametres for the simulation with msprime.
     """
     params = {
         "sample_size": sample, "size_population": ne, "rcb_rate": rcb_rate, "mu": mu,
@@ -55,21 +55,25 @@ def sfs_shape_verification():
     """
     params = simulation_parameters(sample=10, ne=1, rcb_rate=2e-2, mu=2e-2, length=1e5)
 
-    # Constant
+    # Constant scenario
     print("Scénario constant")
-    sfs_cst = \
-        ms.msprime_simulation(model=ms.constant_model, param=params, debug=True)
+    sfs_cst = ms.msprime_simulation(model=ms.constant_model, param=params, debug=True)
 
-    # Declin
+    # Declin / growth scenario
+    tmp = {"Tau": 1.0, "Kappa": 10.0}
+
     print("\n\nScénario de déclin")
     sfs_declin = \
-        ms.msprime_simulation(model=ms.sudden_decline_model, param=params, tau=1.0, kappa=10,
-                              debug=True)
+        ms.msprime_simulation(model=ms.sudden_decline_model, param=params, tmp=tmp, debug=True)
 
-    # Growth
     print("\n\nScénario de croissance")
     sfs_croissance = \
-        ms.msprime_simulation(model=ms.sudden_growth_model, param=params, tau=1.0, kappa=10,
+        ms.msprime_simulation(model=ms.sudden_growth_model, param=params, tmp=tmp, debug=True)
+
+    # Migration scenario
+    tmp = {"Kappa": 10.0, "m12": 1.0, "m21": 0}
+    sfs_migration = \
+        ms.msprime_simulation(model=ms.two_pops_migration_model, param=params, tmp=tmp,
                               debug=True)
 
     # Theoretical SFS for any constant population
@@ -79,10 +83,11 @@ def sfs_shape_verification():
 
     # Plot
     plot.plot_sfs(
-        sfs=[sfs_cst, sfs_theorique, sfs_declin, sfs_croissance],
-        label=["Constant", "Theoretical", "Declin", "Growth"],
-        color=["tab:blue", "tab:orange", "tab:red", "tab:green"],
-        title="Unfold SFS for various scenarios"
+        sfs=[sfs_cst, sfs_theorique, sfs_declin, sfs_croissance, sfs_migration],
+        label=["Constant", "Theoretical", "Declin", "Growth", "Migration"],
+        color=["tab:blue", "tab:orange", "tab:red", "tab:green", "tab:gray"],
+        style=["solid", "dashed", "solid", "solid", "dashed"],
+        title="Unfold SFS for various scenarios", axis=True
     )
 
 
@@ -120,7 +125,7 @@ def grid_optimisation():
             point = (len(sfs) - 1) * scale
             pts_list = [point, point+10, point+20]
 
-            likelihood, estimated_theta, _ = dadi.dadi_inference(pts_list, dadi.constant_model)
+            likelihood, estimated_theta = dadi.dadi_inference(pts_list, dadi.constant_model)
 
             dico[mu]["Likelihood"].append(likelihood)
             dico[mu]["Estimated theta"].append(estimated_theta)
@@ -270,21 +275,25 @@ def likelihood_ratio_test(tau, kappa, models, optimization, nb_simu, dof):
 
     Return
     ------
-    data: list
+    data: dictionary
+      - LL: list of the log-likelihood
+        M0: log-likelihood for the model with less parameters
+        M1: best log-likelihood for the model with more parameters
+      - SNP: list of the SNPs
+        SNPs for the observed sfs generated with msprime
+      - LRT: list of log likelihood ratio test
         List of 0 (negative run) & 1 (positive run)
-    ll_list: list
-        List of log-likelihood to keep track for each simulation
-          - Model0: log-likelihood for the model with less parameters
-          - Model1: nbest log-likelihood for the model with more parameters
     """
-    mu, sample = 2e-4, 20  # 8e-2
-    ll_list, ll_ratio = {"Model0": [], "Model1": []}, []
+    mu, sample, ll_ratio = 2e-4, 20, []  # 8e-2
+
+    data = {"LL": {"M0": [], "M1": []}, "SNPs": [], "LRT": []}
 
     # Grid point for the extrapolation
     pts_list = [sample*10, sample*10 + 10, sample*10 + 20]
 
     # Parameters for the simulation
     params = simulation_parameters(sample=sample, ne=1, rcb_rate=mu, mu=mu, length=1e5)
+    tmp = {"Tau": tau, "Kappa": kappa}
 
     # Path & name
     path_data = "./Data/Optimization_{}/".format(optimization)
@@ -293,15 +302,14 @@ def likelihood_ratio_test(tau, kappa, models, optimization, nb_simu, dof):
     # Generate x genomic data for the same kappa and tau
     for _ in range(nb_simu):
         # Simulation with msprime
-        sfs = ms.msprime_simulation(
-            model=models["Simulation"], param=params, kappa=kappa, tau=tau
-        )
+        sfs_observed = ms.msprime_simulation(model=models["Simulation"], param=params, tmp=tmp)
+        data['SNPs'].append(sum(sfs_observed))
 
         # Generate the SFS file compatible with dadi
-        f.dadi_data(sfs, models["Inference"].__name__, path=path_data, name=name)
+        f.dadi_data(sfs_observed, models["Inference"].__name__, path=path_data, name=name)
 
         # Dadi inference
-        tmp = []
+        ll_list = []
         control_ll, _ = dadi.dadi_inference(
             pts_list, models["Control"], path=path_data, name=name
         )
@@ -310,27 +318,27 @@ def likelihood_ratio_test(tau, kappa, models, optimization, nb_simu, dof):
             ll, _ = dadi.dadi_inference(
                 pts_list, models["Inference"], opt=optimization, path=path_data, name=name
             )
-            tmp.append(ll)
+            ll_list.append(ll)
 
         # Select the best one, i.e. the one with the highest likelihood
         # Compute the log-likelihood ratio
-        ll_ratio.append(log_likelihood_ratio(tmp, control_ll))
+        ll_ratio.append(log_likelihood_ratio(ll_list, control_ll))
 
         # Keep track of log-likelihood for each simulation
-        ll_list["Model0"].append(control_ll)
-        ll_list["Model1"].append(max(tmp))
+        data['LL']['M0'].append(control_ll)
+        data['LL']['M1'].append(max(ll_list))
 
     # Delete sfs file
     os.remove("{}{}.fs".format(path_data, name))
 
     # Likelihood-ratio test
-    lrt = [1] * len(ll_ratio)
+    data['LRT'] = [1] * len(ll_ratio)
     for i, chi_stat in enumerate(ll_ratio):
         p_value = chi2.sf(chi_stat, dof)
         if p_value > 0.05:
-            lrt[i] = 0
+            data['LRT'][i] = 0
 
-    return lrt, ll_list
+    return data
 
 
 def inference(models, optimization, scale):
@@ -345,7 +353,7 @@ def inference(models, optimization, scale):
     optimization
         parameter to optimize - (kappa), (tau), (kappa, tau), etc.
     """
-    col = ["Tau", "Kappa", "Positive hit", "Model0 ll", "Model1 ll"]
+    col = ["Tau", "Kappa", "Positive hit", "Model0 ll", "Model1 ll", "SNPs"]
     data = pd.DataFrame(columns=col)
 
     # Set up tau & kappa for the simulation and inference
@@ -353,21 +361,22 @@ def inference(models, optimization, scale):
         kappa, tau, dof = 10, np.float_power(10, scale[0]), 1  # Kappa fixed
     elif optimization == "kappa":
         kappa, tau, dof = np.float_power(10, scale[0]), 1.0, 1  # Tau fixed
-    else:
+    elif optimization == "tau-kappa":
         kappa, tau, dof = np.float_power(10, scale[1]), np.float_power(10, scale[0]), 2
 
     print("Likelihood ratio test - optimization of ({}) with x = 100 simulations"
           .format(optimization))
 
-    lrt, ll_list = likelihood_ratio_test(
+    values = likelihood_ratio_test(
         tau, kappa, models, optimization, nb_simu=2, dof=dof
     )  # 1000 simulations
 
     print("Likelihood ratio test done !!!\n")
 
     row = {
-        "Tau": tau, "Kappa": kappa, "Positive hit": Counter(lrt)[1],
-        "Model0 ll": ll_list["Model0"], "Model1 ll": ll_list["Model1"]
+        "Tau": tau, "Kappa": kappa, "Positive hit": Counter(values['LRT'])[1],
+        "Model0 ll": values['LL']['M0'], "Model1 ll": values['LL']['M1'],
+        "SNPs": values['SNPs']
     }
     data = data.append(row, ignore_index=True)
 
@@ -390,17 +399,7 @@ def main():
     args = arg.arguments()
 
     if args.analyse == 'msprime':
-        # sfs_shape_verification()
-
-        mu, sample = 2e-2, 20
-        # Parameters for the simulation
-        params = simulation_parameters(sample=sample, ne=1, rcb_rate=mu, mu=mu, length=1e5)
-        # Simulation with msprime
-        sfs = ms.msprime_migration_simulation(
-            model=ms.two_pops_migration_model, param=params, m12=0.1, m21=0.0, kappa=10,
-            debug=True
-        )
-        print(sfs)
+        sfs_shape_verification()
 
     elif args.analyse == 'opt':
         dadi_params_optimisation(args.number)
