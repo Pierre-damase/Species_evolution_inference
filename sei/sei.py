@@ -50,12 +50,12 @@ def sfs_shape_verification():
     Method to check the SFS obtained with msprime.
 
     I.E. check that:
-     - The SFS of a constant population fits well to the theoretical SFS of any constant population
+     - The SFS of a constant population fits well to the theoretical SFS of any constant
+       population
      - The SFS of an increasing or decreasing population
     """
     # Fixed parameters for the simulation
     fixed_params = simulation_parameters(sample=10, ne=1, rcb_rate=2e-2, mu=2e-2, length=1e5)
-
 
     # Constant scenario
     print("Scénario constant")
@@ -422,7 +422,7 @@ def main():
             "Control": dadi.constant_model
         }
         name = "{}-{}".format(args.param, args.value[0])
-        
+
         inference(models=models, optimization=args.param, scale=scale, name=name)
 
     elif args.analyse == 'er':
