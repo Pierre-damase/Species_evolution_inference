@@ -182,21 +182,25 @@ def likelihood_ratio_test(tau, kappa, models, optimization, nb_simu, dof):
 
     Return
     ------
-    data: list
+    data: dictionary
+      - LL: list of the log-likelihood
+        M0: log-likelihood for the model with less parameters
+        M1: best log-likelihood for the model with more parameters
+      - SNP: list of the SNPs
+        SNPs for the observed sfs generated with msprime
+      - LRT: list of log likelihood ratio test
         List of 0 (negative run) & 1 (positive run)
-    ll_list: list
-        List of log-likelihood to keep track for each simulation
-          - Model0: log-likelihood for the model with less parameters
-          - Model1: nbest log-likelihood for the model with more parameters
     """
-    mu, sample = 8e-6, 20
-    ll_list, ll_ratio = {"Model0": [], "Model1": []}, []
+    mu, sample, ll_ratio = 8e-2, 20, []
+
+    data = {"LL": {"M0": [], "M1": []}, "SNPs": [], "LRT": []}
 
     # Grid point for the extrapolation
     pts_list = [sample*10, sample*10 + 10, sample*10 + 20]
 
     # Parameters for the simulation
     params = simulation_parameters(sample=sample, ne=1, rcb_rate=mu, mu=mu, length=1e5)
+    tmp = {"Tau": tau, "Kappa": kappa}
 
     # Path & name
     path_data = "/home/pimbert/work/Species_evolution_inference/Data/Optimization_{}/"\
@@ -206,15 +210,14 @@ def likelihood_ratio_test(tau, kappa, models, optimization, nb_simu, dof):
     # Generate x genomic data for the same kappa and tau
     for _ in range(nb_simu):
         # Simulation with msprime
-        sfs = ms.msprime_simulation(
-            model=models["Simulation"], param=params, kappa=kappa, tau=tau
-        )
+        sfs_observed = ms.msprime_simulation(model=models["Simulation"], param=params, tmp=tmp)
+        data['SNPs'].append(sum(sfs_observed))
 
         # Generate the SFS file compatible with dadi
-        f.dadi_data(sfs, models["Inference"].__name__, path=path_data, name=name)
+        f.dadi_data(sfs_observed, models["Inference"].__name__, path=path_data, name=name)
 
         # Dadi inference
-        tmp = []
+        ll_list = []
         control_ll, _ = dadi.dadi_inference(
             pts_list, models["Control"], path=path_data, name=name
         )
@@ -223,27 +226,27 @@ def likelihood_ratio_test(tau, kappa, models, optimization, nb_simu, dof):
             ll, _ = dadi.dadi_inference(
                 pts_list, models["Inference"], opt=optimization, path=path_data, name=name
             )
-            tmp.append(ll)
+            ll_list.append(ll)
 
         # Select the best one, i.e. the one with the highest likelihood
         # Compute the log-likelihood ratio
         ll_ratio.append(log_likelihood_ratio(tmp, control_ll))
 
         # Keep track of log-likelihood for each simulation
-        ll_list["Model0"].append(control_ll)
-        ll_list["Model1"].append(max(tmp))
+        data['LL']['M0'].append(control_ll)
+        data['LL']['M1'].append(max(ll_list))
 
     # Delete sfs file
     os.remove("{}{}.fs".format(path_data, name))
 
     # Likelihood-ratio test
-    lrt = [1] * len(ll_ratio)
+    data['LRT'] = [1] * len(ll_ratio)
     for i, chi_stat in enumerate(ll_ratio):
         p_value = chi2.sf(chi_stat, dof)
         if p_value > 0.05:
-            lrt[i] = 0
+            data['LRT'][i] = 0
 
-    return lrt, ll_list
+    return data
 
 
 def inference(models, optimization, scale):
@@ -258,7 +261,7 @@ def inference(models, optimization, scale):
     optimization
         parameter to optimize - (kappa), (tau), (kappa, tau), etc.
     """
-    col = ["Tau", "Kappa", "Positive hit", "Model0 ll", "Model1 ll"]
+    col = ["Tau", "Kappa", "Positive hit", "Model0 ll", "Model1 ll", "SNPs"]
     data = pd.DataFrame(columns=col)
 
     # Set up tau & kappa for the simulation and inference
@@ -272,15 +275,16 @@ def inference(models, optimization, scale):
     print("Likelihood ratio test - optimization of ({}) with x = 100 simulations"
           .format(optimization))
 
-    lrt, ll_list = likelihood_ratio_test(
-        tau, kappa, models, optimization, nb_simu=2, dof=dof
+    values = likelihood_ratio_test(
+        tau, kappa, models, optimization, nb_simu=1, dof=dof
     )  # 1000 simulations
 
     print("Likelihood ratio test done !!!\n")
 
     row = {
-        "Tau": tau, "Kappa": kappa, "Positive hit": Counter(lrt)[1],
-        "Model0 ll": ll_list["Model0"], "Model1 ll": ll_list["Model1"]
+        "Tau": tau, "Kappa": kappa, "Positive hit": Counter(values['LRT'])[1],
+        "Model0 ll": values['LL']['M0'], "Model1 ll": values['LL']['M1'],
+        "SNPs": values['SNPs']
     }
     data = data.append(row, ignore_index=True)
 
@@ -312,7 +316,7 @@ if __name__ == "__main__":
         if args.param == 'tau':
             scale = [np.arange(-4, 4.1, 0.1)[int(args.value[0])-1]]
         elif args.param == 'kappa':
-            scale = [np.arange(0, 8.1, 0.1)[int(args.value[0])-1]]
+            scale = [np.arange(0.05, 4.1, 0.05)[int(args.value[0])-1]]
         else:
             scale = [
                 np.arange(-4, 4.1, 0.1)[int(args.value[0])-1],

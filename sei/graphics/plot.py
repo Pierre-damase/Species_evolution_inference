@@ -24,8 +24,7 @@ def normalization(data):
 # Plot Site Frequency Spectrum                                       #
 ######################################################################
 
-def plot_sfs(sfs, label, color, title, style, transparency, axis=False,
-             path_figure="./Figures/", name="sfs"):
+def plot_sfs(sfs, label, color, title, style, axis=False, path_figure="./Figures/", name="sfs"):
     """
     Graphic representation of Site Frequency Spectrum (SFS), save to the folder ./Figures.
 
@@ -45,8 +44,7 @@ def plot_sfs(sfs, label, color, title, style, transparency, axis=False,
     # Plot
     for i, spectrum in enumerate(sfs):
         normalized_spectrum = normalization(spectrum)  # normalization of each sfs
-        plt.plot(normalized_spectrum, color=color[i], linestyle=style[i], label=label[i],
-                 alpha=transparency[i])
+        plt.plot(normalized_spectrum, color=color[i], linestyle=style[i], label=label[i])
 
     # Caption
     plt.legend(loc="upper right", fontsize="large")

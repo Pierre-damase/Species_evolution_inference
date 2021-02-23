@@ -27,8 +27,7 @@ def arguments():
     # Likelihood-ratio test
     lrt = subparsers.add_parser('lrt', help="Comute likelihood-ratio test for dadi inference")
     lrt.add_argument(
-        '--param', dest='param', default='tau', choices=['tau', 'kappa', 'tau-kappa'],
-        required=True,
+        '--param', dest='param', choices=['tau', 'kappa', 'tau-kappa'], required=True,
         help="Parameter to optimize - (tau) - default, (kappa), (kappa, tau)"
     )
     lrt.add_argument(
@@ -46,8 +45,7 @@ def arguments():
     #     help"Tools to evaluate - dadi, stairway plot, etc."
     # )
     ases.add_argument(
-        '--param', dest='param', default='tau', choices=['tau', 'kappa', 'tau-kappa'],
-        required=True,
+        '--param', dest='param', choices=['tau', 'kappa', 'tau-kappa'], required=True,
         help="Parameter to evaluate - (tau) - default, (kappa), (kappa, tau)"
     )
 
