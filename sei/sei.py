@@ -303,8 +303,7 @@ def likelihood_ratio_test(params, models, optimization, nb_simu, dof, name):
         length = (500000 / float(length_factor[index])) / (4 * 1 * mu)
     else:
         length = 1e5
-    print(length)
-    sys.exit()
+
     fixed_params = simulation_parameters(sample=sample, ne=1, rcb_rate=mu, mu=mu, length=length)
 
     # Path & name
