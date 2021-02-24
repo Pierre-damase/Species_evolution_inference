@@ -199,7 +199,15 @@ def likelihood_ratio_test(params, models, optimization, nb_simu, dof, name):
     pts_list = [sample*10, sample*10 + 10, sample*10 + 20]
 
     # Parameters for the simulation
-    fixed_params = simulation_parameters(sample=sample, ne=1, rcb_rate=mu, mu=mu, length=1e4)
+    if optimization == "tau":
+        fichier = "./Data/length_factor-kappa={}".format(params['Kappa'])
+        with open(fichier, "r") as filin:
+            length_factor = filin.readlines()[0].split(" ")
+        index = int(name.split('-')[1]) - 1
+        length = (500000 / float(length_factor[index])) / (4 * 1 * mu)
+    else:
+        length = 1e5
+    fixed_params = simulation_parameters(sample=sample, ne=1, rcb_rate=mu, mu=mu, length=length)
 
     # Path & name
     path_data = "/home/pimbert/work/Species_evolution_inference/Data/Optimization_{}/"\

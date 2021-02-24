@@ -242,11 +242,17 @@ def snp_distribution():
 
     theoritical_theta = 32000
 
+    fig, axs = plt.subplots(1, 2, figsize=(15,7))
+    sns.set_theme(style="whitegrid")
+
+    #######
+    # Tau #
+    #######
     for i, kappa in enumerate([2, 10]):
         # Export data to DataFrame
         data = from_json_to_dataframe("./Data/Optimization_tau-kappa={}/".format(kappa))
 
-        # Compute log 10 of tau
+        # Compute log10 of tau
         data['Tau'] = data['Parameters'].apply(lambda ele: np.log10(ele['Tau']))
 
         length_factor = [round(np.mean(ele) / theoritical_theta, 1) for ele in data['SNPs']]
@@ -258,15 +264,37 @@ def snp_distribution():
         data['SNPs'] = data['SNPs'].apply(lambda ele: np.log10(np.mean(ele)))
 
         # Plot
-        sns.set_theme(style="whitegrid")
-        ax = sns.lineplot(x="Tau", y="SNPs", data=data, label=label[i])
+        ax = sns.lineplot(x="Tau", y="SNPs", data=data, label=label[i], ax=axs[0])
 
-    # Set axis label
-    ax.set(xlabel='Log10(Tau)', ylabel='Log10(SNPs)')
+    # Set axis label & title
+    axs[0].set(
+        xlabel='Log10(Tau)', ylabel='Log10(SNPs)',
+        title='SNPs distribution for various tau'
+    )
+
+    #########
+    # Kappa #
+    #########
+    # Export data to DataFrame
+    data = from_json_to_dataframe("./Data/Optimization_kappa-tau={}/".format(1))
+
+    # Compute log10 of kappa
+    data['Kappa'] = data['Parameters'].apply(lambda ele: np.log10(ele['Kappa']))
+
+    # Compute mean of SNPs
+    data['SNPs'] = data['SNPs'].apply(lambda ele: np.log10(np.mean(ele)))
+
+    # Plot
+    ax = sns.lineplot(x="Kappa", y="SNPs", data=data, label='Tau = 1.0', ax=axs[1])
+
+    # Set axis label & title
+    axs[1].set(
+        xlabel='Log10(Kappa)', ylabel='', title='SNPs distribution for various kappa'
+    )
 
     # Title + save plot to folder ./Figures
-    plt.title("SNPs distribution for various tau")
-    plt.savefig("./Figures/snp_distribution")
+    #plt.title("SNPs distribution for various tau")
+    plt.savefig("./Figures/snp_distribution", bbox_inches="tight")
     plt.clf()
 
 
