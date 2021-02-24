@@ -200,7 +200,8 @@ def likelihood_ratio_test(params, models, optimization, nb_simu, dof, name):
 
     # Parameters for the simulation
     if optimization == "tau":
-        fichier = "./Data/length_factor-kappa={}".format(params['Kappa'])
+        fichier = "/home/pimbert/work/Species_evolution_inference/Data/length_factor-kappa={}"\
+            .format(params['Kappa'])
         with open(fichier, "r") as filin:
             length_factor = filin.readlines()[0].split(" ")
         index = int(name.split('-')[1]) - 1
