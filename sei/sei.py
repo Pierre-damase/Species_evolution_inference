@@ -78,6 +78,12 @@ def sfs_shape_verification():
     sfs_migration = ms.msprime_simulation(
         model=ms.two_pops_migration_model, fixed_params=fixed_params, params=params, debug=True)
 
+    params = {"Kappa": 10.0, "m12": 0, "m21": 1.0}
+    sfs_migration = ms.msprime_simulation(
+        model=ms.two_pops_migration_model, fixed_params=fixed_params, params=params, debug=True)
+
+    #sys.exit()
+
     # Theoretical SFS for any constant population
     sfs_theorique = [0] * (fixed_params["sample_size"] - 1)
     for i in range(len(sfs_theorique)):
@@ -356,7 +362,7 @@ def inference(models, optimization, scale, name):
     optimization
         parameter to optimize - (kappa), (tau), (kappa, tau), etc.
     """
-    col = ["Parameters", "Positive hit", "Model0 ll", "Model1 ll", "SNPs"]
+    col = ["Parameters", "Positive hit", "SNPs", "Model0 ll", "Model1 ll"]
     data = pd.DataFrame(columns=col)
 
     # Set up tau & kappa for the simulation and inference
@@ -421,7 +427,7 @@ def main():
             "Simulation": ms.sudden_decline_model, "Inference": dadi.sudden_decline_model,
             "Control": dadi.constant_model
         }
-        name = "{}-{}".format(args.param, args.value[0])
+        name = "{}-{}".format(args.param, int(args.value[0]))
 
         inference(models=models, optimization=args.param, scale=scale, name=name)
 
