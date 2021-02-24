@@ -2,11 +2,13 @@
 This module allows you to create graphics.
 """
 
+import os
 import sys
 import matplotlib.pyplot as plt
 import seaborn as sns
 
 import pandas as pd
+import numpy as np
 from matplotlib.lines import Line2D
 
 
@@ -18,6 +20,25 @@ def normalization(data):
     normalized_data = [ele / somme for ele in data]
 
     return normalized_data
+
+
+def from_json_to_dataframe(path_data):
+    """
+    Export json file to pandas DataFrame.
+    """
+    dico = {
+        "Parameters": np.array([], dtype=object), "Positive hit": np.array([], dtype=int),
+        "Model0 ll": np.array([], dtype=list), "Model1 ll": np.array([], dtype=list),
+        "SNPs": np.array([], dtype=int)
+    }
+    data = pd.DataFrame(dico)
+
+    for fichier in [ele for ele in os.listdir(path_data)]:
+        res = pd.read_json(path_or_buf="{}{}".format(path_data, fichier), typ='frame')
+        # res['Tau'] = np.log10(res['Tau'])
+        data = data.append(res, ignore_index=True)
+
+    return data
 
 
 ######################################################################
@@ -206,6 +227,39 @@ def plot_lrt(data, path="./Figures/"):
     # Title + save plot to folder ./Figures
     plt.title("Likelihood-ratio test - mu = 2e-2")
     plt.savefig("{}lrt".format(path), bbox_inches="tight")
+    plt.clf()
+
+
+######################################################################
+# SNPs distribution for various tau                                  #
+######################################################################
+
+def snp_distribution():
+    """
+    Plot the SNPs distribution for various tau for kappa = 2 & kappa = 10.
+    """
+    label = ['Kappa = 2', 'Kappa = 10']
+
+    for i, kappa in enumerate([2, 10]):
+        # Export data to DataFrame
+        data = from_json_to_dataframe("./Data/Optimization_tau-kappa={}/".format(kappa))
+
+        # Compute log 10 of tau
+        data['Tau'] = data['Parameters'].apply(lambda ele: np.log10(ele['Tau']))
+
+        # Compute mean of SNPs
+        data['SNPs'] = data['SNPs'].apply(lambda ele: np.log10(np.mean(ele)))
+
+        # Plot
+        sns.set_theme(style="whitegrid")
+        ax = sns.lineplot(x="Tau", y="SNPs", data=data, label=label[i])
+
+    # Set axis label
+    ax.set(xlabel='Log(Tau)', ylabel='Log(SNPs)')
+
+    # Title + save plot to folder ./Figures
+    plt.title("SNPs distribution for various tau")
+    plt.savefig("./Figures/snp_distribution")
     plt.clf()
 
 

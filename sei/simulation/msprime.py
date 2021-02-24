@@ -143,8 +143,8 @@ def two_pops_migration_model(sample, pop, params, debug):
     # Each element of the matrix Mj,k defines the fraction of population j that consists of
     # migrants from population k in each generation.
     migration_matrix = [
-        [0, params["m21"]],
-        [params["m12"], 0]
+        [0, params["m12"]],
+        [params["m21"], 0]
     ]
 
     if debug:

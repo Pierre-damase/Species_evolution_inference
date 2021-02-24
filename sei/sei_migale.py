@@ -191,7 +191,7 @@ def likelihood_ratio_test(params, models, optimization, nb_simu, dof, name):
       - LRT: list of log likelihood ratio test
         List of 0 (negative run) & 1 (positive run)
     """
-    mu, sample, ll_ratio = 8e-2, 20, []  # 8e-2
+    mu, sample, ll_ratio = 8e-2, 20, []
 
     data = {"LL": {"M0": [], "M1": []}, "SNPs": [], "LRT": []}
 
@@ -199,7 +199,7 @@ def likelihood_ratio_test(params, models, optimization, nb_simu, dof, name):
     pts_list = [sample*10, sample*10 + 10, sample*10 + 20]
 
     # Parameters for the simulation
-    fixed_params = simulation_parameters(sample=sample, ne=1, rcb_rate=mu, mu=mu, length=1e5)
+    fixed_params = simulation_parameters(sample=sample, ne=1, rcb_rate=mu, mu=mu, length=1e4)
 
     # Path & name
     path_data = "/home/pimbert/work/Species_evolution_inference/Data/Optimization_{}/"\
