@@ -49,4 +49,7 @@ def arguments():
         help="Parameter to evaluate - (tau) - default, (kappa), (kappa, tau)"
     )
 
+    # Plot SNPs distribution for various tau
+    snp = subparsers.add_parser('snp', help="Plot SNPs distribution for various tau")
+
     return parser.parse_args()

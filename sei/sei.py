@@ -58,31 +58,26 @@ def sfs_shape_verification():
     fixed_params = simulation_parameters(sample=10, ne=1, rcb_rate=2e-2, mu=2e-2, length=1e5)
 
     # Constant scenario
-    print("Scénario constant")
+    print("Constant scenario !")
     sfs_cst = ms.msprime_simulation(
         model=ms.constant_model, fixed_params=fixed_params, debug=True)
 
     # Define tau & kappa for decline/growth scenario
     params = {"Tau": 1.0, "Kappa": 10.0}
 
-    print("\n\nScénario de déclin")
+    print("\n\nDeclin scenario !")
     sfs_declin = ms.msprime_simulation(
         model=ms.sudden_decline_model, fixed_params=fixed_params, params=params, debug=True)
 
-    print("\n\nScénario de croissance")
+    print("\n\nGrowth scenario !")
     sfs_croissance = ms.msprime_simulation(
         model=ms.sudden_growth_model, fixed_params=fixed_params, params=params, debug=True)
 
     # Migration scenario
+    print("\n\nMigration scenario !")
     params = {"Kappa": 10.0, "m12": 1.0, "m21": 0}
     sfs_migration = ms.msprime_simulation(
         model=ms.two_pops_migration_model, fixed_params=fixed_params, params=params, debug=True)
-
-    params = {"Kappa": 10.0, "m12": 0, "m21": 1.0}
-    sfs_migration = ms.msprime_simulation(
-        model=ms.two_pops_migration_model, fixed_params=fixed_params, params=params, debug=True)
-
-    #sys.exit()
 
     # Theoretical SFS for any constant population
     sfs_theorique = [0] * (fixed_params["sample_size"] - 1)
@@ -452,6 +447,9 @@ def main():
             data = data.append(res, ignore_index=True)
 
         plot.plot_lrt(data)
+
+    elif args.analyse == 'snp':
+        plot.snp_distribution()
 
 
 if __name__ == "__main__":
