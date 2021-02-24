@@ -287,7 +287,7 @@ def likelihood_ratio_test(params, models, optimization, nb_simu, dof, name):
       - LRT: list of log likelihood ratio test
         List of 0 (negative run) & 1 (positive run)
     """
-    mu, sample, ll_ratio = 2e-4, 20, []  # 8e-2
+    mu, sample, ll_ratio = 8e-2, 20, []  # 8e-2
 
     data = {"LL": {"M0": [], "M1": []}, "SNPs": [], "LRT": []}
 
@@ -295,7 +295,17 @@ def likelihood_ratio_test(params, models, optimization, nb_simu, dof, name):
     pts_list = [sample*10, sample*10 + 10, sample*10 + 20]
 
     # Parameters for the simulation
-    fixed_params = simulation_parameters(sample=sample, ne=1, rcb_rate=mu, mu=mu, length=1e5)
+    if optimization == "tau":
+        fichier = "./Data/length_factor-kappa={}".format(params['Kappa'])
+        with open(fichier, "r") as filin:
+            length_factor = filin.readlines()[0].split(" ")
+        index = int(name.split('-')[1]) - 1
+        length = (500000 / float(length_factor[index])) / (4 * 1 * mu)
+    else:
+        length = 1e5
+    print(length)
+    sys.exit()
+    fixed_params = simulation_parameters(sample=sample, ne=1, rcb_rate=mu, mu=mu, length=length)
 
     # Path & name
     path_data = "./Data/Optimization_{}/".format(optimization)

@@ -240,12 +240,19 @@ def snp_distribution():
     """
     label = ['Kappa = 2', 'Kappa = 10']
 
+    theoritical_theta = 32000
+
     for i, kappa in enumerate([2, 10]):
         # Export data to DataFrame
         data = from_json_to_dataframe("./Data/Optimization_tau-kappa={}/".format(kappa))
 
         # Compute log 10 of tau
         data['Tau'] = data['Parameters'].apply(lambda ele: np.log10(ele['Tau']))
+
+        length_factor = [round(np.mean(ele) / theoritical_theta, 1) for ele in data['SNPs']]
+        with open("./Data/length_factor-kappa={}".format(kappa), 'w') as filout:
+            for ele in sorted(length_factor, reverse=True):
+                filout.write("{} ".format(ele))
 
         # Compute mean of SNPs
         data['SNPs'] = data['SNPs'].apply(lambda ele: np.log10(np.mean(ele)))
@@ -255,7 +262,7 @@ def snp_distribution():
         ax = sns.lineplot(x="Tau", y="SNPs", data=data, label=label[i])
 
     # Set axis label
-    ax.set(xlabel='Log(Tau)', ylabel='Log(SNPs)')
+    ax.set(xlabel='Log10(Tau)', ylabel='Log10(SNPs)')
 
     # Title + save plot to folder ./Figures
     plt.title("SNPs distribution for various tau")
