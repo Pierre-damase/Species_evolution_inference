@@ -193,7 +193,11 @@ def likelihood_ratio_test(params, models, optimization, nb_simu, dof, name):
     """
     mu, sample, ll_ratio = 8e-2, 20, []
 
-    data = {"LL": {"M0": [], "M1": []}, "SNPs": [], "LRT": []}
+    data = {"LL": {"M0": [], "M1": []}, "SNPs": [], "LRT": [], "Time simulation": 0,
+            "Time inference": 0}
+
+    # Time of execution
+    simulation_time, inference_time = [], []
 
     # Grid point for the extrapolation
     pts_list = [sample*10, sample*10 + 10, sample*10 + 20]
@@ -218,29 +222,40 @@ def likelihood_ratio_test(params, models, optimization, nb_simu, dof, name):
     # Generate x genomic data for the same kappa and tau
     for _ in range(nb_simu):
         # Simulation with msprime
+        start_simulation = time.time()
+
+        # Simulation with msprime
         sfs_observed = ms.msprime_simulation(
             model=models["Simulation"], fixed_params=fixed_params, params=params
         )
+
         data['SNPs'].append(sum(sfs_observed))
+        simulation_time.append(time.time() - start_simulation)
 
         # Generate the SFS file compatible with dadi
         f.dadi_data(sfs_observed, models["Inference"].__name__, path=path_data, name=name)
 
         # Dadi inference
-        ll_list = []
+        ll_list, tmp = [], []
         control_ll, _ = dadi.dadi_inference(
             pts_list, models["Control"], path=path_data, name=name
         )
 
         for _ in range(nb_simu):  # run x inference with dadi from the same observed data
+            start_inference = time.time()
+
             ll, _ = dadi.dadi_inference(
                 pts_list, models["Inference"], opt=optimization, path=path_data, name=name
             )
+
             ll_list.append(ll)
+            tmp.append(time.time() - start_inference)
 
         # Select the best one, i.e. the one with the highest likelihood
         # Compute the log-likelihood ratio
         ll_ratio.append(log_likelihood_ratio(ll_list, control_ll))
+
+        inference_time.append(round(sum(tmp) / nb_simu, 3))
 
         # Keep track of log-likelihood for each simulation
         data['LL']['M0'].append(control_ll)
@@ -248,6 +263,10 @@ def likelihood_ratio_test(params, models, optimization, nb_simu, dof, name):
 
     # Delete sfs file
     os.remove("{}{}.fs".format(path_data, name))
+
+    # Mean time execution for simulation and inference
+    data['Time simulation'] = round(sum(simulation_time) / nb_simu, 3)
+    data['Time inference'] = round(sum(inference_time) / nb_simu, 3)
 
     # Likelihood-ratio test
     data['LRT'] = [1] * len(ll_ratio)
@@ -271,12 +290,13 @@ def inference(models, optimization, scale, name):
     optimization
         parameter to optimize - (kappa), (tau), (kappa, tau), etc.
     """
-    col = ["Parameters", "Positive hit", "SNPs", "Model0 ll", "Model1 ll"]
+    col = ["Parameters", "Positive hit", "SNPs", "Model0 ll", "Model1 ll", "Time simulation",
+           "Time inference"]
     data = pd.DataFrame(columns=col)
 
     # Set up tau & kappa for the simulation and inference
     if optimization == "tau":
-        params = {"Kappa": 2, "Tau": np.float_power(10, scale[0])}  # Kappa fixed
+        params = {"Kappa": 10, "Tau": np.float_power(10, scale[0])}  # Kappa fixed
         dof = 1
     elif optimization == "kappa":
         params = {"Kappa": np.float_power(10, scale[0]), "Tau": 1.0}  # Tau fixed
@@ -288,13 +308,16 @@ def inference(models, optimization, scale, name):
     print("Likelihood ratio test - optimization of ({}) with x = 100 simulations"
           .format(optimization))
 
-    values = likelihood_ratio_test(params, models, optimization, nb_simu=2, dof=dof, name=name)
+    values = likelihood_ratio_test(
+        params, models, optimization, nb_simu=100, dof=dof, name=name
+    )
 
     print("Likelihood ratio test done !!!\n")
 
     row = {
         "Parameters": params, "Positive hit": Counter(values['LRT'])[1], "SNPs": values['SNPs'],
-        "Model0 ll": values['LL']['M0'], "Model1 ll": values['LL']['M1']
+        "Model0 ll": values['LL']['M0'], "Model1 ll": values['LL']['M1'],
+        "Time simulation": values['Time simulation'], "Time inference": values['Time inference']
     }
     data = data.append(row, ignore_index=True)
 
