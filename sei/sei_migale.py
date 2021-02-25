@@ -146,6 +146,13 @@ def log_likelihood_ratio(likelihood, control_ll):
     return 2 * (max(likelihood) - control_ll)
 
 
+def length_from_file(fichier, name, mu):
+    with open(fichier, "r") as filin:
+        length_factor = filin.readlines()[0].split(" ")
+    index = int(name.split('-')[1]) - 1
+    return (500000 / float(length_factor[index])) / (4 * 1 * mu)
+
+
 def likelihood_ratio_test(params, models, optimization, nb_simu, dof, name):
     """
     Likelihood-ratio test to assesses the godness fit of two model.
@@ -206,10 +213,12 @@ def likelihood_ratio_test(params, models, optimization, nb_simu, dof, name):
     if optimization == "tau":
         fichier = "/home/pimbert/work/Species_evolution_inference/Data/length_factor-kappa={}"\
             .format(params['Kappa'])
-        with open(fichier, "r") as filin:
-            length_factor = filin.readlines()[0].split(" ")
-        index = int(name.split('-')[1]) - 1
-        length = (500000 / float(length_factor[index])) / (4 * 1 * mu)
+        length = length_from_file(fichier, name, mu)
+
+    elif optimization == "kappa":
+        fichier = "/home/pimbert/work/Species_evolution_inference/Data/length_factor-tau={}"\
+            .format(params['Tau'])
+        length = length_from_file(fichier, name, mu)
     else:
         length = 1e5
     fixed_params = simulation_parameters(sample=sample, ne=1, rcb_rate=mu, mu=mu, length=length)
@@ -220,7 +229,7 @@ def likelihood_ratio_test(params, models, optimization, nb_simu, dof, name):
     name = "SFS-{}".format(name)
 
     # Generate x genomic data for the same kappa and tau
-    for _ in range(nb_simu):
+    for _ in range(1):  # nb_simu
         # Simulation with msprime
         start_simulation = time.time()
 
@@ -296,10 +305,10 @@ def inference(models, optimization, scale, name):
 
     # Set up tau & kappa for the simulation and inference
     if optimization == "tau":
-        params = {"Kappa": 10, "Tau": np.float_power(10, scale[0])}  # Kappa fixed
+        params = {"Kappa": 2, "Tau": np.float_power(10, scale[0])}  # Kappa fixed
         dof = 1
     elif optimization == "kappa":
-        params = {"Kappa": np.float_power(10, scale[0]), "Tau": 1.0}  # Tau fixed
+        params = {"Kappa": np.float_power(10, scale[0]), "Tau": 1}  # Tau fixed
         dof = 1
     elif optimization == "tau-kappa":
         params = {"Kappa": np.float_power(10, scale[1]), "Tau": np.float_power(10, scale[0])}
@@ -309,7 +318,7 @@ def inference(models, optimization, scale, name):
           .format(optimization))
 
     values = likelihood_ratio_test(
-        params, models, optimization, nb_simu=100, dof=dof, name=name
+        params, models, optimization, nb_simu=1000, dof=dof, name=name
     )
 
     print("Likelihood ratio test done !!!\n")
