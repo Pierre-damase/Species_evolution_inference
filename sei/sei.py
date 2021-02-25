@@ -242,6 +242,13 @@ def log_likelihood_ratio(likelihood, control_ll):
     return 2 * (max(likelihood) - control_ll)
 
 
+def length_from_file(fichier, name, mu):
+    with open(fichier, "r") as filin:
+        length_factor = filin.readlines()[0].split(" ")
+    index = int(name.split('-')[1]) - 1
+    return (500000 / float(length_factor[index])) / (4 * 1 * mu)
+
+
 def likelihood_ratio_test(params, models, optimization, nb_simu, dof, name):
     """
     Likelihood-ratio test to assesses the godness fit of two model.
@@ -301,10 +308,12 @@ def likelihood_ratio_test(params, models, optimization, nb_simu, dof, name):
     # Parameters for the simulation
     if optimization == "tau":
         fichier = "./Data/length_factor-kappa={}".format(params['Kappa'])
-        with open(fichier, "r") as filin:
-            length_factor = filin.readlines()[0].split(" ")
-        index = int(name.split('-')[1]) - 1
-        length = (500000 / float(length_factor[index])) / (4 * 1 * mu)
+        length = length_from_file(fichier, name, mu)
+
+    elif optimization == "kappa":
+        fichier = "./Data/length_factor-tau={}".format(params['Tau'])
+        length = length_from_file(fichier, name, mu)
+
     else:
         length = 1e5
 
@@ -393,7 +402,7 @@ def inference(models, optimization, scale, name):
         params = {"Kappa": 10, "Tau": np.float_power(10, scale[0])}  # Kappa fixed
         dof = 1
     elif optimization == "kappa":
-        params = {"Kappa": np.float_power(10, scale[0]), "Tau": 1.0}  # Tau fixed
+        params = {"Kappa": np.float_power(10, scale[0]), "Tau": 1}  # Tau fixed
         dof = 1
     elif optimization == "tau-kappa":
         params = {"Kappa": np.float_power(10, scale[1]), "Tau": np.float_power(10, scale[0])}
