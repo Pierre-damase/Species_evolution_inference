@@ -358,7 +358,7 @@ def likelihood_ratio_test(params, models, optimization, nb_simu, dof, name):
         # Compute the log-likelihood ratio
         ll_ratio.append(log_likelihood_ratio(ll_list, control_ll))
 
-        inference_time.append(round(sum(tmp) / nb_simu, 3))
+        inference_time.append(sum(tmp) / nb_simu, 3)
 
         # Keep track of log-likelihood for each simulation
         data['LL']['M0'].append(control_ll)
@@ -488,6 +488,9 @@ def main():
 
     elif args.analyse == 'snp':
         plot.snp_distribution()
+
+    elif args.analyse == 'stairway':
+        f.stairway_data()
 
 
 if __name__ == "__main__":

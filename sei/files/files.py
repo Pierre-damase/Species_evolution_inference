@@ -50,5 +50,12 @@ def export_sfs(path, name):
     return [int(ele) for ele in lines[1].strip().split(' ') if ele != "0"]
 
 
+def stairway_data(path="./Data/", name="SFS"):
+    with open("./sei/inference/stairway_plot_v2.1.1/two-epoch.blueprint", "r") as filin:
+        lines = filin.readlines()
+        print(lines[4])
+        print([float(ele.strip()) for ele in lines[6].split('#')[0].split(':')[1].split('\t')])
+
+
 if __name__ == "__main__":
     sys.exit()  # No actions desired
