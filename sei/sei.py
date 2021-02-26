@@ -456,6 +456,7 @@ def main():
                 np.arange(-4, 4.1, 0.1)[int(args.value[0])-1],
                 np.arange(0.05, 4.1, 0.05)[int(args.value[1])-1]
             ]
+
         models = {
             "Simulation": ms.sudden_decline_model, "Inference": dadi.sudden_decline_model,
             "Control": dadi.constant_model
@@ -490,7 +491,33 @@ def main():
         plot.snp_distribution()
 
     elif args.analyse == 'stairway':
-        f.stairway_data()
+        # Fixed parameters for the simulation
+        fixed_params = \
+            simulation_parameters(sample=20, ne=1, rcb_rate=8e-3, mu=8e-3, length=1e5)
+
+        params = {"Tau": 1.0, "Kappa": 10.0}
+
+        sfs = ms.msprime_simulation(
+            model=ms.sudden_decline_model, fixed_params=fixed_params, params=params, debug=True)
+
+        path_data = "/home/damase/All/Cours/M2BI-Diderot/Species_evolution_inference/sei/inference/stairway_plot_v2.1.1/"
+        name = "test"
+
+        # Generate the SFS file compatible with stairway plot v2
+        data = {k: v for k, v in fixed_params.items() if k in ['sample_size', 'length', 'mu']}
+        data['sfs'], data['year'], data['ninput'] = sfs, 24, 200
+
+        f.stairway_data(name, data, path_data)
+
+        # Create the batch file
+        os.system("java -cp {0}stairway_plot_es Stairbuilder {0}{1}.blueprint"
+                  .format(path_data, name))
+
+        # Run teh batch file
+        os.system("bash {}{}.blueprint.sh".format(path_data, name))
+
+        # Remove all blueprint file
+        os.system("rm -rf {}{}.blueprint*".format(path_data, name))
 
 
 if __name__ == "__main__":
