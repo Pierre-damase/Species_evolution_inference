@@ -219,6 +219,7 @@ def likelihood_ratio_test(params, models, optimization, nb_simu, dof, name):
         fichier = "/home/pimbert/work/Species_evolution_inference/Data/length_factor-tau={}"\
             .format(params['Tau'])
         length = length_from_file(fichier, name, mu)
+
     else:
         length = 1e5
     fixed_params = simulation_parameters(sample=sample, ne=1, rcb_rate=mu, mu=mu, length=length)
@@ -229,7 +230,7 @@ def likelihood_ratio_test(params, models, optimization, nb_simu, dof, name):
     name = "SFS-{}".format(name)
 
     # Generate x genomic data for the same kappa and tau
-    for _ in range(1):  # nb_simu
+    for _ in range(nb_simu):  # nb_simu
         # Simulation with msprime
         start_simulation = time.time()
 
@@ -264,7 +265,7 @@ def likelihood_ratio_test(params, models, optimization, nb_simu, dof, name):
         # Compute the log-likelihood ratio
         ll_ratio.append(log_likelihood_ratio(ll_list, control_ll))
 
-        inference_time.append(round(sum(tmp) / nb_simu, 3))
+        inference_time.append(sum(tmp) / nb_simu)
 
         # Keep track of log-likelihood for each simulation
         data['LL']['M0'].append(control_ll)
@@ -274,8 +275,8 @@ def likelihood_ratio_test(params, models, optimization, nb_simu, dof, name):
     os.remove("{}{}.fs".format(path_data, name))
 
     # Mean time execution for simulation and inference
-    data['Time simulation'] = round(sum(simulation_time) / nb_simu, 3)
-    data['Time inference'] = round(sum(inference_time) / nb_simu, 3)
+    data['Time simulation'] = round(sum(simulation_time) / nb_simu, 4)
+    data['Time inference'] = round(sum(inference_time) / nb_simu, 4)
 
     # Likelihood-ratio test
     data['LRT'] = [1] * len(ll_ratio)
@@ -318,7 +319,7 @@ def inference(models, optimization, scale, name):
           .format(optimization))
 
     values = likelihood_ratio_test(
-        params, models, optimization, nb_simu=1000, dof=dof, name=name
+        params, models, optimization, nb_simu=100, dof=dof, name=name
     )
 
     print("Likelihood ratio test done !!!\n")

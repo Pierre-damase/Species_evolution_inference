@@ -52,4 +52,6 @@ def arguments():
     # Plot SNPs distribution for various tau
     snp = subparsers.add_parser('snp', help="Plot SNPs distribution for various tau")
 
+    stairway = subparsers.add_parser('stairway', help="Stairway plots")
+
     return parser.parse_args()
