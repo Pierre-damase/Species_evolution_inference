@@ -34,11 +34,11 @@ def simulation_parameters(sample, ne, rcb_rate, mu, length):
     """
     Set up the parametres for the simulation with msprime.
     """
-    params = {
+    parameters = {
         "sample_size": sample, "size_population": ne, "rcb_rate": rcb_rate, "mu": mu,
         "length": length
     }
-    return params
+    return parameters
 
 
 ######################################################################
