@@ -193,6 +193,8 @@ def dadi_inference(pts_list, model_func, opt=None, verbose=0, path="./Data/", na
         likelihood of the data
     theta: float
         the optimal value of theta given the model
+    model: list
+        the sfs inferred
     """
     global OPTIMIZATION
     OPTIMIZATION = opt
@@ -246,7 +248,7 @@ def dadi_inference(pts_list, model_func, opt=None, verbose=0, path="./Data/", na
     # The optimal value of theta given the model
     theta = dadi.Inference.optimal_sfs_scaling(model, sfs)
 
-    return ll_model, theta
+    return ll_model, theta, model
 
 
 if __name__ == "__main__":

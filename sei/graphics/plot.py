@@ -210,27 +210,6 @@ def plot_error_rate(sample):
 
 
 ######################################################################
-# Plot likelihood-ratio test                                         #
-######################################################################
-
-def plot_lrt(data, path="./Figures/"):
-    """
-    Plot the likelihood-ratio test.
-    """
-    # Plot
-    sns.set_theme(style="whitegrid")
-    ax = sns.lineplot(x="Tau", y="Positive hit", data=data)
-
-    # Set yaxis range
-    ax.set(ylim=(0, max(data["Positive hit"]) + 5))
-
-    # Title + save plot to folder ./Figures
-    plt.title("Likelihood-ratio test - mu = 2e-2")
-    plt.savefig("{}lrt".format(path), bbox_inches="tight")
-    plt.clf()
-
-
-######################################################################
 # SNPs distribution for various tau                                  #
 ######################################################################
 
@@ -306,6 +285,147 @@ def snp_distribution():
 
     # Title + save plot to folder ./Figures
     plt.savefig("./Figures/snp_distribution", bbox_inches="tight")
+    plt.clf()
+
+
+######################################################################
+# Plot likelihood-ratio test                                         #
+######################################################################
+
+def plot_lrt(data, path="./Figures/"):
+    """
+    Plot the likelihood-ratio test.
+    """
+    # Compute log 10 of tau
+    data['Tau'] = data['Parameters'].apply(lambda ele: np.log10(ele['Tau']))
+    data['Positive hit'] = data['Positive hit'].astype(int)
+
+    # Plot
+    sns.set_theme(style="whitegrid")
+    ax = sns.lineplot(x="Tau", y="Positive hit", data=data)
+
+    # Set yaxis range
+    ax.set(ylim=(0, max(data["Positive hit"]) + 5))
+
+    # Title + save plot to folder ./Figures
+    plt.title("Likelihood-ratio test - mu = 8e-2")
+    plt.savefig("{}lrt".format(path), bbox_inches="tight")
+    plt.clf()
+
+
+######################################################################
+# Plot weighted square distance d2                                  #
+######################################################################
+
+def compute_weighted_square_distance(sfs_a, sfs_b, case):
+    """
+    Compute the weighted square distance d2
+
+    a) Between the observed SFS and the predicted SFS by model M1
+
+    In this case d2 is:
+
+      d2(eta_model, eta_observed) = Sum{(eta_model_i - eta_observed_i)^2 / eta_model_i}
+
+    With
+      - eta_observed the normalized observed SFS
+      - eta_model the normalized inferred SFS of M1
+
+
+    or b) Between the inferred SFS of two models (M0 & M1)
+
+    In this case d2 is:
+
+      d2(eta_m0, eta_m1) = Sum{(eta_m0_i - eta_m1_i)^2 / mean(eta_m0_i, eta_m1_i)}
+
+    With
+      - eta_m0 the normalized inferred SFS of M0
+      - eta_m1 the normalized inferred SFS of M1
+      - mean(eta_m0, eta_m1) = (eta_m0_i + eta_m1_i) / 2
+
+
+    In both case, the sum is from i=1 to n (i=2 if singleton ignored)
+
+    Parameter
+    ---------
+    case: either a or b
+    """
+    if case == 'a':
+        d2_i = [
+            np.power(eta_a - eta_b, 2) / eta_a for eta_a, eta_b in zip(sfs_a, sfs_b)
+        ]
+    else:
+        d2_i = [
+            np.power(eta_a - eta_b, 2) / np.mean([eta_a, eta_b]) for eta_a, eta_b
+            in zip(sfs_a, sfs_b)
+        ]
+    return sum(d2_i)
+
+
+def data_weighted_square_distance(data):
+    """
+    Retrieve and pre-process data that are needed for plot the weighted square distance d2.
+    """
+    # Normalized all SFS
+    data['SFS obs'] = data['SFS obs'].apply(lambda x: [normalization(ele) for ele in x])
+    data['SFS M0'] = data['SFS M0'].apply(lambda x: [normalization(ele) for ele in x])
+    data['SFS M1'] = data['SFS M1'].apply(lambda x: [normalization(ele) for ele in x])
+
+    # Compute weighted square distance for all SFS
+    d2_model_inferred = {}  # d2 between the observed SFS and inferred SFS of M1
+    d2_models = {}  # d2 between the inferred SFS of two models (M0 & M1)
+
+    # Iterate over DataFrame row as (index, Series) pairs
+    for i, row in data.iterrows():
+
+        # Iterate over all the normalized observed SFS & normalized inferred SFS with M1
+        tmp = []
+        for sfs_a, sfs_b in zip(row['SFS M1'], row['SFS obs']):
+            tmp.append(compute_weighted_square_distance(sfs_a, sfs_b, case='a'))
+        d2_model_inferred[i] = tmp
+
+        # Iterate over all the normalized observed SFS & normalized inferred SFS with M1
+        tmp = []
+        for sfs_a, sfs_b in zip(row['SFS M1'], row['SFS M0']):
+            tmp.append(compute_weighted_square_distance(sfs_a, sfs_b, case='b'))
+        d2_models[i] = tmp
+
+    # Add new column to the DataFrame from dictionary - the dict keys need to be in the
+    # DataFrame index
+    data['d2 model inferred'] = pd.Series(d2_model_inferred)
+    data['d2 models'] = pd.Series(d2_models)
+
+    # Compute log 10 of tau
+    data['Tau'] = data['Parameters'].apply(lambda ele: np.log10(ele['Tau']))
+
+    return data
+
+
+def plot_weighted_square_distance(data):
+    """
+    Plot the weighted square distance d2.
+    """
+    data = data_weighted_square_distance(data)
+
+    # Plot the weighted square distance - median
+    _, axs = plt.subplots(1, 2, figsize=(15, 7))
+    sns.set_theme(style="whitegrid")
+
+    percentiles, color, style = [2.5, 50, 97.5], ['tab:blue', 'tab:red'], ['dashed', 'solid', 'dashed']
+
+    for i, centile in enumerate(percentiles):
+        _ = sns.lineplot(
+            x=data['Tau'], y=[np.percentile(ele, centile) for ele in data['d2 model inferred']],
+            ax=axs[0], color=color[0], linestyle=style[i]
+        )
+
+        _ = sns.lineplot(
+            x=data['Tau'], y=[np.percentile(ele, centile) for ele in data['d2 models']],
+            ax=axs[1], color=color[1], linestyle=style[i]
+        )
+
+    # Title + save plot to folder ./Figures
+    plt.savefig("./Figures/test", bbox_inches="tight")
     plt.clf()
 
 

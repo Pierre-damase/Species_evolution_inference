@@ -2,8 +2,11 @@
 This module allows you to read or write files.
 """
 
+import os
 import sys
 import numpy as np
+import pandas as pd
+
 
 def dadi_data(sfs, fichier, path="./Data/", name="SFS"):
     """
@@ -26,7 +29,7 @@ def dadi_data(sfs, fichier, path="./Data/", name="SFS"):
     fichier: str
         file in which the SFS will be written in the format compatible with dadi
     """
-    with open("{}{}_dadi.fs".format(path, name), "w") as filout:
+    with open("{}{}.fs".format(path, name), "w") as filout:
         filout.write("{} unfolded \"{}\"\n".format(len(sfs)+2, fichier))
 
         # Write SFS
@@ -74,7 +77,7 @@ def stairway_data(name, data, path):
         # SFS
         filout.write("SFS: ")
         for snp in sfs:
-            filout.write("{}\t".format(snp))
+            filout.write("{} ".format(snp))
         filout.write("# snp frequency spectrum: number of singleton, doubleton, etc.\n")
 
         filout.write("#smallest_size_of_SFS_bin_used_for_estimation: 1\n")
@@ -85,7 +88,7 @@ def stairway_data(name, data, path):
         break_points = np.ceil([(nseq-2)/4, (nseq-2)/2, (nseq-2)*3/4, (nseq-2)])
         filout.write("nrand: ")
         for ele in break_points:
-            filout.write("{}\t".format(int(ele)))
+            filout.write("{} ".format(int(ele)))
         filout.write("# number of random break points for each try\n")
 
         filout.write("project_dir: {}{} # project directory\n".format(path, name))
@@ -110,6 +113,23 @@ def stairway_data(name, data, path):
         filout.write("xspacing: 2 # x axis spacing\n")
         filout.write("yspacing: 2 # y axis sapcing\n")
         filout.write("fontsize: 12\n")
+
+
+def export_to_dataframe(path_data):
+    """
+    Export json file to a Pandas DataFrame.
+    """
+    col = [
+        "Parameters", "Positive hit", "SNPs", "SFS obs", "SFS M0", "SFS M1",
+        "Model0 ll", "Model1 ll", "Time simulation", "Time inference"
+    ]
+    data = pd.DataFrame(columns=col)
+
+    for fichier in [ele for ele in os.listdir(path_data)]:
+        res = pd.read_json(path_or_buf="{}{}".format(path_data, fichier), typ='frame')
+        data = data.append(res, ignore_index=True)
+
+    return data
 
 
 if __name__ == "__main__":
