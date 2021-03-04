@@ -352,7 +352,7 @@ if __name__ == "__main__":
         dadi_params_optimisation(sample[args.number-1])
     elif args.analyse == 'lrt':
         if args.param == 'tau':
-            scale = [np.arange(-4, 4.1, 0.1)[int(args.value[0])-1]]
+            scale = [np.arange(-4, 4.1, 0.1)[int(args.value[0])-1]]  # 0.3
         elif args.param == 'kappa':
             scale = [np.arange(0.05, 4.1, 0.05)[int(args.value[0])-1]]
         else:

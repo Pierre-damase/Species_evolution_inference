@@ -11,6 +11,11 @@ def arguments():
     # Define the subparser
     subparsers = parser.add_subparsers(dest='analyse', required=True)
 
+    # Generate various set of data with msprime
+    data = subparsers.add_parser(
+        'data', help="Generate various unfolded sfs with msprime"
+    )
+
     # Msprime verification
     msprime = subparsers.add_parser(
         'msprime', help="Check unfolded sfs generated with msprime for various scenarios"
@@ -52,6 +57,7 @@ def arguments():
     # Plot SNPs distribution for various tau
     snp = subparsers.add_parser('snp', help="Plot SNPs distribution for various tau")
 
+    # Inference with stairway plot
     stairway = subparsers.add_parser('stairway', help="Stairway plots")
 
     return parser.parse_args()

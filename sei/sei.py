@@ -42,6 +42,26 @@ def simulation_parameters(sample, ne, rcb_rate, mu, length):
 
 
 ######################################################################
+# Generate a set of SFS with msprime                                 #
+######################################################################
+
+def length_from_file(fichier, name, mu):
+    with open(fichier, "r") as filin:
+        length_factor = filin.readlines()[0].split(" ")
+    index = int(name.split('-')[1]) - 1
+    return (100000 / float(length_factor[index])) / (4 * 1 * mu)
+
+
+def generate_sfs():
+    """
+    Generate a set of unfolded sfs of fixed SNPs size with msprime.
+    """
+    # Fixed parameters for the simulation
+    fixed_params = simulation_parameters(sample=20, ne=1, rcb_rate=8e-2, mu=8e-2, length=length)
+
+
+
+######################################################################
 # SFS verification                                                   #
 ######################################################################
 
@@ -128,7 +148,7 @@ def grid_optimisation():
             point = (len(sfs) - 1) * scale
             pts_list = [point, point+10, point+20]
 
-            likelihood, estimated_theta = dadi.dadi_inference(pts_list, dadi.constant_model)
+            likelihood, estimated_theta, _ = dadi.dadi_inference(pts_list, dadi.constant_model)
 
             dico[mu]["Likelihood"].append(likelihood)
             dico[mu]["Estimated theta"].append(estimated_theta)
@@ -187,7 +207,7 @@ def dadi_params_optimisation(sample):
                         name="SFS-{}".format(sample))
 
             # Dadi inference
-            _, estimated_theta = dadi.dadi_inference(
+            _, estimated_theta, _ = dadi.dadi_inference(
                 pts_list, dadi.constant_model, path="./Data/Error_rate/",
                 name="SFS-{}".format(sample)
             )
@@ -242,13 +262,6 @@ def log_likelihood_ratio(likelihood, control_ll):
     return 2 * (max(likelihood) - control_ll)
 
 
-def length_from_file(fichier, name, mu):
-    with open(fichier, "r") as filin:
-        length_factor = filin.readlines()[0].split(" ")
-    index = int(name.split('-')[1]) - 1
-    return (500000 / float(length_factor[index])) / (4 * 1 * mu)
-
-
 def likelihood_ratio_test(params, models, optimization, nb_simu, dof, name):
     """
     Likelihood-ratio test to assesses the godness fit of two model.
@@ -293,11 +306,21 @@ def likelihood_ratio_test(params, models, optimization, nb_simu, dof, name):
         SNPs for the observed sfs generated with msprime
       - LRT: list of log likelihood ratio test
         List of 0 (negative run) & 1 (positive run)
+      - Time simulation: float
+        The mean time of execution of the x simulations with msprime
+      - Time inference: float
+        The mean time of execution of the x inferences with dadi
+      - SFS: list of SFS
+        Obs: the observed SFS generated with msprime
+        M0: the inferred SFS for M0 the model with less parameters
+        M1: the inferred SFS for M1 the model with more parameters
     """
     mu, sample, ll_ratio = 8e-2, 20, []  # 8e-2
 
-    data = {"LL": {"M0": [], "M1": []}, "SNPs": [], "LRT": [], "Time simulation": 0,
-            "Time inference": 0}
+    data = {
+        "LL": {"M0": [], "M1": []}, "SNPs": [], "LRT": [], "Time simulation": 0,
+        "Time inference": 0, "SFS": {"Obs": [], "M0": [], "M1": []}
+    }
 
     # Time of execution
     simulation_time, inference_time = [], []
@@ -339,30 +362,37 @@ def likelihood_ratio_test(params, models, optimization, nb_simu, dof, name):
         f.dadi_data(sfs_observed, models["Inference"].__name__, path=path_data, name=name)
 
         # Dadi inference
-        ll_list, tmp = [], []
-        control_ll, _ = dadi.dadi_inference(
+        ll_list, tmp, sfs_m1 = [], [], []
+        control_ll, _, sfs_m0 = dadi.dadi_inference(
             pts_list, models["Control"], path=path_data, name=name
         )
 
         for _ in range(nb_simu):  # run x inference with dadi from the same observed data
             start_inference = time.time()
 
-            ll, _ = dadi.dadi_inference(
+            ll, _, sfs_inferred = dadi.dadi_inference(
                 pts_list, models["Inference"], opt=optimization, path=path_data, name=name
             )
 
             ll_list.append(ll)
             tmp.append(time.time() - start_inference)
+            sfs_m1.append(list(sfs_inferred[1:-1]))
 
         # Select the best one, i.e. the one with the highest likelihood
         # Compute the log-likelihood ratio
         ll_ratio.append(log_likelihood_ratio(ll_list, control_ll))
 
-        inference_time.append(sum(tmp) / nb_simu, 3)
+        # Mean execution time of x inference with dadi
+        inference_time.append(sum(tmp) / nb_simu)
 
         # Keep track of log-likelihood for each simulation
         data['LL']['M0'].append(control_ll)
         data['LL']['M1'].append(max(ll_list))
+
+        # Keep track of the observed SFS and inferred SFS for M0 & M1 (best one)
+        data['SFS']['Obs'].append(sfs_observed[1:-1])
+        data['SFS']['M0'].append(list(sfs_m0[1:-1]))
+        data['SFS']['M1'].append(sfs_m1[ll_list.index(max(ll_list))])
 
     # Delete sfs file
     os.remove("{}{}.fs".format(path_data, name))
@@ -393,8 +423,10 @@ def inference(models, optimization, scale, name):
     optimization
         parameter to optimize - (kappa), (tau), (kappa, tau), etc.
     """
-    col = ["Parameters", "Positive hit", "SNPs", "Model0 ll", "Model1 ll", "Time simulation",
-           "Time inference"]
+    col = [
+        "Parameters", "Positive hit", "SNPs", "SFS obs", "SFS M0", "SFS M1",
+        "Model0 ll", "Model1 ll", "Time simulation", "Time inference"
+    ]
     data = pd.DataFrame(columns=col)
 
     # Set up tau & kappa for the simulation and inference
@@ -417,12 +449,14 @@ def inference(models, optimization, scale, name):
 
     row = {
         "Parameters": params, "Positive hit": Counter(values['LRT'])[1], "SNPs": values['SNPs'],
+        "SFS obs": values['SFS']['Obs'], "SFS M0": values['SFS']['M0'],
+        "SFS M1": values['SFS']['M1'],
         "Model0 ll": values['LL']['M0'], "Model1 ll": values['LL']['M1'],
         "Time simulation": values['Time simulation'], "Time inference": values['Time inference']
     }
     data = data.append(row, ignore_index=True)
 
-    # Export data to csv file
+    # Export data to json file
     path_data = "./Data/Optimization_{}/".format(optimization)
     data.to_json("{}opt_{}.json".format(path_data, name))
 
@@ -440,7 +474,10 @@ def main():
 
     args = arg.arguments()
 
-    if args.analyse == 'msprime':
+    if args.analyse == 'data':
+        generate_sfs()
+
+    elif args.analyse == 'msprime':
         sfs_shape_verification()
 
     elif args.analyse == 'opt':
@@ -448,9 +485,9 @@ def main():
 
     elif args.analyse == 'lrt':
         if args.param == 'tau':
-            scale = [np.arange(-4, 4.1, 0.1)[int(args.value[0])-1]]
+            scale = [np.arange(-4, 4, 0.1)[int(args.value[0])-1]]
         elif args.param == 'kappa':
-            scale = [np.arange(0.05, 4.1, 0.05)[int(args.value[0])-1]]
+            scale = [np.arange(-3.3, 3.1, 0.08)[int(args.value[0])-1]]
         else:
             scale = [
                 np.arange(-4, 4.1, 0.1)[int(args.value[0])-1],
@@ -470,22 +507,24 @@ def main():
             plot.plot_error_rate(sample)
 
     elif args.analyse == 'ases':
-        path_data = "./Data/Optimization_{}/".format(args.param)
+        path_data = "./Data/Optimization_{}_d2/".format(args.param)
+        data = f.export_to_dataframe(path_data)
+
+        plot.plot_weighted_square_distance(data)
 
         # Generate plot puissance
-        dico = {
-            "Tau": np.array([], dtype=float), "Kappa": np.array([], dtype=float),
-            "Positive hit": np.array([], dtype=int),
-            "Model0 ll": np.array([], dtype=list), "Model1 ll": np.array([], dtype=list)
-        }
-        data = pd.DataFrame(dico)
+        path_data = "./Data/Optimization_{}/".format(args.param)
+        col = [
+            "Parameters", "Positive hit", "SNPs",
+            "Model0 ll", "Model1 ll", "Time simulation", "Time inference"
+        ]
+        data = pd.DataFrame(columns=col)
 
         for fichier in [ele for ele in os.listdir(path_data) if ele.startswith("opt")]:
             res = pd.read_json(path_or_buf="{}{}".format(path_data, fichier), typ='frame')
-            res['Tau'] = np.log10(res['Tau'])
-            data = data.append(res, ignore_index=True)
+            #data = data.append(res, ignore_index=True)
 
-        plot.plot_lrt(data)
+        #plot.plot_lrt(data)
 
     elif args.analyse == 'snp':
         plot.snp_distribution()
@@ -493,19 +532,20 @@ def main():
     elif args.analyse == 'stairway':
         # Fixed parameters for the simulation
         fixed_params = \
-            simulation_parameters(sample=20, ne=1, rcb_rate=8e-3, mu=8e-3, length=1e5)
+            simulation_parameters(sample=20, ne=1, rcb_rate=8e-4, mu=8e-4, length=1e5)
 
         params = {"Tau": 1.0, "Kappa": 10.0}
 
         sfs = ms.msprime_simulation(
             model=ms.sudden_decline_model, fixed_params=fixed_params, params=params, debug=True)
 
-        path_data = "/home/damase/All/Cours/M2BI-Diderot/Species_evolution_inference/sei/inference/stairway_plot_v2.1.1/"
+        path_data = "/home/damase/All/Cours/M2BI-Diderot/Species_evolution_inference/sei/" \
+            "inference/stairway_plot_v2.1.1/"
         name = "test"
 
         # Generate the SFS file compatible with stairway plot v2
         data = {k: v for k, v in fixed_params.items() if k in ['sample_size', 'length', 'mu']}
-        data['sfs'], data['year'], data['ninput'] = sfs, 24, 200
+        data['sfs'], data['year'], data['ninput'] = sfs, 1, 200
 
         f.stairway_data(name, data, path_data)
 
