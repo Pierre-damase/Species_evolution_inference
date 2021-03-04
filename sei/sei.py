@@ -57,7 +57,7 @@ def generate_sfs(params, model, nb_simu, path_data, name):
     Generate a set of unfolded sfs of fixed SNPs size with msprime.
     """
     # Data
-    data = pd.DataFrame(columns=['Parameters', 'SFS', 'SNPs'])
+    data = pd.DataFrame(columns=['Parameters', 'SFS', 'SNPs', 'Time'])
 
     # Convert params from log scale
     params = {k: np.power(10, v) for k, v in params.items()}
@@ -65,14 +65,18 @@ def generate_sfs(params, model, nb_simu, path_data, name):
     # Parameters for the simulation
     params.update(simulation_parameters(sample=20, ne=1, rcb_rate=8e-5, mu=8e-5, length=1e5))
 
-    sfs, snp = [], []
+    sfs, snp, execution = [], [], []
     for _ in range(nb_simu):
+        start_time = time.time()
+
         sfs_observed = ms.msprime_simulation(model=model, params=params)
         sfs.append(sfs_observed)
         snp.append(sum(sfs_observed))
 
+        execution.append(time.time() - start_time)
+
     # Export DataFrame to json file
-    row = {'Parameters': params, 'SFS': sfs, 'SNPs': snp}
+    row = {'Parameters': params, 'SFS': sfs, 'SNPs': snp, 'Time': round(np.mean(execution), 4)}
     data = data.append(row, ignore_index=True)
 
     data.to_json("{}{}".format(path_data, name))
