@@ -22,5 +22,5 @@
 #$ -e $HOME/work/Err
 
 conda activate sei-3.8.5
-python /home/pimbert/work/Species_evolution_inference/sei/sei_migale.py data --param decline --value $SGE_TASK_ID
+python /home/pimbert/work/Species_evolution_inference/sei/sei_migale.py data --model decline --value $SGE_TASK_ID
 conda deactivate
