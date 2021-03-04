@@ -45,20 +45,37 @@ def simulation_parameters(sample, ne, rcb_rate, mu, length):
 # Generate a set of SFS with msprime                                 #
 ######################################################################
 
-def length_from_file(fichier, name, mu):
+def length_from_file(fichier, name, mu, snp):
     with open(fichier, "r") as filin:
         length_factor = filin.readlines()[0].split(" ")
     index = int(name.split('-')[1]) - 1
-    return (100000 / float(length_factor[index])) / (4 * 1 * mu)
+    return (snp / float(length_factor[index])) / (4 * 1 * mu)
 
 
-def generate_sfs():
+def generate_sfs(params, model, nb_simu, path_data, name):
     """
     Generate a set of unfolded sfs of fixed SNPs size with msprime.
     """
-    # Fixed parameters for the simulation
-    fixed_params = simulation_parameters(sample=20, ne=1, rcb_rate=8e-2, mu=8e-2, length=length)
+    # Data
+    data = pd.DataFrame(columns=['Parameters', 'SFS', 'SNPs'])
 
+    # Convert params from log scale
+    params = {k: np.power(10, v) for k, v in params.items()}
+
+    # Parameters for the simulation
+    params.update(simulation_parameters(sample=20, ne=1, rcb_rate=8e-5, mu=8e-5, length=1e5))
+
+    sfs, snp = [], []
+    for _ in range(nb_simu):
+        sfs_observed = ms.msprime_simulation(model=model, params=params)
+        sfs.append(sfs_observed)
+        snp.append(sum(sfs_observed))
+
+    # Export DataFrame to json file
+    row = {'Parameters': params, 'SFS': sfs, 'SNPs': snp}
+    data = data.append(row, ignore_index=True)
+
+    data.to_json("{}{}".format(path_data, name))
 
 
 ######################################################################
@@ -75,32 +92,31 @@ def sfs_shape_verification():
      - The SFS of an increasing or decreasing population
     """
     # Fixed parameters for the simulation
-    fixed_params = simulation_parameters(sample=10, ne=1, rcb_rate=2e-2, mu=2e-2, length=1e5)
+    params = simulation_parameters(sample=10, ne=1, rcb_rate=2e-2, mu=2e-2, length=1e5)
 
     # Constant scenario
     print("Constant scenario !")
-    sfs_cst = ms.msprime_simulation(
-        model=ms.constant_model, fixed_params=fixed_params, debug=True)
+    sfs_cst = ms.msprime_simulation(model=ms.constant_model, params=params, debug=True)
 
     # Define tau & kappa for decline/growth scenario
-    params = {"Tau": 1.0, "Kappa": 10.0}
+    params.update({"Tau": 1.0, "Kappa": 10.0})
 
     print("\n\nDeclin scenario !")
-    sfs_declin = ms.msprime_simulation(
-        model=ms.sudden_decline_model, fixed_params=fixed_params, params=params, debug=True)
+    sfs_declin = \
+        ms.msprime_simulation(model=ms.sudden_decline_model, params=params, debug=True)
 
     print("\n\nGrowth scenario !")
-    sfs_croissance = ms.msprime_simulation(
-        model=ms.sudden_growth_model, fixed_params=fixed_params, params=params, debug=True)
+    sfs_croissance = \
+        ms.msprime_simulation(model=ms.sudden_growth_model, params=params, debug=True)
 
     # Migration scenario
     print("\n\nMigration scenario !")
-    params = {"Kappa": 10.0, "m12": 1.0, "m21": 0}
-    sfs_migration = ms.msprime_simulation(
-        model=ms.two_pops_migration_model, fixed_params=fixed_params, params=params, debug=True)
+    params.update({"Kappa": 10.0, "m12": 1.0, "m21": 0})
+    sfs_migration = \
+        ms.msprime_simulation(model=ms.two_pops_migration_model, params=params, debug=True)
 
     # Theoretical SFS for any constant population
-    sfs_theorique = [0] * (fixed_params["sample_size"] - 1)
+    sfs_theorique = [0] * (params["sample_size"] - 1)
     for i in range(len(sfs_theorique)):
         sfs_theorique[i] = 1 / (i+1)
 
@@ -331,11 +347,11 @@ def likelihood_ratio_test(params, models, optimization, nb_simu, dof, name):
     # Parameters for the simulation
     if optimization == "tau":
         fichier = "./Data/length_factor-kappa={}".format(params['Kappa'])
-        length = length_from_file(fichier, name, mu)
+        length = length_from_file(fichier, name, mu, 500000)
 
     elif optimization == "kappa":
         fichier = "./Data/length_factor-tau={}".format(params['Tau'])
-        length = length_from_file(fichier, name, mu)
+        length = length_from_file(fichier, name, mu, 500000)
 
     else:
         length = 1e5
@@ -475,7 +491,22 @@ def main():
     args = arg.arguments()
 
     if args.analyse == 'data':
-        generate_sfs()
+
+        if args.model == "decline":
+            # Range of value for tau & kappa
+            tau_list, kappa_list = np.arange(-4, 4, 0.1), np.arange(-3.3, 3.1, 0.08)
+            params = []
+            for tau in tau_list:
+                for kappa in kappa_list:
+                    params.append({'Tau': round(tau, 2), 'Kappa': round(kappa, 2)})
+
+            params, model = params[args.value-1], ms.sudden_decline_model
+
+            # Path of data & file name
+            path_data = "./Data/Msprime/sfs_{}/".format(args.model)
+            name = "SFS_{}-tau={}_kappa={}".format(args.model, params['Tau'], params['Kappa'])
+
+        generate_sfs(params, model, nb_simu=2, path_data=path_data, name=name)
 
     elif args.analyse == 'msprime':
         sfs_shape_verification()
