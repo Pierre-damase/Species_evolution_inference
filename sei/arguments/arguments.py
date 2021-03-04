@@ -5,7 +5,22 @@ Define command-line options, arguments and sub-commands by using argparse.
 import argparse
 
 
+def data_type(value):
+    try:
+        value = int(value)
+    except:
+        raise argparse.ArgumentTypeError('Value must be an integer !')
+
+    if value < 1:
+        raise argparse.ArgumentTypeError('Value must be an integer >= 1')
+
+    return value
+
+
 def arguments():
+    """
+    Define arguments.
+    """
     parser = argparse.ArgumentParser()
 
     # Define the subparser
@@ -14,6 +29,15 @@ def arguments():
     # Generate various set of data with msprime
     data = subparsers.add_parser(
         'data', help="Generate various unfolded sfs with msprime"
+    )
+    data.add_argument(
+        '--model', dest='model', required=True, choices=['decline', 'migration'],
+        help="Kind of scenario to use for the generation of sfs with msprime - declin" \
+        ", migration, etc."
+    )
+    data.add_argument(
+        '--value', dest='value', type=data_type, required=True, 
+        help="Simulation with msprime for a given tau & kappa"
     )
 
     # Msprime verification

@@ -41,6 +41,43 @@ def simulation_parameters(sample, ne, rcb_rate, mu, length):
 
 
 ######################################################################
+# Generate a set of SFS with msprime                                 #
+######################################################################
+
+def length_from_file(fichier, name, mu, snp):
+    with open(fichier, "r") as filin:
+        length_factor = filin.readlines()[0].split(" ")
+    index = int(name.split('-')[1]) - 1
+    return (snp / float(length_factor[index])) / (4 * 1 * mu)
+
+
+def generate_sfs(params, model, nb_simu, path_data, name):
+    """
+    Generate a set of unfolded sfs of fixed SNPs size with msprime.
+    """
+    # Data
+    data = pd.DataFrame(columns=['Parameters', 'SFS', 'SNPs'])
+
+    # Convert params from log scale
+    params = {k: np.power(10, v) for k, v in params.items()}
+
+    # Parameters for the simulation
+    params.update(simulation_parameters(sample=20, ne=1, rcb_rate=8e-5, mu=8e-5, length=1e5))
+
+    sfs, snp = [], []
+    for _ in range(nb_simu):
+        sfs_observed = ms.msprime_simulation(model=model, params=params)
+        sfs.append(sfs_observed)
+        snp.append(sum(sfs_observed))
+
+    # Export DataFrame to json file
+    row = {'Parameters': params, 'SFS': sfs, 'SNPs': snp}
+    data = data.append(row, ignore_index=True)
+
+    data.to_json("{}{}".format(path_data, name))
+
+
+######################################################################
 # Optimization of dadi parameters                                    #
 ######################################################################
 
@@ -347,7 +384,26 @@ if __name__ == "__main__":
 
     args = arg.arguments()
 
-    if args.analyse == 'opt':
+    if args.analyse == 'data':
+
+        if args.model == "decline":
+            # Range of value for tau & kappa
+            tau_list, kappa_list = np.arange(-4, 4, 0.1), np.arange(-3.3, 3.1, 0.08)
+            params = []
+            for tau in tau_list:
+                for kappa in kappa_list:
+                    params.append({'Tau': round(tau, 2), 'Kappa': round(kappa, 2)})
+
+            params, model = params[args.value-1], ms.sudden_decline_model
+
+            # Path of data & file name
+            path_data = "/home/pimbert/work/Species_evolution_inference/Data/Msprime/sfs_{}/" \
+                .format(args.model)
+            name = "SFS_{}-tau={}_kappa={}".format(args.model, params['Tau'], params['Kappa'])
+
+        generate_sfs(params, model, nb_simu=2, path_data=path_data, name=name)
+
+    elif args.analyse == 'opt':
         sample = [10, 20, 40, 60, 100]
         dadi_params_optimisation(sample[args.number-1])
     elif args.analyse == 'lrt':
