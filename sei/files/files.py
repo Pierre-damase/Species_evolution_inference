@@ -132,5 +132,17 @@ def export_to_dataframe(path_data):
     return data
 
 
+def factor_to_file(data):
+    """
+    Compute the length factor of each (tau, kappa) pairs nad save it to a file.
+    """
+    theoritical_theta = 32000
+
+    length_factor = [np.mean(ele) / theoritical_theta for ele in data['SNPs']]
+    with open("./Data/length_factor-decline", "w") as filout:
+        for ele in sorted(length_factor, reverse=True):
+            filout.write("{} ".format(ele))
+
+
 if __name__ == "__main__":
     sys.exit()  # No actions desired

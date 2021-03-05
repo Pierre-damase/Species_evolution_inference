@@ -51,18 +51,26 @@ def length_from_file(fichier, name, mu, snp):
     return (snp / float(length_factor[index])) / (4 * 1 * mu)
 
 
-def generate_sfs(params, model, nb_simu, path_data, name):
+def generate_sfs(params, model, nb_simu, path_data, path_length):
     """
     Generate a set of unfolded sfs of fixed SNPs size with msprime.
     """
+    mu = 8e-2
+
     # Data
     data = pd.DataFrame(columns=['Parameters', 'SFS', 'SNPs', 'Time'])
+
+    # Define length
+    #length = length_from_file(path_length, params, mu, snp=10000)
+    #print(length)
+    #sys.exit()
+    length = 1e5
 
     # Convert params from log scale
     params = {k: np.power(10, v) for k, v in params.items()}
 
     # Parameters for the simulation
-    params.update(simulation_parameters(sample=20, ne=1, rcb_rate=8e-5, mu=8e-5, length=1e5))
+    params.update(simulation_parameters(sample=20, ne=1, rcb_rate=mu, mu=mu, length=length))
 
     sfs, snp, execution = [], [], []
     for _ in range(nb_simu):
@@ -78,7 +86,7 @@ def generate_sfs(params, model, nb_simu, path_data, name):
     row = {'Parameters': params, 'SFS': sfs, 'SNPs': snp, 'Time': round(np.mean(execution), 4)}
     data = data.append(row, ignore_index=True)
 
-    data.to_json("{}{}".format(path_data, name))
+    data.to_json("{}".format(path_data))
 
 
 ######################################################################
@@ -388,24 +396,25 @@ if __name__ == "__main__":
 
     args = arg.arguments()
 
-    if args.analyse == 'data':
+    if args.analyse == 'data' and args.model == "decline":
+        # Range of value for tau & kappa
+        tau_list, kappa_list = np.arange(-4, 4, 0.1), np.arange(-3.3, 3.1, 0.08)
+        params = []
+        for tau in tau_list:
+            for kappa in kappa_list:
+                params.append({'Tau': round(tau, 2), 'Kappa': round(kappa, 2)})
 
-        if args.model == "decline":
-            # Range of value for tau & kappa
-            tau_list, kappa_list = np.arange(-4, 4, 0.1), np.arange(-3.3, 3.1, 0.08)
-            params = []
-            for tau in tau_list:
-                for kappa in kappa_list:
-                    params.append({'Tau': round(tau, 2), 'Kappa': round(kappa, 2)})
+        params, model = params[args.value-1], ms.sudden_decline_model
 
-            params, model = params[args.value-1], ms.sudden_decline_model
+        # Path of data
+        path_data = "/home/pimbert/work/Species_evolution_inference/Data/Msprime/sfs_{0}/"\
+            "SFS_{0}-tau={1}_kappa={2}"\
+            .format(args.model, params['Tau'], params['Kappa'])
+        path_length = \
+            "/home/pimbert/work/Species_evolution_inference/Data/Msprime/length_factor-{}"\
+            .format(args.model)
 
-            # Path of data & file name
-            path_data = "/home/pimbert/work/Species_evolution_inference/Data/Msprime/sfs_{}/" \
-                .format(args.model)
-            name = "SFS_{}-tau={}_kappa={}".format(args.model, params['Tau'], params['Kappa'])
-
-        generate_sfs(params, model, nb_simu=2, path_data=path_data, name=name)
+        generate_sfs(params, model, nb_simu=2, path_data=path_data, path_length=path_length)
 
     elif args.analyse == 'opt':
         sample = [10, 20, 40, 60, 100]
