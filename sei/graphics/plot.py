@@ -289,6 +289,38 @@ def snp_distribution():
 
 
 ######################################################################
+# Plot SNPs distribution in 3D for various tau & kappa               #
+######################################################################
+
+def snp_distribution_3d(data):
+    """
+    Plot SNPs distribution in 3D of simulation with msprime.
+    """
+    # Compute log10 of kappa & tau
+    data['Tau'] = data['Parameters'].apply(lambda ele: np.log10(ele['Tau']))
+    data['Kappa'] = data['Parameters'].apply(lambda ele: np.log10(ele['Kappa']))
+
+    # Compute mean of SNPs (then log10)
+    data['SNPs'] = data['SNPs'].apply(lambda ele: np.log10(np.mean(ele)))
+
+    # Plot
+    sns.set_theme(style='whitegrid')
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+
+    ax.set_xlabel('Log10(Tau)')
+    ax.set_ylabel('Log10(SNPs)')
+    ax.set_zlabel('Log10(Kappa)')
+
+    ax.scatter(data['Tau'], data['SNPs'], data['Kappa'])
+
+    # Title + save plot to folder ./Figures
+    plt.savefig("./Figures/snp_distribution_3d", bbox_inches="tight")
+    plt.clf()
+
+
+######################################################################
 # Plot likelihood-ratio test                                         #
 ######################################################################
 

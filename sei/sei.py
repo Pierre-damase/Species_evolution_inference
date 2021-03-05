@@ -3,6 +3,7 @@ Programme pour inférer l'évolution d'une population à partir de données gén
 """
 
 import os
+import random
 import sys
 import time
 import warnings
@@ -45,25 +46,39 @@ def simulation_parameters(sample, ne, rcb_rate, mu, length):
 # Generate a set of SFS with msprime                                 #
 ######################################################################
 
-def length_from_file(fichier, name, mu, snp):
-    with open(fichier, "r") as filin:
-        length_factor = filin.readlines()[0].split(" ")
-    index = int(name.split('-')[1]) - 1
-    return (snp / float(length_factor[index])) / (4 * 1 * mu)
+def length_from_file(fichier, params, mu, snp):
+    """
+    Extract length factor from file and return the length of the sequence.
+    """
+    res = pd.read_json(path_or_buf="{}".format(fichier), typ='frame')
+
+    print(res[res['Parameters'] == params])
+    print(params)
+    sys.exit()
+
+    return (snp / float(1)) / (4 * 1 * mu)
 
 
-def generate_sfs(params, model, nb_simu, path_data, name):
+def generate_sfs(params, model, nb_simu, path_data, path_length):
     """
     Generate a set of unfolded sfs of fixed SNPs size with msprime.
     """
+    mu = 8e-2
+
     # Data
     data = pd.DataFrame(columns=['Parameters', 'SFS', 'SNPs', 'Time'])
+
+    # Define length
+    #length = length_from_file(path_length, params, mu, snp=10000)
+    #print(length)
+    #sys.exit()
+    length = 1e5
 
     # Convert params from log scale
     params = {k: np.power(10, v) for k, v in params.items()}
 
     # Parameters for the simulation
-    params.update(simulation_parameters(sample=20, ne=1, rcb_rate=8e-5, mu=8e-5, length=1e5))
+    params.update(simulation_parameters(sample=20, ne=1, rcb_rate=mu, mu=mu, length=length))
 
     sfs, snp, execution = [], [], []
     for _ in range(nb_simu):
@@ -79,7 +94,7 @@ def generate_sfs(params, model, nb_simu, path_data, name):
     row = {'Parameters': params, 'SFS': sfs, 'SNPs': snp, 'Time': round(np.mean(execution), 4)}
     data = data.append(row, ignore_index=True)
 
-    data.to_json("{}{}".format(path_data, name))
+    data.to_json("{}".format(path_data))
 
 
 ######################################################################
@@ -494,23 +509,57 @@ def main():
 
     args = arg.arguments()
 
-    if args.analyse == 'data':
+    if args.analyse == 'data' and (args.snp or args.file):
+        # Path data
+        path_data = "./Data/Msprime/snp_distribution/sfs_{}/".format(args.model)
 
-        if args.model == "decline":
-            # Range of value for tau & kappa
-            tau_list, kappa_list = np.arange(-4, 4, 0.1), np.arange(-3.3, 3.1, 0.08)
-            params = []
-            for tau in tau_list:
-                for kappa in kappa_list:
-                    params.append({'Tau': round(tau, 2), 'Kappa': round(kappa, 2)})
+        # Data
+        data = pd.DataFrame(columns=['Parameters', 'SNPs', 'SFS', 'Time'])
 
-            params, model = params[args.value-1], ms.sudden_decline_model
+        # Length factor
+        if args.file:
+            length_factor = pd.DataFrame(columns=['Parameters', 'Factor'])
+            theoritical_theta = 32000
 
-            # Path of data & file name
-            path_data = "./Data/Msprime/sfs_{}/".format(args.model)
-            name = "SFS_{}-tau={}_kappa={}".format(args.model, params['Tau'], params['Kappa'])
+        files = os.listdir(path_data)
+        #files = random.sample(files, round(len(files)/20)):
 
-        generate_sfs(params, model, nb_simu=2, path_data=path_data, name=name)
+        for fichier in files:
+            res = pd.read_json(path_or_buf="{}{}".format(path_data, fichier), typ='frame')
+            data = data.append(res, ignore_index=True)
+
+            if args.file:
+                if args.model == 'decline':
+                    tmp = {'Tau': float(fichier.split('=')[1].split('_')[0]),
+                           'Kappa': float(fichier.split('=')[2])}
+                factor = {
+                    'Parameters': tmp, 'Factor': np.mean(res['SNPs'][0]) / theoritical_theta
+                }
+                length_factor = length_factor.append(factor, ignore_index=True)
+
+        if args.snp:  # Plot SNPs distribution
+            plot.snp_distribution_3d()
+        else:  # Import sequences length factor to text json file
+            length_factor.to_json("./Data/Msprime/length_factor-{}".format(args.model))
+
+        sys.exit()
+
+    if args.analyse == 'data' and args.model == "decline":
+        # Range of value for tau & kappa
+        tau_list, kappa_list = np.arange(-4, 4, 0.1), np.arange(-3.3, 3.1, 0.08)
+        params = []
+        for tau in tau_list:
+            for kappa in kappa_list:
+                params.append({'Tau': round(tau, 2), 'Kappa': round(kappa, 2)})
+
+        params, model = params[args.value-1], ms.sudden_decline_model
+
+        # Path of data
+        path_data = "./Data/Msprime/sfs_{0}/SFS_{0}-tau={1}_kappa={2}"\
+            .format(args.model, params['Tau'], params['Kappa'])
+        path_length = "./Data/Msprime/length_factor-{}".format(args.model)
+
+        generate_sfs(params, model, nb_simu=2, path_data=path_data, path_length=path_length)
 
     elif args.analyse == 'msprime':
         sfs_shape_verification()

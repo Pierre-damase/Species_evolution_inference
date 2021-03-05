@@ -8,8 +8,8 @@ import argparse
 def data_type(value):
     try:
         value = int(value)
-    except:
-        raise argparse.ArgumentTypeError('Value must be an integer !')
+    except ValueError as type_error:
+        raise argparse.ArgumentTypeError('Value must be an integer !') from type_error
 
     if value < 1:
         raise argparse.ArgumentTypeError('Value must be an integer >= 1')
@@ -26,7 +26,9 @@ def arguments():
     # Define the subparser
     subparsers = parser.add_subparsers(dest='analyse', required=True)
 
-    # Generate various set of data with msprime
+    #############################################
+    # Generate various set of data with msprime #
+    #############################################
     data = subparsers.add_parser(
         'data', help="Generate various unfolded sfs with msprime"
     )
@@ -35,17 +37,33 @@ def arguments():
         help="Kind of scenario to use for the generation of sfs with msprime - declin" \
         ", migration, etc."
     )
-    data.add_argument(
-        '--value', dest='value', type=data_type, required=True, 
+
+    group = data.add_mutually_exclusive_group(required=True)
+    group.add_argument(
+        '--value', dest='value', type=data_type,
         help="Simulation with msprime for a given tau & kappa"
     )
 
-    # Msprime verification
+    sub_group = group.add_mutually_exclusive_group()
+    sub_group.add_argument(
+        '--snp', dest='snp', action='store_true',
+        help="To determine and plot the snp distribution for a given model"
+    )
+    sub_group.add_argument(
+        '--file', dest='file', action='store_true',
+        help="Determine the length factor for each (tau, kappa) pairs"
+    )
+
+    #############################################
+    # Msprime verification                      #
+    #############################################
     msprime = subparsers.add_parser(
         'msprime', help="Check unfolded sfs generated with msprime for various scenarios"
     )
 
-    # Optimisation
+    #############################################
+    # Optimisation                              #
+    #############################################
     opt = subparsers.add_parser('opt', help="Compute optimisation of dadi's parameters")
     opt.add_argument(
         '--nb', dest='number', type=int, required=True,
@@ -53,7 +71,9 @@ def arguments():
         inference of 100 observed for various mutation rate mu"""
     )
 
-    # Likelihood-ratio test
+    #############################################
+    # Likelihood-ratio test                     #
+    #############################################
     lrt = subparsers.add_parser('lrt', help="Comute likelihood-ratio test for dadi inference")
     lrt.add_argument(
         '--param', dest='param', choices=['tau', 'kappa', 'tau-kappa'], required=True,
@@ -64,10 +84,14 @@ def arguments():
         help="Simulation for a given parameter p"
     )
 
-    # Plot error rate
+    #############################################
+    # Plot error rate                           #
+    #############################################
     er = subparsers.add_parser('er', help="Plot error rate of simulation with dadi")
 
-    # Assessment of inferences
+    #############################################
+    # Assessment of inferences                  #
+    #############################################
     ases = subparsers.add_parser('ases', help="Evaluation of inference")
     # ases.add_argument(
     #     '--tool', dest='tool', required=True,
