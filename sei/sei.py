@@ -521,10 +521,7 @@ def main():
             length_factor = pd.DataFrame(columns=['Parameters', 'Factor'])
             theoritical_theta = 32000
 
-        files = os.listdir(path_data)
-        #files = random.sample(files, round(len(files)/20)):
-
-        for fichier in files:
+        for fichier in os.listdir(path_data):
             res = pd.read_json(path_or_buf="{}{}".format(path_data, fichier), typ='frame')
             data = data.append(res, ignore_index=True)
 
@@ -538,7 +535,8 @@ def main():
                 length_factor = length_factor.append(factor, ignore_index=True)
 
         if args.snp:  # Plot SNPs distribution
-            plot.snp_distribution_3d()
+            #plot.snp_distribution_3d(data)
+            os.system("jupyter lab sei/graphics/plot.ipynb")
         else:  # Import sequences length factor to text json file
             length_factor.to_json("./Data/Msprime/length_factor-{}".format(args.model))
 

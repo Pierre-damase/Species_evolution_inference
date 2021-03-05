@@ -305,15 +305,7 @@ def snp_distribution_3d(data):
 
     # Plot
     sns.set_theme(style='whitegrid')
-
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
-
-    ax.set_xlabel('Log10(Tau)')
-    ax.set_ylabel('Log10(SNPs)')
-    ax.set_zlabel('Log10(Kappa)')
-
-    ax.scatter(data['Tau'], data['SNPs'], data['Kappa'])
+    sns.scatterplot(x='Tau', y='SNPs', size='Kappa', data=data, sizes=(10, 60))
 
     # Title + save plot to folder ./Figures
     plt.savefig("./Figures/snp_distribution_3d", bbox_inches="tight")
