@@ -497,6 +497,38 @@ def inference(models, optimization, scale, name):
 
 
 ######################################################################
+# Export json files                                                  #
+######################################################################
+
+def export_json_files(model, path_data):
+    """
+    Export each json file generated with msprime into a single DataFrame.
+
+    Then export this DataFrame to a json file.
+
+    Parameters
+    ----------
+    model:
+        kind of model - decline, growth, migration, etc.
+    path_data:
+        path of each json file
+    """
+    # Pandas DataFrame
+    data = pd.DataFrame(columns=['Parameters', 'SNPs', 'SFS', 'Time'])
+
+    for fichier in os.listdir(path_data):
+        # Export the json file to pandas DataFrame and store it in data
+        res = pd.read_json(path_or_buf="{}{}".format(path_data, fichier), typ='frame')
+        data = data.append(res, ignore_index=True)
+
+        # Delete the json file
+        os.remove("{}{}".format(path_data, fichier))
+
+    # Export pandas DataFrame data to json file
+    data.to_json("{}SFS_{}-all.json".format(path_data, model))
+
+
+######################################################################
 # Main                                                               #
 ######################################################################
 
@@ -509,52 +541,60 @@ def main():
 
     args = arg.arguments()
 
-    if args.analyse == 'data' and (args.snp or args.file):
-        # Path data
-        path_data = "./Data/Msprime/snp_distribution/sfs_{}/".format(args.model)
+    if args.analyse == 'data':
 
-        # Data
-        data = pd.DataFrame(columns=['Parameters', 'SNPs', 'SFS', 'Time'])
+        if args.snp:
+            path_data = "./Data/Msprime/snp_distribution/sfs_{}/".format(args.model)
+            fichier = "SFS_{}-all.json".format(args.model)
 
-        # Length factor
-        if args.file:
-            length_factor = pd.DataFrame(columns=['Parameters', 'Factor'])
-            theoritical_theta = 32000
+            if fichier not in os.listdir(path_data):
+                export_json_files(args.model, path_data)
+            data = pd.read_json(path_or_buf="{}{}".format(path_data, fichier), typ='frame')
 
-        for fichier in os.listdir(path_data):
-            res = pd.read_json(path_or_buf="{}{}".format(path_data, fichier), typ='frame')
-            data = data.append(res, ignore_index=True)
+            # Plot SNPs distribution
+            plot.snp_distribution_3d(data)
+            # os.system("jupyter lab sei/graphics/plot.ipynb")
 
-            if args.file:
-                if args.model == 'decline':
-                    tmp = {'Tau': float(fichier.split('=')[1].split('_')[0]),
-                           'Kappa': float(fichier.split('=')[2])}
-                factor = {
-                    'Parameters': tmp, 'Factor': np.mean(res['SNPs'][0]) / theoritical_theta
-                }
-                length_factor = length_factor.append(factor, ignore_index=True)
+            return
 
-        if args.snp:  # Plot SNPs distribution
-            #plot.snp_distribution_3d(data)
-            os.system("jupyter lab sei/graphics/plot.ipynb")
-        else:  # Import sequences length factor to text json file
-            length_factor.to_json("./Data/Msprime/length_factor-{}".format(args.model))
+        elif args.file:
+            path_data= "./Data/Msprime/sfs_{}/".format(args.model)
+            fichier = "SFS_{}-all.json".format(args.model)
 
-        sys.exit()
+            factor, theta = pd.DataFrame(columns=['Parameters', 'Factor']), 32000
 
-    if args.analyse == 'data' and args.model == "decline":
-        # Range of value for tau & kappa
-        tau_list, kappa_list = np.arange(-4, 4, 0.1), np.arange(-3.3, 3.1, 0.08)
-        params = []
-        for tau in tau_list:
-            for kappa in kappa_list:
-                params.append({'Tau': round(tau, 2), 'Kappa': round(kappa, 2)})
+            if fichier not in os.listdir(path_data):
+                export_json_files(args.model, path_data)
 
-        params, model = params[args.value-1], ms.sudden_decline_model
+            data = pd.read_json(path_or_buf="{}{}".format(path_data, fichier), typ='frame')
 
-        # Path of data
-        path_data = "./Data/Msprime/sfs_{0}/SFS_{0}-tau={1}_kappa={2}"\
-            .format(args.model, params['Tau'], params['Kappa'])
+            if args.model == 'decline':
+                # Convert Tau & kappa to log10
+                factor['Parameters'] = data['Parameters'].apply(lambda ele: {
+                    'Tau': round(np.log10(ele['Tau']), 2),
+                    'Kappa': round(np.log10(ele['Kappa']), 2)
+                })
+
+            # Compute mean SNPs
+            factor['Factor'] = data['SNPs'].apply(lambda snp: np.mean(snp) / theta)
+
+            factor.to_json('./Data/Msprime/length_factor-{}'.format(args.model))
+
+            return
+
+        if args.model == 'decline':
+            # Range of value for tau & kappa
+            tau_list, kappa_list = np.arange(-4, 4, 0.1), np.arange(-3.3, 3.1, 0.08)
+
+            params = []
+            for tau in tau_list:
+                for kappa in kappa_list:
+                    params.append({'Tau': round(tau, 2), 'Kappa': round(kappa, 2)})
+            params, model = params[args.value-1], ms.sudden_decline_model
+
+            path_data = "./Data/Msprime/sfs_{0}/SFS_{0}-tau={1}_kappa={2}"\
+                .format(args.model, params['Tau'], params['Kappa'])
+
         path_length = "./Data/Msprime/length_factor-{}".format(args.model)
 
         generate_sfs(params, model, nb_simu=2, path_data=path_data, path_length=path_length)

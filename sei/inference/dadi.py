@@ -208,24 +208,24 @@ def dadi_inference(pts_list, model_func, opt=None, verbose=0, path="./Data/", na
 
     # Optimisation of model parameters
     if OPTIMIZATION == "tau":
-        #  [1.0], [0], [10]
-        p0, lower_bound, upper_bound = [1.0], [1e-4], [1e5]
+        # Param: (tau)
+        p0, lower_bound, upper_bound = [0.9], [1e-4], [1e4]
         popt = parameters_optimization(p0, sfs, model_func_extrapolated, pts_list, lower_bound,
                                        upper_bound, verbose=verbose)
         # Simulated frequency spectrum
         model = model_func_extrapolated(popt, ns, pts_list)
 
     elif OPTIMIZATION == "kappa":
-        # [10.0], [3], [30]
-        p0, lower_bound, upper_bound = [10.0], [1.0], [1e6]
+        # Param: (kappa)
+        p0, lower_bound, upper_bound = [1.0], [1e-4], [1.5e3]
         popt = parameters_optimization(p0, sfs, model_func_extrapolated, pts_list, lower_bound,
                                        upper_bound, verbose=verbose)
         # Simulated frequency spectrum
         model = model_func_extrapolated(popt, ns, pts_list)
 
     elif OPTIMIZATION == "tau-kappa":
-        # [10.0, 1.0], [1, 0], [30, 10]
-        p0, lower_bound, upper_bound = [10.0, 1.0], [1.0, 1e-4], [1e6, 1e5]
+        # Params: (kappa, tau)
+        p0, lower_bound, upper_bound = [1.0, 0.9], [1e-4, 1e-4], [1.5e3, 1e4]
         popt = parameters_optimization(p0, sfs, model_func_extrapolated, pts_list, lower_bound,
                                        upper_bound, verbose=verbose)
         # Simulated frequency spectrum
