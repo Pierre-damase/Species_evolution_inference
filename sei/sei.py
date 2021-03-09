@@ -73,6 +73,7 @@ def generate_sfs(params, model, nb_simu, path_data, path_length):
     #print(length)
     #sys.exit()
     length = 1e4
+    nb_simu = 1
 
     # Convert params from log scale
     params = {k: np.power(10, v) for k, v in params.items()}
