@@ -3,6 +3,7 @@ Define command-line options, arguments and sub-commands by using argparse.
 """
 
 import argparse
+import sys
 
 
 def data_type(value):
@@ -29,9 +30,7 @@ def arguments():
     #############################################
     # Generate various set of data with msprime #
     #############################################
-    data = subparsers.add_parser(
-        'data', help="Generate various unfolded sfs with msprime"
-    )
+    data = subparsers.add_parser('data', help="Generate various unfolded sfs with msprime")
     data.add_argument(
         '--model', dest='model', required=True, choices=['decline', 'migration'],
         help="Kind of scenario to use for the generation of sfs with msprime - declin" \
@@ -72,17 +71,28 @@ def arguments():
     )
 
     #############################################
-    # Likelihood-ratio test                     #
+    # Inference of demographic history          #
     #############################################
-    lrt = subparsers.add_parser('lrt', help="Comute likelihood-ratio test for dadi inference")
-    lrt.add_argument(
-        '--param', dest='param', choices=['tau', 'kappa', 'tau-kappa'], required=True,
-        help="Parameter to optimize - (tau) - default, (kappa), (kappa, tau)"
+    inf = subparsers.add_parser('inf', help="Compute inference of demographic history")
+    tool = inf.add_mutually_exclusive_group(required=True)
+
+    # Dadi
+    tool.add_argument('-dadi', action='store_true',
+                      help="Inference of demographic history with Dadi")
+    inf.add_argument(
+        '--model', dest="model", choices=['decline', 'migration'],
+        required='--dadi' in sys.argv,  # required only if --dadi indicated
+        help="Population model for the inference - model-constrained only, such as dadi"
     )
-    lrt.add_argument(
-        '--value', dest='value', type=float, required=True, nargs='*',
-        help="Simulation for a given parameter p"
+    inf.add_argument(
+        '--opt', dest="opt", choices=['tau', 'kappa', 'tau-kappa'],
+        required='--dadi' in sys.argv,  # required only if --dadi indicated
+        help="Parameter to evaluate - (tau), (kappa), (kappa, tau)"
     )
+
+    # Stairway
+    tool.add_argument('-stairway', action='store_true',
+                      help="Inference of demographic history with Stairway plot 2")
 
     #############################################
     # Plot error rate                           #

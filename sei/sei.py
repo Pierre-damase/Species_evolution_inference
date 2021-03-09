@@ -66,13 +66,13 @@ def generate_sfs(params, model, nb_simu, path_data, path_length):
     mu = 8e-2
 
     # Data
-    data = pd.DataFrame(columns=['Parameters', 'SFS', 'SNPs', 'Time'])
+    data = pd.DataFrame(columns=['Parameters', 'SFS observed', 'SNPs', 'Time'])
 
     # Define length
     #length = length_from_file(path_length, params, mu, snp=10000)
     #print(length)
     #sys.exit()
-    length = 1e5
+    length = 1e4
 
     # Convert params from log scale
     params = {k: np.power(10, v) for k, v in params.items()}
@@ -91,7 +91,10 @@ def generate_sfs(params, model, nb_simu, path_data, path_length):
         execution.append(time.time() - start_time)
 
     # Export DataFrame to json file
-    row = {'Parameters': params, 'SFS': sfs, 'SNPs': snp, 'Time': round(np.mean(execution), 4)}
+    row = {
+        'Parameters': params, 'SFS observed': sfs, 'SNPs': snp,
+        'Time': round(np.mean(execution), 4)
+    }
     data = data.append(row, ignore_index=True)
 
     data.to_json("{}".format(path_data))
@@ -446,31 +449,42 @@ def likelihood_ratio_test(params, models, optimization, nb_simu, dof, name):
     return data
 
 
-def inference(models, optimization, scale, name):
+def inference_dadi(simulation, models, optimization):
     """
 
     Parameter
     ---------
     models: dictionary
-      - Simulation: the custom model to generate genomic data
-      - Inference: the custom model to infer demography history
-      - Control: the control model - model with less parameters
+      - Inference: the custom model to infer demography history, i.e. the model m1 with more
+        parameters
+      - Control: the control model, i.e. the model m0 with less parameters
     optimization
         parameter to optimize - (kappa), (tau), (kappa, tau), etc.
     """
+    print(simulation['Parameters'])
+
+    simulation['SNPs'] = simulation['SNPs'].apply(lambda ele: np.log10(np.mean(ele)))
+
+    print(simulation['Parameters'])
+    sys.exit()
     col = [
         "Parameters", "Positive hit", "SNPs", "SFS obs", "SFS M0", "SFS M1",
         "Model0 ll", "Model1 ll", "Time simulation", "Time inference"
     ]
     data = pd.DataFrame(columns=col)
 
+    # DELETE #
+    name = "ras"
+    scale = []
+    # DELETE #
+
     # Set up tau & kappa for the simulation and inference
     if optimization == "tau":
         params = {"Kappa": 10, "Tau": np.float_power(10, scale[0])}  # Kappa fixed
-        dof = 1
+        dof = 2
     elif optimization == "kappa":
         params = {"Kappa": np.float_power(10, scale[0]), "Tau": 1}  # Tau fixed
-        dof = 1
+        dof = 2
     elif optimization == "tau-kappa":
         params = {"Kappa": np.float_power(10, scale[1]), "Tau": np.float_power(10, scale[0])}
         dof = 2
@@ -500,7 +514,7 @@ def inference(models, optimization, scale, name):
 # Export json files                                                  #
 ######################################################################
 
-def export_json_files(model, path_data):
+def export_json_files(model, filein, path_data):
     """
     Export each json file generated with msprime into a single DataFrame.
 
@@ -513,19 +527,28 @@ def export_json_files(model, path_data):
     path_data:
         path of each json file
     """
-    # Pandas DataFrame
-    data = pd.DataFrame(columns=['Parameters', 'SNPs', 'SFS', 'Time'])
+    if filein not in os.listdir(path_data):
+        # Pandas DataFrame
+        simulation = pd.DataFrame(columns=['Parameters', 'SNPs', 'SFS', 'Time'])
 
-    for fichier in os.listdir(path_data):
-        # Export the json file to pandas DataFrame and store it in data
-        res = pd.read_json(path_or_buf="{}{}".format(path_data, fichier), typ='frame')
-        data = data.append(res, ignore_index=True)
+        for fichier in os.listdir(path_data):
+            # Export the json file to pandas DataFrame and store it in simulation
+            res = pd.read_json(path_or_buf="{}{}".format(path_data, fichier), typ='frame')
+            simulation = simulation.append(res, ignore_index=True)
 
-        # Delete the json file
-        os.remove("{}{}".format(path_data, fichier))
+            # Delete the json file
+            os.remove("{}{}".format(path_data, fichier))
 
-    # Export pandas DataFrame data to json file
-    data.to_json("{}SFS_{}-all.json".format(path_data, model))
+        # Export pandas DataFrame simulation to json file
+        simulation = simulation.rename(columns={'SFS': 'SFS observed'})
+        simulation.to_json("{}SFS_{}-all.json".format(path_data, model))
+
+    else:
+        simulation = \
+            pd.read_json(path_or_buf="{}{}".format(path_data, filein), typ='frame')
+
+    simulation = simulation.rename(columns={'SFS': 'SFS observed'})
+    return simulation
 
 
 ######################################################################
@@ -545,42 +568,39 @@ def main():
 
         if args.snp:
             path_data = "./Data/Msprime/snp_distribution/sfs_{}/".format(args.model)
-            fichier = "SFS_{}-all.json".format(args.model)
+            filein = "SFS_{}-all.json".format(args.model)
 
-            if fichier not in os.listdir(path_data):
-                export_json_files(args.model, path_data)
-            data = pd.read_json(path_or_buf="{}{}".format(path_data, fichier), typ='frame')
+            # Export the observed SFS to DataFrame
+            simulation = export_json_files(args.model, filein, path_data)
 
             # Plot SNPs distribution
-            plot.snp_distribution_3d(data)
-            # os.system("jupyter lab sei/graphics/plot.ipynb")
+            plot.snp_distribution_3d(simulation)
+            os.system("jupyter lab sei/graphics/plot.ipynb")
 
-            return
+            sys.exit()
 
         elif args.file:
-            path_data= "./Data/Msprime/sfs_{}/".format(args.model)
-            fichier = "SFS_{}-all.json".format(args.model)
+            path_data = "./Data/Msprime/sfs_{}/".format(args.model)
+            filein = "SFS_{}-all.json".format(args.model)
+
+            # Export the observed SFS to DataFrame
+            simulation = export_json_files(args.model, filein, path_data)
 
             factor, theta = pd.DataFrame(columns=['Parameters', 'Factor']), 32000
-
-            if fichier not in os.listdir(path_data):
-                export_json_files(args.model, path_data)
-
-            data = pd.read_json(path_or_buf="{}{}".format(path_data, fichier), typ='frame')
-
             if args.model == 'decline':
                 # Convert Tau & kappa to log10
-                factor['Parameters'] = data['Parameters'].apply(lambda ele: {
+                factor['Parameters'] = simulation['Parameters'].apply(lambda ele: {
                     'Tau': round(np.log10(ele['Tau']), 2),
                     'Kappa': round(np.log10(ele['Kappa']), 2)
                 })
 
             # Compute mean SNPs
-            factor['Factor'] = data['SNPs'].apply(lambda snp: np.mean(snp) / theta)
+            factor['Factor'] = simulation['SNPs'].apply(lambda snp: np.mean(snp) / theta)
 
+            # Export pandas DataFrame factor to json file
             factor.to_json('./Data/Msprime/length_factor-{}'.format(args.model))
 
-            return
+            sys.exit()
 
         if args.model == 'decline':
             # Range of value for tau & kappa
@@ -605,24 +625,24 @@ def main():
     elif args.analyse == 'opt':
         dadi_params_optimisation(args.number)
 
-    elif args.analyse == 'lrt':
-        if args.param == 'tau':
-            scale = [np.arange(-4, 4, 0.1)[int(args.value[0])-1]]
-        elif args.param == 'kappa':
-            scale = [np.arange(-3.3, 3.1, 0.08)[int(args.value[0])-1]]
-        else:
-            scale = [
-                np.arange(-4, 4.1, 0.1)[int(args.value[0])-1],
-                np.arange(0.05, 4.1, 0.05)[int(args.value[1])-1]
-            ]
+    elif args.analyse == 'inf':
+        path_data = "./Data/Msprime/sfs_{}/".format(args.model)
+        filein = "SFS_{}-all.json".format(args.model)
 
-        models = {
-            "Simulation": ms.sudden_decline_model, "Inference": dadi.sudden_decline_model,
-            "Control": dadi.constant_model
-        }
-        name = "{}-{}".format(args.param, int(args.value[0]))
+        # Export the observed SFS to DataFrame
+        simulation = export_json_files(args.model, filein, path_data)
 
-        inference(models=models, optimization=args.param, scale=scale, name=name)
+        if args.dadi:  # Dadi
+
+            if args.model == "decline":
+                models = \
+                    {'Inference': dadi.sudden_decline_model, 'Control': dadi.constant_model}
+
+            inference_dadi(simulation, models, optimization=args.opt)
+            sys.exit()
+
+        elif args.stairway:  # Stairway plot 2
+            sys.exit()
 
     elif args.analyse == 'er':
         for sample in [10, 20, 40, 60, 100]:

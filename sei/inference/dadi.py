@@ -176,7 +176,7 @@ def parameters_optimization(p0, sfs, model_func, pts_list, lower_bound, upper_bo
     return popt
 
 
-def dadi_inference(pts_list, model_func, opt=None, verbose=0, path="./Data/", name="SFS"):
+def inference(pts_list, model_func, opt=None, verbose=0, path="./Data/", name="SFS"):
     """
     Dadi inference.
 
