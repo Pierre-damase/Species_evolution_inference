@@ -76,7 +76,7 @@ def sudden_decline_model(params, ns, pts):
     # Calculate the spectrum from phi
     sfs = dadi.Spectrum.from_phi(phi, ns, (grid,))
 
-    return sfs
+    return sfs, params
 
 
 def params_migration_model(params):
@@ -200,8 +200,8 @@ def inference(pts_list, model_func, opt=None, verbose=0, path="./Data/", name="S
     OPTIMIZATION = opt
 
     # Load the data
-    sfs = dadi.Spectrum.from_file("{}{}.fs".format(path, name))
-    ns = sfs.sample_sizes
+    observed_sfs = dadi.Spectrum.from_file("{}{}.fs".format(path, name))
+    ns = observed_sfs.sample_sizes
 
     # Make the extrapolation version of our demographic model function
     model_func_extrapolated = dadi.Numerics.make_extrap_log_func(model_func)
@@ -210,45 +210,48 @@ def inference(pts_list, model_func, opt=None, verbose=0, path="./Data/", name="S
     if OPTIMIZATION == "tau":
         # Param: (tau)
         p0, lower_bound, upper_bound = [0.9], [1e-4], [1e4]
-        popt = parameters_optimization(p0, sfs, model_func_extrapolated, pts_list, lower_bound,
-                                       upper_bound, verbose=verbose)
+        popt = parameters_optimization(p0, observed_sfs, model_func_extrapolated, pts_list,
+                                       lower_bound, upper_bound, verbose=verbose)
         # Simulated frequency spectrum
-        model = model_func_extrapolated(popt, ns, pts_list)
+        inferred_sfs, params = model_func_extrapolated(popt, ns, pts_list)
 
     elif OPTIMIZATION == "kappa":
         # Param: (kappa)
         p0, lower_bound, upper_bound = [1.0], [1e-4], [1.5e3]
-        popt = parameters_optimization(p0, sfs, model_func_extrapolated, pts_list, lower_bound,
-                                       upper_bound, verbose=verbose)
+        popt = parameters_optimization(p0, observed_sfs, model_func_extrapolated, pts_list,
+                                       lower_bound, upper_bound, verbose=verbose)
         # Simulated frequency spectrum
-        model = model_func_extrapolated(popt, ns, pts_list)
+        inferred_sfs, params = model_func_extrapolated(popt, ns, pts_list)
 
     elif OPTIMIZATION == "tau-kappa":
         # Params: (kappa, tau)
         p0, lower_bound, upper_bound = [1.0, 0.9], [1e-4, 1e-4], [1.5e3, 1e4]
-        popt = parameters_optimization(p0, sfs, model_func_extrapolated, pts_list, lower_bound,
-                                       upper_bound, verbose=verbose)
+        popt = parameters_optimization(p0, observed_sfs, model_func_extrapolated, pts_list,
+                                       lower_bound, upper_bound, verbose=verbose)
         # Simulated frequency spectrum
-        model = model_func_extrapolated(popt, ns, pts_list)
+        inferred_sfs, params = model_func_extrapolated(popt, ns, pts_list)
 
     elif OPTIMIZATION == "migration":
         p0, lower_bound, upper_bound = [10.0, 1.0, 1.0], [1.0, 1e-4, 0.0], [1e6, 1e5, 10.0]
-        popt = parameters_optimization(p0, sfs, model_func_extrapolated, pts_list, lower_bound,
-                                       upper_bound, verbose=verbose)
+        popt = parameters_optimization(p0, observed_sfs, model_func_extrapolated, pts_list,
+                                       lower_bound, upper_bound, verbose=verbose)
         # Simulated frequency spectrum
-        model = model_func_extrapolated(popt, ns, pts_list)
+        inferred_sfs = model_func_extrapolated(popt, ns, pts_list)
 
     else:
         # Simulated frequency spectrum
-        model = model_func_extrapolated(ns, pts_list)
+        inferred_sfs = model_func_extrapolated(ns, pts_list)
 
     # Log-likelihood of the data (sfs) given the model
-    ll_model = dadi.Inference.ll_multinom(model, sfs)
+    ll_model = dadi.Inference.ll_multinom(inferred_sfs, observed_sfs)
 
     # The optimal value of theta given the model
-    theta = dadi.Inference.optimal_sfs_scaling(model, sfs)
+    theta = dadi.Inference.optimal_sfs_scaling(inferred_sfs, observed_sfs)
 
-    return ll_model, theta, model
+    # Return
+    if model_func.__name__ == 'constant_model':
+        return ll_model, inferred_sfs
+    return ll_model, inferred_sfs, params
 
 
 if __name__ == "__main__":

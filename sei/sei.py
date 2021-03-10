@@ -301,7 +301,7 @@ def log_likelihood_ratio(likelihood, control_ll):
     return 2 * (max(likelihood) - control_ll)
 
 
-def likelihood_ratio_test(params, models, optimization, nb_simu, dof, name):
+def likelihood_ratio_test(params, sfs_observed, models, sample, optimization):
     """
     Likelihood-ratio test to assesses the godness fit of two model.
 
@@ -337,117 +337,47 @@ def likelihood_ratio_test(params, models, optimization, nb_simu, dof, name):
 
     Return
     ------
-    data: dictionary
-      - LL: list of the log-likelihood
-        M0: log-likelihood for the model with less parameters
-        M1: best log-likelihood for the model with more parameters
-      - SNP: list of the SNPs
-        SNPs for the observed sfs generated with msprime
-      - LRT: list of log likelihood ratio test
-        List of 0 (negative run) & 1 (positive run)
-      - Time simulation: float
-        The mean time of execution of the x simulations with msprime
-      - Time inference: float
-        The mean time of execution of the x inferences with dadi
-      - SFS: list of SFS
-        Obs: the observed SFS generated with msprime
-        M0: the inferred SFS for M0 the model with less parameters
-        M1: the inferred SFS for M1 the model with more parameters
     """
-    mu, sample, ll_ratio = 8e-2, 20, []  # 8e-2
-
+    print(params)
+    print(sfs_observed)
+    print(models)
     data = {
-        "LL": {"M0": [], "M1": []}, "SNPs": [], "LRT": [], "Time simulation": 0,
-        "Time inference": 0, "SFS": {"Obs": [], "M0": [], "M1": []}
+        'LRT': [], 'M0': {'LL': [], 'SFS': 0}, 'M1': {'LL': [], 'SFS': []}, 'Time': 0
     }
+    execution, ll_ratio = [], []
 
-    # Time of execution
-    simulation_time, inference_time = [], []
+    # Path data & name
+    path_data = "./Data/Dadi/"
 
     # Grid point for the extrapolation
     pts_list = [sample*10, sample*10 + 10, sample*10 + 20]
 
-    # Parameters for the simulation
-    if optimization == "tau":
-        fichier = "./Data/length_factor-kappa={}".format(params['Kappa'])
-        length = length_from_file(fichier, name, mu, 500000)
+    for sfs in sfs_observed:
 
-    elif optimization == "kappa":
-        fichier = "./Data/length_factor-tau={}".format(params['Tau'])
-        length = length_from_file(fichier, name, mu, 500000)
-
-    else:
-        length = 1e5
-
-    fixed_params = simulation_parameters(sample=sample, ne=1, rcb_rate=mu, mu=mu, length=length)
-
-    # Path & name
-    path_data = "./Data/Optimization_{}/".format(optimization)
-    name = "SFS-{}".format(name)
-
-    # Generate x genomic data for the same kappa and tau
-    for _ in range(nb_simu):
-        # Simulation with msprime
-        start_simulation = time.time()
-
-        sfs_observed = ms.msprime_simulation(
-            model=models["Simulation"], fixed_params=fixed_params, params=params
-        )
-
-        data['SNPs'].append(sum(sfs_observed))
-        simulation_time.append(time.time() - start_simulation)
-
-        # Generate the SFS file compatible with dadi
-        f.dadi_data(sfs_observed, models["Inference"].__name__, path=path_data, name=name)
+        # Generate the SFS ile compatible with dadi
+        f.dadi_data(sfs, models['Inference'].__name__, path=path_data)
 
         # Dadi inference
-        ll_list, tmp, sfs_m1 = [], [], []
-        control_ll, _, sfs_m0 = dadi.dadi_inference(
-            pts_list, models["Control"], path=path_data, name=name
-        )
+        m1_inferrence, m1_execution = [], []
 
-        for _ in range(nb_simu):  # run x inference with dadi from the same observed data
+        # Pairs (Log-likelihood, Inferred SFS)
+        m0_inferrence = dadi.inference(pts_list, models['Control'], path=path_data)
+
+        for _ in range(10):  # Run 100 inferences with dadi from the observed sfs
             start_inference = time.time()
 
-            ll, _, sfs_inferred = dadi.dadi_inference(
-                pts_list, models["Inference"], opt=optimization, path=path_data, name=name
-            )
+            # Pairs (Log-likelihood, Inferred SFS, Params)
+            tmp = \
+                dadi.inference(pts_list, models['Inference'], opt=optimization, path=path_data)
 
-            ll_list.append(ll)
-            tmp.append(time.time() - start_inference)
-            sfs_m1.append(list(sfs_inferred[1:-1]))
+            m1_inferrence.append(tmp)
+            m1_execution.append(time.time() - start_inference)
 
-        # Select the best one, i.e. the one with the highest likelihood
-        # Compute the log-likelihood ratio
-        ll_ratio.append(log_likelihood_ratio(ll_list, control_ll))
+        # Select the best one, i.e the one with the highest log-likelihood
+        # Compute the log-likelihood for each simulation
+        ll_ratio.append(log_likelihood_ratio())
 
-        # Mean execution time of x inference with dadi
-        inference_time.append(sum(tmp) / nb_simu)
-
-        # Keep track of log-likelihood for each simulation
-        data['LL']['M0'].append(control_ll)
-        data['LL']['M1'].append(max(ll_list))
-
-        # Keep track of the observed SFS and inferred SFS for M0 & M1 (best one)
-        data['SFS']['Obs'].append(sfs_observed[1:-1])
-        data['SFS']['M0'].append(list(sfs_m0[1:-1]))
-        data['SFS']['M1'].append(sfs_m1[ll_list.index(max(ll_list))])
-
-    # Delete sfs file
-    os.remove("{}{}.fs".format(path_data, name))
-
-    # Mean time execution for simulation and inference
-    data['Time simulation'] = round(sum(simulation_time) / nb_simu, 3)
-    data['Time inference'] = round(sum(inference_time) / nb_simu, 3)
-
-    # Likelihood-ratio test
-    data['LRT'] = [1] * len(ll_ratio)
-    for i, chi_stat in enumerate(ll_ratio):
-        p_value = chi2.sf(chi_stat, dof)
-        if p_value > 0.05:
-            data['LRT'][i] = 0
-
-    return data
+        
 
 
 def inference_dadi(simulation, models, optimization):
@@ -455,6 +385,17 @@ def inference_dadi(simulation, models, optimization):
 
     Parameter
     ---------
+    simulation: dictionary
+      - Parameters
+        Parameters for the simulation with msprime - mutation rate mu, recombination rate, Ne,
+        length L of the sequence, sample size.
+      - SNPs
+        List of SNPs for each observed SFS
+      - SFS observed
+        List of the observed SFS generated with msprime for the same set of parameters
+      - Time
+        Mean execution time to generate the observed SFS
+
     models: dictionary
       - Inference: the custom model to infer demography history, i.e. the model m1 with more
         parameters
@@ -462,53 +403,19 @@ def inference_dadi(simulation, models, optimization):
     optimization
         parameter to optimize - (kappa), (tau), (kappa, tau), etc.
     """
-    print(simulation['Parameters'])
-
-    simulation['SNPs'] = simulation['SNPs'].apply(lambda ele: np.log10(np.mean(ele)))
-
-    print(simulation['Parameters'])
-    sys.exit()
-    col = [
-        "Parameters", "Positive hit", "SNPs", "SFS obs", "SFS M0", "SFS M1",
-        "Model0 ll", "Model1 ll", "Time simulation", "Time inference"
-    ]
+    col = ['Parameters', 'Positive hit', 'SNPs', 'SFS observed', 'M0', 'M1', 'Time']
     data = pd.DataFrame(columns=col)
 
-    # DELETE #
-    name = "ras"
-    scale = []
-    # DELETE #
+    if models['Inference'].__name__ == 'sudden_decline_model':
 
-    # Set up tau & kappa for the simulation and inference
-    if optimization == "tau":
-        params = {"Kappa": 10, "Tau": np.float_power(10, scale[0])}  # Kappa fixed
-        dof = 2
-    elif optimization == "kappa":
-        params = {"Kappa": np.float_power(10, scale[0]), "Tau": 1}  # Tau fixed
-        dof = 2
-    elif optimization == "tau-kappa":
-        params = {"Kappa": np.float_power(10, scale[1]), "Tau": np.float_power(10, scale[0])}
-        dof = 2
+        for _, row in simulation.iterrows():
+            sfs_observed, sample = row['SFS observed'], row['Parameters']['sample_size']
+            params = {k: v for k, v in row['Parameters'].items() if k in ['Tau', 'Kappa']}
 
-    print("Likelihood ratio test - optimization of ({}) with x = 100 simulations"
-          .format(optimization))
+            inf = likelihood_ratio_test(params, sfs_observed, models, sample)
+            break
 
-    values = likelihood_ratio_test(params, models, optimization, nb_simu=2, dof=dof, name=name)
-
-    print("Likelihood ratio test done !!!\n")
-
-    row = {
-        "Parameters": params, "Positive hit": Counter(values['LRT'])[1], "SNPs": values['SNPs'],
-        "SFS obs": values['SFS']['Obs'], "SFS M0": values['SFS']['M0'],
-        "SFS M1": values['SFS']['M1'],
-        "Model0 ll": values['LL']['M0'], "Model1 ll": values['LL']['M1'],
-        "Time simulation": values['Time simulation'], "Time inference": values['Time inference']
-    }
-    data = data.append(row, ignore_index=True)
-
-    # Export data to json file
-    path_data = "./Data/Optimization_{}/".format(optimization)
-    data.to_json("{}opt_{}.json".format(path_data, name))
+    sys.exit()
 
 
 ######################################################################
@@ -541,14 +448,13 @@ def export_json_files(model, filein, path_data):
             os.remove("{}{}".format(path_data, fichier))
 
         # Export pandas DataFrame simulation to json file
-        simulation = simulation.rename(columns={'SFS': 'SFS observed'})
+        # simulation = simulation.rename(columns={'SFS': 'SFS observed'})
         simulation.to_json("{}SFS_{}-all.json".format(path_data, model))
 
     else:
         simulation = \
             pd.read_json(path_or_buf="{}{}".format(path_data, filein), typ='frame')
 
-    simulation = simulation.rename(columns={'SFS': 'SFS observed'})
     return simulation
 
 
@@ -640,7 +546,6 @@ def main():
                     {'Inference': dadi.sudden_decline_model, 'Control': dadi.constant_model}
 
             inference_dadi(simulation, models, optimization=args.opt)
-            sys.exit()
 
         elif args.stairway:  # Stairway plot 2
             sys.exit()
