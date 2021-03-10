@@ -76,7 +76,7 @@ def sudden_decline_model(params, ns, pts):
     # Calculate the spectrum from phi
     sfs = dadi.Spectrum.from_phi(phi, ns, (grid,))
 
-    return sfs, params
+    return sfs
 
 
 def params_migration_model(params):
@@ -207,36 +207,39 @@ def inference(pts_list, model_func, opt=None, verbose=0, path="./Data/", name="S
     model_func_extrapolated = dadi.Numerics.make_extrap_log_func(model_func)
 
     # Optimisation of model parameters
-    if OPTIMIZATION == "tau":
-        # Param: (tau)
-        p0, lower_bound, upper_bound = [0.9], [1e-4], [1e4]
-        popt = parameters_optimization(p0, observed_sfs, model_func_extrapolated, pts_list,
-                                       lower_bound, upper_bound, verbose=verbose)
-        # Simulated frequency spectrum
-        inferred_sfs, params = model_func_extrapolated(popt, ns, pts_list)
+    if opt is not None:
 
-    elif OPTIMIZATION == "kappa":
-        # Param: (kappa)
-        p0, lower_bound, upper_bound = [1.0], [1e-4], [1.5e3]
-        popt = parameters_optimization(p0, observed_sfs, model_func_extrapolated, pts_list,
-                                       lower_bound, upper_bound, verbose=verbose)
-        # Simulated frequency spectrum
-        inferred_sfs, params = model_func_extrapolated(popt, ns, pts_list)
+        # Set up:
+        #   - p0: initial guess for the parameters, which is somewhat arbitrary
+        #   - lower & upper bound for the optimization
+        if OPTIMIZATION == "tau":  # Fixed Kappa
+            # Param: (tau)
+            p0, lower_bound, upper_bound = [0.9], [1e-4], [1e4]
 
-    elif OPTIMIZATION == "tau-kappa":
-        # Params: (kappa, tau)
-        p0, lower_bound, upper_bound = [1.0, 0.9], [1e-4, 1e-4], [1.5e3, 1e4]
-        popt = parameters_optimization(p0, observed_sfs, model_func_extrapolated, pts_list,
-                                       lower_bound, upper_bound, verbose=verbose)
-        # Simulated frequency spectrum
-        inferred_sfs, params = model_func_extrapolated(popt, ns, pts_list)
+        elif OPTIMIZATION == "kappa":  # Fixed Tau
+            # Param: (Kappa)
+            p0, lower_bound, upper_bound = [1.0], [1e-4], [1.5e3]
 
-    elif OPTIMIZATION == "migration":
-        p0, lower_bound, upper_bound = [10.0, 1.0, 1.0], [1.0, 1e-4, 0.0], [1e6, 1e5, 10.0]
+        elif OPTIMIZATION == "tau-kappa":
+            # Params: (kappa, tau)
+            p0, lower_bound, upper_bound = [1.0, 0.9], [1e-4, 1e-4], [1.5e3, 1e4]
+
+        elif OPTIMIZATION == "migration":
+            p0, lower_bound, upper_bound = [10.0, 1.0, 1.0], [1.0, 1e-4, 0.0], [1e6, 1e5, 10.0]
+
         popt = parameters_optimization(p0, observed_sfs, model_func_extrapolated, pts_list,
                                        lower_bound, upper_bound, verbose=verbose)
+
         # Simulated frequency spectrum
         inferred_sfs = model_func_extrapolated(popt, ns, pts_list)
+
+        # Keep track of parameters after optimization
+        if OPTIMIZATION == "tau":  # Fixed Kappa
+            params_estimated = {'Tau': popt[0], 'Kappa': 10}
+        elif OPTIMIZATION == "kappa":  # Fixed Tau
+            params_estimated = {'Tau': 1.0, 'Kappa': popt[0]}
+        elif OPTIMIZATION == "tau-kappa":
+            params_estimated = {'Tau': popt[1], 'Kappa': popt[0]}
 
     else:
         # Simulated frequency spectrum
@@ -248,10 +251,13 @@ def inference(pts_list, model_func, opt=None, verbose=0, path="./Data/", name="S
     # The optimal value of theta given the model
     theta = dadi.Inference.optimal_sfs_scaling(inferred_sfs, observed_sfs)
 
+    # Remove 0/n & n/n
+    inferred_sfs = list(inferred_sfs)[1:-1]
+
     # Return
     if model_func.__name__ == 'constant_model':
         return ll_model, inferred_sfs
-    return ll_model, inferred_sfs, params
+    return ll_model, inferred_sfs, params_estimated
 
 
 if __name__ == "__main__":

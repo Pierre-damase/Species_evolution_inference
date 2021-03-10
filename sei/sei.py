@@ -275,33 +275,10 @@ def dadi_params_optimisation(sample):
 
 
 ######################################################################
-# Likelihood-ratio test                                              #
+# Inference with Dadi                                                #
 ######################################################################
 
-def log_likelihood_ratio(likelihood, control_ll):
-    """
-    Log-likelihood ratio test.
-
-    lrt = 2 * (LL1 - LL0) with
-
-      - LL1: log-likelihood of M1
-      - LL0: log-likelihood of M0
-
-    Here, we are juste subtracting the null hypothesis log-likelihood from the alternative
-    hypothesis log-likelihood.
-
-    Parameter
-    ---------
-    likelihood: list
-        Likelihood for x inference with dadi, i.e. likelihood for model M1
-    control_ll: float
-        Likelihood for model M0
-    """
-
-    return 2 * (max(likelihood) - control_ll)
-
-
-def likelihood_ratio_test(params, sfs_observed, models, sample, optimization):
+def likelihood_ratio_test(sfs_observed, models, sample, optimization, dof):
     """
     Likelihood-ratio test to assesses the godness fit of two model.
 
@@ -328,23 +305,40 @@ def likelihood_ratio_test(params, sfs_observed, models, sample, optimization):
 
     Parameter
     ---------
-    params: dictionary
-
+    sfs_observed: list
+        the observed SFS generated with msprime
     models: dictionary
-
+      - Inference
+        The model with more parameters, i.e. M1
+      - Control
+        The model with less parameters, i.e. M0
+    sample: int
+        The number of sampled monoploid genomes
+    optimization: str
+        Either tau, kappa or tau-kappa
     dof: int
         degrees of freedom
 
     Return
     ------
+    data: dictionary
+      - LRT
+        Likelihood ratio test, either 1 - test significant and reject of H0
+                                   or 0 - test insignificant and no reject of H0
+      - M0
+        List of log likelihood and sfs for the inference with M0
+      - M1
+        List of log likelihood, sfs and estimated parameters for the inference with M1.
+        In this case from the same observed SFS, 1000 inferences with M1 are made and only the
+        best one is kept. I.E. the one with the highest log-likelihood.
+      - Time
+        Mean execution time for the inference
     """
-    print(params)
-    print(sfs_observed)
-    print(models)
     data = {
-        'LRT': [], 'M0': {'LL': [], 'SFS': 0}, 'M1': {'LL': [], 'SFS': []}, 'Time': 0
+        'LRT': [], 'M0': {'LL': [], 'SFS': 0}, 'M1': {'LL': [], 'SFS': [], 'Estimated': []},
+        'Time': 0
     }
-    execution, ll_ratio = [], []
+    execution = []
 
     # Path data & name
     path_data = "./Data/Dadi/"
@@ -353,35 +347,57 @@ def likelihood_ratio_test(params, sfs_observed, models, sample, optimization):
     pts_list = [sample*10, sample*10 + 10, sample*10 + 20]
 
     for sfs in sfs_observed:
-
-        # Generate the SFS ile compatible with dadi
+        # Generate the SFS file compatible with dadi
         f.dadi_data(sfs, models['Inference'].__name__, path=path_data)
 
-        # Dadi inference
-        m1_inferrence, m1_execution = [], []
-
+        # Dadi inference for M0
         # Pairs (Log-likelihood, Inferred SFS)
-        m0_inferrence = dadi.inference(pts_list, models['Control'], path=path_data)
+        m0_inference = dadi.inference(pts_list, models['Control'], path=path_data)
+        data['M0']['LL'].append(m0_inference[0])
+        data['M0']['SFS'] = m0_inference[1]
 
-        for _ in range(10):  # Run 100 inferences with dadi from the observed sfs
+        # Dadi inference for M1
+        m1_inferences, m1_execution = [], []
+
+        for _ in range(10):  # Run 1000 inferences with dadi from the observed sfs
             start_inference = time.time()
 
             # Pairs (Log-likelihood, Inferred SFS, Params)
             tmp = \
                 dadi.inference(pts_list, models['Inference'], opt=optimization, path=path_data)
 
-            m1_inferrence.append(tmp)
+            m1_inferences.append(tmp)
             m1_execution.append(time.time() - start_inference)
 
-        # Select the best one, i.e the one with the highest log-likelihood
-        # Compute the log-likelihood for each simulation
-        ll_ratio.append(log_likelihood_ratio())
+        execution.append(sum(m1_execution) / 10)
 
-        
+        # m1_inferences is a list of pairs (Log-likelihood, Inferred SFS, Params)
+        # Compare each item of this list by the value at index 0, i.e. the log-likelihood and
+        # select the one with this highest value.
+        index_best_ll = m1_inferences.index((max(m1_inferences, key=lambda ele: ele[0])))
+
+        data['M1']['LL'].append(m1_inferences[index_best_ll][0])
+        data['M1']['SFS'].append(m1_inferences[index_best_ll][1])
+        data['M1']['Estimated'].append(m1_inferences[index_best_ll][2])
+
+        # Compute the log-likelihood ratio test between M0 and M1
+        lrt = 2 * (m1_inferences[index_best_ll][0] - m0_inference[0])  # LL ratio test
+        p_value = chi2.sf(lrt, dof)  # Chi2 test
+
+        if p_value > 0.05:
+            data['LRT'].append(0)  # Test insignificant and no reject of H0
+        else:
+            data['LRT'].append(1)  # Test significant and reject of H0
+
+        # Mean execution time for the inference
+        data['Time'] = round(sum(execution) / len(sfs_observed), 4)
+
+        return data
 
 
 def inference_dadi(simulation, models, optimization):
     """
+    Inference with dadi.
 
     Parameter
     ---------
@@ -410,12 +426,65 @@ def inference_dadi(simulation, models, optimization):
 
         for _, row in simulation.iterrows():
             sfs_observed, sample = row['SFS observed'], row['Parameters']['sample_size']
+
+            if optimization == 'tau' and round(row['Parameters']['Tau'], 2) == 1.0:
+                inf = likelihood_ratio_test(sfs_observed, models, sample, optimization, dof=2)
+
+            elif optimization == 'kappa' and round(row['Parameters']['Kappa'], 2) == 10.47:
+                inf = likelihood_ratio_test(sfs_observed, models, sample, optimization, dof=2)
+
+            else:
+                inf = likelihood_ratio_test(sfs_observed, models, sample, optimization, dof=2)
+
             params = {k: v for k, v in row['Parameters'].items() if k in ['Tau', 'Kappa']}
 
-            inf = likelihood_ratio_test(params, sfs_observed, models, sample)
-            break
+            dico = {
+                'Parameters': params, 'Positive hit': inf['LRT'], 'SNPs': row['SNPs'],
+                'SFS observed': sfs_observed, 'M0': inf['M0'], 'M1': inf['M1'],
+                'Time': inf['Time']
+            }
+            data = data.append(dico, ignore_index=True)
 
-    sys.exit()
+    elif models['Inference'].__name__ == 'two_pops_migration_model':
+        pass
+
+    # Export dataframe to json files
+    path_data = "./Data/Dadi/"
+    data.to_json("{}dadi-{}".format(path_data, models['Inference'].__name__))
+
+
+######################################################################
+# Inference with stairway plot 2                                     #
+######################################################################
+
+def inference_stairway_plot(simulation, model):
+    """
+    Inference with stairway plot.
+    """
+    for _, row in simulation.iterrows():
+        path_data = "/home/damase/All/Cours/M2BI-Diderot/Species_evolution_inference/sei/" \
+            "inference/stairway_plot_v2.1.1/"
+
+        if model == 'decline':
+            name = "stairway_{}-tau={}_kappa={}"\
+                .format(model, row['Parameters']['Tau'], row['Parameters']['Kappa'])
+
+        for sfs in row['SFS observed']:
+            # Generate the SFS file compatible with stairway plot v2
+            data = {k: v for k, v in row['Parameters'].items() if k in['sample_size', 'length', 'mu']}
+            data['sfs'], data['year'], data['ninput'] = sfs, 1, 200
+
+            f.stairway_data(name, data, path_data)
+
+            # Create the batch file
+            os.system("java -cp {0}stairway_plot_es Stairbuilder {0}{1}.blueprint"
+                      .format(path_data, name))
+
+            # Run the batch file
+            os.system("bash {}{}.blueprint.sh".format(path_data, name))
+
+            # Remove all blueprint file
+            os.system("rm -rf {}{}.blueprint*".format(path_data, name))
 
 
 ######################################################################
@@ -473,6 +542,7 @@ def main():
 
     if args.analyse == 'data':
 
+        # Analyse SNPs distribution
         if args.snp:
             path_data = "./Data/Msprime/snp_distribution/sfs_{}/".format(args.model)
             filein = "SFS_{}-all.json".format(args.model)
@@ -486,6 +556,7 @@ def main():
 
             sys.exit()
 
+        # Generate length factor file
         elif args.file:
             path_data = "./Data/Msprime/sfs_{}/".format(args.model)
             filein = "SFS_{}-all.json".format(args.model)
@@ -509,6 +580,7 @@ def main():
 
             sys.exit()
 
+        # Simulation of sudden decline model with msprime for various tau & kappa
         if args.model == 'decline':
             # Range of value for tau & kappa
             tau_list, kappa_list = np.arange(-4, 4, 0.1), np.arange(-3.3, 3.1, 0.08)
@@ -521,6 +593,21 @@ def main():
 
             path_data = "./Data/Msprime/sfs_{0}/SFS_{0}-tau={1}_kappa={2}"\
                 .format(args.model, params['Tau'], params['Kappa'])
+
+        # Simulation of two populations migration models for various migration rate from
+        # population 2 to 1 and kappa
+        elif args.model == 'migration':
+            # Range of value for m12 & kappa
+            m12_list, kappa_list = np.arange(-4, 4, 0.1), np.arange(-3.3, 3.1, 0.08)
+
+            params = []
+            for m12 in m12_list:
+                for kappa in kappa_list:
+                    params.append({'M12': round(m12, 2), 'Kappa': round(kappa, 2)})
+            params, model = params[args.value-1], ms.two_pops_migration_model
+
+            path_data = "./Data/Msprime/sfs_{0}/SFS_{0}-m12={1}_kappa={2}"\
+                .format(args.model, params['M12'], params['Kappa'])
 
         path_length = "./Data/Msprime/length_factor-{}".format(args.model)
 
@@ -539,16 +626,23 @@ def main():
         # Export the observed SFS to DataFrame
         simulation = export_json_files(args.model, filein, path_data)
 
-        if args.dadi:  # Dadi
+        # Inference with dadi
+        if args.dadi:
 
+            # Set up M0 & M1 model for the inference with dadi
             if args.model == "decline":
                 models = \
                     {'Inference': dadi.sudden_decline_model, 'Control': dadi.constant_model}
+            elif args.model == "migration":
+                models = \
+                    {'Inference': dadi.two_pops_migration_model, 'Control': dadi.constant_model}
 
             inference_dadi(simulation, models, optimization=args.opt)
 
-        elif args.stairway:  # Stairway plot 2
-            sys.exit()
+        # Inference with stairway plot 2
+        elif args.stairway:
+
+            inference_stairway_plot(simulation, model=args.model)
 
     elif args.analyse == 'er':
         for sample in [10, 20, 40, 60, 100]:
@@ -578,35 +672,7 @@ def main():
         plot.snp_distribution()
 
     elif args.analyse == 'stairway':
-        # Fixed parameters for the simulation
-        fixed_params = \
-            simulation_parameters(sample=20, ne=1, rcb_rate=8e-4, mu=8e-4, length=1e5)
-
-        params = {"Tau": 1.0, "Kappa": 10.0}
-
-        sfs = ms.msprime_simulation(
-            model=ms.sudden_decline_model, fixed_params=fixed_params, params=params, debug=True)
-
-        path_data = "/home/damase/All/Cours/M2BI-Diderot/Species_evolution_inference/sei/" \
-            "inference/stairway_plot_v2.1.1/"
-        name = "test"
-
-        # Generate the SFS file compatible with stairway plot v2
-        data = {k: v for k, v in fixed_params.items() if k in ['sample_size', 'length', 'mu']}
-        data['sfs'], data['year'], data['ninput'] = sfs, 1, 200
-
-        f.stairway_data(name, data, path_data)
-
-        # Create the batch file
-        os.system("java -cp {0}stairway_plot_es Stairbuilder {0}{1}.blueprint"
-                  .format(path_data, name))
-
-        # Run teh batch file
-        os.system("bash {}{}.blueprint.sh".format(path_data, name))
-
-        # Remove all blueprint file
-        os.system("rm -rf {}{}.blueprint*".format(path_data, name))
-
+        pass
 
 if __name__ == "__main__":
     warnings.filterwarnings('ignore')

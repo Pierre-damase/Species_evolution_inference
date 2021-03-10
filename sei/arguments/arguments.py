@@ -80,19 +80,21 @@ def arguments():
     tool.add_argument('-dadi', action='store_true',
                       help="Inference of demographic history with Dadi")
     inf.add_argument(
-        '--model', dest="model", choices=['decline', 'migration'],
+        '--opt', dest="opt",
+        choices=['tau', 'kappa', 'tau-kappa', 'migration', 'migration-kappa'],
         required='--dadi' in sys.argv,  # required only if --dadi indicated
-        help="Population model for the inference - model-constrained only, such as dadi"
-    )
-    inf.add_argument(
-        '--opt', dest="opt", choices=['tau', 'kappa', 'tau-kappa'],
-        required='--dadi' in sys.argv,  # required only if --dadi indicated
-        help="Parameter to evaluate - (tau), (kappa), (kappa, tau)"
+        help="Parameter to evaluate - (tau), (kappa), (kappa, tau), (m12), (m12, kappa)"
     )
 
     # Stairway
     tool.add_argument('-stairway', action='store_true',
                       help="Inference of demographic history with Stairway plot 2")
+
+    inf.add_argument(
+        '--model', dest="model", choices=['decline', 'migration'], required=True,
+        help="Simulation model used for the inference, in the case of dadi also indicate the "
+        "population model for the inference"
+    )
 
     #############################################
     # Plot error rate                           #
