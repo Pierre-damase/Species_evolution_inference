@@ -7,6 +7,9 @@ import sys
 import numpy as np
 import pandas as pd
 
+######################################################################
+# SFS - Dadi                                                         #
+######################################################################
 
 def dadi_data(sfs, fichier, path="./Data/", name="SFS"):
     """
@@ -45,15 +48,9 @@ def dadi_data(sfs, fichier, path="./Data/", name="SFS"):
             else:
                 filout.write("0 ")
 
-
-def export_sfs(path, name):
-    """
-    Export SFS file in the format compatible with the dadi software into list.
-    """
-    with open("{}{}.fs".format(path, name), "r") as filin:
-        lines = filin.readlines()
-    return [int(ele) for ele in lines[1].strip().split(' ') if ele != "0"]
-
+######################################################################
+# SFS - Stairway plot 2                                              #
+######################################################################
 
 def stairway_data(name, data, path):
     """
@@ -114,6 +111,49 @@ def stairway_data(name, data, path):
         filout.write("yspacing: 2 # y axis sapcing\n")
         filout.write("fontsize: 12\n")
 
+
+######################################################################
+# Export json files                                                  #
+######################################################################
+
+def export_json_files(model, filein, path_data):
+    """
+    Export each json file generated with msprime into a single DataFrame.
+
+    Then export this DataFrame to a json file.
+
+    Parameters
+    ----------
+    model:
+        kind of model - decline, growth, migration, etc.
+    path_data:
+        path of each json file
+    """
+    if filein not in os.listdir(path_data):
+        # Pandas DataFrame
+        simulation = pd.DataFrame(columns=['Parameters', 'SNPs', 'SFS', 'Time'])
+
+        for fichier in os.listdir(path_data):
+            # Export the json file to pandas DataFrame and store it in simulation
+            res = pd.read_json(path_or_buf="{}{}".format(path_data, fichier), typ='frame')
+            simulation = simulation.append(res, ignore_index=True)
+
+            # Delete the json file
+            os.remove("{}{}".format(path_data, fichier))
+
+        # Export pandas DataFrame simulation to json file
+        simulation.to_json("{}SFS_{}-all.json".format(path_data, model))
+
+    else:
+        simulation = \
+            pd.read_json(path_or_buf="{}{}".format(path_data, filein), typ='frame')
+
+    return simulation
+
+
+######################################################################
+# A SUPPRIMER - probablement                                         #
+######################################################################
 
 def export_to_dataframe(path_data):
     """

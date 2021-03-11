@@ -65,7 +65,6 @@ def generate_sfs(params, model, nb_simu, path_data, path_length):
     #print(length)
     #sys.exit()
     length = 1e5
-    nb_simu = 1
 
     # Convert params from log scale
     params = {k: np.power(10, v) for k, v in params.items()}
@@ -403,7 +402,7 @@ if __name__ == "__main__":
         if args.model == "decline":
 
             # Range of value for tau & kappa
-            tau_list, kappa_list = np.arange(-4, 4, 0.1), np.arange(-3.3, 3.1, 0.08)
+            tau_list, kappa_list = np.arange(-4, 2.5, 0.1), np.arange(-3.5, 3, 0.1)
             params = []
             for tau in tau_list:
                 for kappa in kappa_list:
@@ -420,7 +419,7 @@ if __name__ == "__main__":
             "/home/pimbert/work/Species_evolution_inference/Data/Msprime/length_factor-{}"\
             .format(args.model)
 
-        generate_sfs(params, model, nb_simu=2, path_data=path_data, path_length=path_length)
+        generate_sfs(params, model, nb_simu=1, path_data=path_data, path_length=path_length)
 
     elif args.analyse == 'opt':
         sample = [10, 20, 40, 60, 100]

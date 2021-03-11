@@ -73,7 +73,6 @@ def generate_sfs(params, model, nb_simu, path_data, path_length):
     #print(length)
     #sys.exit()
     length = 1e4
-    nb_simu = 1
 
     # Convert params from log scale
     params = {k: np.power(10, v) for k, v in params.items()}
@@ -488,46 +487,6 @@ def inference_stairway_plot(simulation, model):
 
 
 ######################################################################
-# Export json files                                                  #
-######################################################################
-
-def export_json_files(model, filein, path_data):
-    """
-    Export each json file generated with msprime into a single DataFrame.
-
-    Then export this DataFrame to a json file.
-
-    Parameters
-    ----------
-    model:
-        kind of model - decline, growth, migration, etc.
-    path_data:
-        path of each json file
-    """
-    if filein not in os.listdir(path_data):
-        # Pandas DataFrame
-        simulation = pd.DataFrame(columns=['Parameters', 'SNPs', 'SFS', 'Time'])
-
-        for fichier in os.listdir(path_data):
-            # Export the json file to pandas DataFrame and store it in simulation
-            res = pd.read_json(path_or_buf="{}{}".format(path_data, fichier), typ='frame')
-            simulation = simulation.append(res, ignore_index=True)
-
-            # Delete the json file
-            os.remove("{}{}".format(path_data, fichier))
-
-        # Export pandas DataFrame simulation to json file
-        # simulation = simulation.rename(columns={'SFS': 'SFS observed'})
-        simulation.to_json("{}SFS_{}-all.json".format(path_data, model))
-
-    else:
-        simulation = \
-            pd.read_json(path_or_buf="{}{}".format(path_data, filein), typ='frame')
-
-    return simulation
-
-
-######################################################################
 # Main                                                               #
 ######################################################################
 
@@ -548,7 +507,7 @@ def main():
             filein = "SFS_{}-all.json".format(args.model)
 
             # Export the observed SFS to DataFrame
-            simulation = export_json_files(args.model, filein, path_data)
+            simulation = f.export_json_files(args.model, filein, path_data)
 
             # Plot SNPs distribution
             plot.snp_distribution_3d(simulation)
@@ -562,7 +521,7 @@ def main():
             filein = "SFS_{}-all.json".format(args.model)
 
             # Export the observed SFS to DataFrame
-            simulation = export_json_files(args.model, filein, path_data)
+            simulation = f.export_json_files(args.model, filein, path_data)
 
             factor, theta = pd.DataFrame(columns=['Parameters', 'Factor']), 32000
             if args.model == 'decline':
@@ -583,12 +542,13 @@ def main():
         # Simulation of sudden decline model with msprime for various tau & kappa
         if args.model == 'decline':
             # Range of value for tau & kappa
-            tau_list, kappa_list = np.arange(-4, 4, 0.1), np.arange(-3.3, 3.1, 0.08)
+            tau_list, kappa_list = np.arange(-4, 2.5, 0.1), np.arange(-3.5, 3, 0.1)
 
             params = []
             for tau in tau_list:
                 for kappa in kappa_list:
                     params.append({'Tau': round(tau, 2), 'Kappa': round(kappa, 2)})
+
             params, model = params[args.value-1], ms.sudden_decline_model
 
             path_data = "./Data/Msprime/sfs_{0}/SFS_{0}-tau={1}_kappa={2}"\
@@ -598,7 +558,7 @@ def main():
         # population 2 to 1 and kappa
         elif args.model == 'migration':
             # Range of value for m12 & kappa
-            m12_list, kappa_list = np.arange(-4, 4, 0.1), np.arange(-3.3, 3.1, 0.08)
+            m12_list, kappa_list = np.arange(-4, 2.5, 0.1), np.arange(-3.5, 3, 0.1)
 
             params = []
             for m12 in m12_list:
@@ -624,7 +584,7 @@ def main():
         filein = "SFS_{}-all.json".format(args.model)
 
         # Export the observed SFS to DataFrame
-        simulation = export_json_files(args.model, filein, path_data)
+        simulation = f.export_json_files(args.model, filein, path_data)
 
         # Inference with dadi
         if args.dadi:
