@@ -3,7 +3,6 @@ Define command-line options, arguments and sub-commands by using argparse.
 """
 
 import argparse
-import sys
 
 
 def data_type(value):
@@ -80,10 +79,12 @@ def arguments():
     tool.add_argument('-dadi', action='store_true',
                       help="Inference of demographic history with Dadi")
     inf.add_argument(
-        '--opt', dest="opt",
-        choices=['tau', 'kappa', 'tau-kappa', 'migration', 'migration-kappa'],
-        required='--dadi' in sys.argv,  # required only if --dadi indicated
-        help="Parameter to evaluate - (tau), (kappa), (kappa, tau), (m12), (m12, kappa)"
+        '--param', dest="param", choices=['tau', 'kappa', 'migration'], default=None,
+        help="Fixed parameters, either (tau), (kappa) or (m12)"
+    )
+    inf.add_argument(
+        '--value', dest='value', type=float, default=None,
+        help="Value of the fixed parameters for the inference"
     )
 
     # Stairway

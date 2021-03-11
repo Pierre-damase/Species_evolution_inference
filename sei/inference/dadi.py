@@ -6,7 +6,8 @@ import dadi
 import sys
 
 
-OPTIMIZATION = None
+FIXED = None
+VALUE = None
 
 
 def constant_model(ns, pts):
@@ -35,11 +36,11 @@ def constant_model(ns, pts):
 
 
 def params_decline_model(params):
-    global OPTIMIZATION
-    if OPTIMIZATION == "tau":
-        return 10, params  # Fixe kappa
-    elif OPTIMIZATION == "kappa":
-        return params, 1.0  # Fixe tau
+    global FIXED, VALUE
+    if FIXED == "tau":  # Fixed param: (Tau)
+        return params, VALUE
+    elif FIXED == "kappa":  # Fixed param: (Kappa)
+        return VALUE, params
     else:
         return params
 
@@ -61,7 +62,7 @@ def sudden_decline_model(params, ns, pts):
     pts: list
         the number of grid points to use in integration
     """
-    # Params (kappa, tau)
+    # Params (Kappa, Tau)
     kappa, tau = params_decline_model(params)
 
     # Define the grid we'll use
@@ -80,8 +81,8 @@ def sudden_decline_model(params, ns, pts):
 
 
 def params_migration_model(params):
-    global OPTIMIZATION
-    if OPTIMIZATION == "migration":
+    global FIXED
+    if FIXED == "migration":
         return params, 0  # No migration from population 1 to population 2
 
 
@@ -176,7 +177,8 @@ def parameters_optimization(p0, sfs, model_func, pts_list, lower_bound, upper_bo
     return popt
 
 
-def inference(pts_list, model_func, opt=None, verbose=0, path="./Data/", name="SFS"):
+def inference(pts_list, model_func, fixed=None, value=None, verbose=0, path="./Data/",
+              name="SFS"):
     """
     Dadi inference.
 
@@ -196,8 +198,9 @@ def inference(pts_list, model_func, opt=None, verbose=0, path="./Data/", name="S
     model: list
         the sfs inferred
     """
-    global OPTIMIZATION
-    OPTIMIZATION = opt
+    global FIXED, VALUE
+    FIXED = fixed
+    VALUE = value
 
     # Load the data
     observed_sfs = dadi.Spectrum.from_file("{}{}.fs".format(path, name))
@@ -207,25 +210,25 @@ def inference(pts_list, model_func, opt=None, verbose=0, path="./Data/", name="S
     model_func_extrapolated = dadi.Numerics.make_extrap_log_func(model_func)
 
     # Optimisation of model parameters
-    if opt is not None:
+    if model_func.__name__ == 'constant_model':
+        inferred_sfs = model_func_extrapolated(ns, pts_list)
 
+    else:
         # Set up:
         #   - p0: initial guess for the parameters, which is somewhat arbitrary
         #   - lower & upper bound for the optimization
-        if OPTIMIZATION == "tau":  # Fixed Kappa
-            # Param: (tau)
+
+        if FIXED == 'tau':  # Fixed param: (Tau) & Param evaluates: (Kappa)
+            # Param: (Kappa)
+            p0, lower_bound, upper_bound = [1.0], [1e-4], [1e3]
+
+        elif FIXED == 'kappa':  # Fixed param: (Kappa) & Param evaluates: (Tau)
+            # Param: (Tau)
             p0, lower_bound, upper_bound = [0.9], [1e-4], [1e4]
 
-        elif OPTIMIZATION == "kappa":  # Fixed Tau
-            # Param: (Kappa)
-            p0, lower_bound, upper_bound = [1.0], [1e-4], [1.5e3]
-
-        elif OPTIMIZATION == "tau-kappa":
-            # Params: (kappa, tau)
-            p0, lower_bound, upper_bound = [1.0, 0.9], [1e-4, 1e-4], [1.5e3, 1e4]
-
-        elif OPTIMIZATION == "migration":
-            p0, lower_bound, upper_bound = [10.0, 1.0, 1.0], [1.0, 1e-4, 0.0], [1e6, 1e5, 10.0]
+        else:  # Params evaluate: (Kappa, Tau)
+            # Params: (Kappa, Tau)
+            p0, lower_bound, upper_bound = [1.0, 0.9], [1e-4, 1e-4], [1e3, 1e4]
 
         popt = parameters_optimization(p0, observed_sfs, model_func_extrapolated, pts_list,
                                        lower_bound, upper_bound, verbose=verbose)
@@ -234,16 +237,13 @@ def inference(pts_list, model_func, opt=None, verbose=0, path="./Data/", name="S
         inferred_sfs = model_func_extrapolated(popt, ns, pts_list)
 
         # Keep track of parameters after optimization
-        if OPTIMIZATION == "tau":  # Fixed Kappa
-            params_estimated = {'Tau': popt[0], 'Kappa': 10}
-        elif OPTIMIZATION == "kappa":  # Fixed Tau
+        if FIXED == 'tau':
             params_estimated = {'Tau': 1.0, 'Kappa': popt[0]}
-        elif OPTIMIZATION == "tau-kappa":
+        elif FIXED == 'kappa':
+            params_estimated = {'Tau': popt[0], 'Kappa': 10}
+        else:
             params_estimated = {'Tau': popt[1], 'Kappa': popt[0]}
 
-    else:
-        # Simulated frequency spectrum
-        inferred_sfs = model_func_extrapolated(ns, pts_list)
 
     # Log-likelihood of the data (sfs) given the model
     ll_model = dadi.Inference.ll_multinom(inferred_sfs, observed_sfs)

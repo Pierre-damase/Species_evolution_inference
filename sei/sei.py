@@ -277,7 +277,7 @@ def dadi_params_optimisation(sample):
 # Inference with Dadi                                                #
 ######################################################################
 
-def likelihood_ratio_test(sfs_observed, models, sample, optimization, dof):
+def likelihood_ratio_test(sfs_observed, models, sample, fixed, dof, value=None):
     """
     Likelihood-ratio test to assesses the godness fit of two model.
 
@@ -313,8 +313,8 @@ def likelihood_ratio_test(sfs_observed, models, sample, optimization, dof):
         The model with less parameters, i.e. M0
     sample: int
         The number of sampled monoploid genomes
-    optimization: str
-        Either tau, kappa or tau-kappa
+    fixed: str
+        fixed parameter for the inference, either (tau), (kappa) or (migration)
     dof: int
         degrees of freedom
 
@@ -362,8 +362,8 @@ def likelihood_ratio_test(sfs_observed, models, sample, optimization, dof):
             start_inference = time.time()
 
             # Pairs (Log-likelihood, Inferred SFS, Params)
-            tmp = \
-                dadi.inference(pts_list, models['Inference'], opt=optimization, path=path_data)
+            tmp = dadi.inference(pts_list, models['Inference'], fixed=fixed, value=value,
+                                 path=path_data)
 
             m1_inferences.append(tmp)
             m1_execution.append(time.time() - start_inference)
@@ -394,7 +394,7 @@ def likelihood_ratio_test(sfs_observed, models, sample, optimization, dof):
         return data
 
 
-def inference_dadi(simulation, models, optimization):
+def inference_dadi(simulation, models, fixed, value, path_data):
     """
     Inference with dadi.
 
@@ -415,8 +415,10 @@ def inference_dadi(simulation, models, optimization):
       - Inference: the custom model to infer demography history, i.e. the model m1 with more
         parameters
       - Control: the control model, i.e. the model m0 with less parameters
-    optimization
-        parameter to optimize - (kappa), (tau), (kappa, tau), etc.
+    fixed
+        fixed parameter for the inference, either (tau), (kappa) or (migration)
+    value
+        Value of the fixed parameters for the inference
     """
     col = ['Parameters', 'Positive hit', 'SNPs', 'SFS observed', 'M0', 'M1', 'Time']
     data = pd.DataFrame(columns=col)
@@ -426,14 +428,19 @@ def inference_dadi(simulation, models, optimization):
         for _, row in simulation.iterrows():
             sfs_observed, sample = row['SFS observed'], row['Parameters']['sample_size']
 
-            if optimization == 'tau' and round(row['Parameters']['Tau'], 2) == 1.0:
-                inf = likelihood_ratio_test(sfs_observed, models, sample, optimization, dof=2)
+            if fixed == 'tau' and round(row['Parameters']['Tau'], 2) == value:
+                inf = likelihood_ratio_test(sfs_observed, models, sample, fixed, dof=2,
+                                            value=value)
 
-            elif optimization == 'kappa' and round(row['Parameters']['Kappa'], 2) == 10.47:
-                inf = likelihood_ratio_test(sfs_observed, models, sample, optimization, dof=2)
+            elif fixed == 'kappa' and round(row['Parameters']['Kappa'], 2) == value:
+                inf = likelihood_ratio_test(sfs_observed, models, sample, fixed, dof=2,
+                                            value=value)
+
+            elif fixed is None:
+                inf = likelihood_ratio_test(sfs_observed, models, sample, fixed, dof=2)
 
             else:
-                inf = likelihood_ratio_test(sfs_observed, models, sample, optimization, dof=2)
+                continue
 
             params = {k: v for k, v in row['Parameters'].items() if k in ['Tau', 'Kappa']}
 
@@ -449,7 +456,14 @@ def inference_dadi(simulation, models, optimization):
 
     # Export dataframe to json files
     path_data = "./Data/Dadi/"
-    data.to_json("{}dadi-{}".format(path_data, models['Inference'].__name__))
+    if fixed is None:
+        name = "dadi-{}".format(models['Inference'])
+    else:
+        name = "dadi-{}-{}={}".format(models['Inference'].__name__, fixed, value)
+    data.to_json("{}{}".format(path_data, name))
+
+    # Remove SFS file
+    os.remove("{}SFS.fs".format(path_data))
 
 
 ######################################################################
@@ -597,7 +611,8 @@ def main():
                 models = \
                     {'Inference': dadi.two_pops_migration_model, 'Control': dadi.constant_model}
 
-            inference_dadi(simulation, models, optimization=args.opt)
+            inference_dadi(simulation, models, fixed=args.param, value=args.value,
+                           path_data=path_data)
 
         # Inference with stairway plot 2
         elif args.stairway:
