@@ -131,13 +131,15 @@ def export_json_files(model, filein, path_data):
     """
     if filein not in os.listdir(path_data):
         # Pandas DataFrame
-        simulation = pd.DataFrame(columns=['Parameters', 'SNPs', 'SFS', 'Time'])
+        simulation = pd.DataFrame(columns=['Parameters', 'SNPs', 'SFS observed', 'Time'])
 
         for fichier in os.listdir(path_data):
             # Export the json file to pandas DataFrame and store it in simulation
             res = pd.read_json(path_or_buf="{}{}".format(path_data, fichier), typ='frame')
             simulation = simulation.append(res, ignore_index=True)
 
+            print("SOME MODIF - file")
+            sys.exit()
             # Delete the json file
             os.remove("{}{}".format(path_data, fichier))
 

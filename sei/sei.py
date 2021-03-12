@@ -74,8 +74,10 @@ def generate_sfs(params, model, nb_simu, path_data, path_length):
     #sys.exit()
     length = 1e4
 
+    print(params)
+
     # Convert params from log scale
-    params = {k: np.power(10, v) for k, v in params.items()}
+    params.update({k: np.power(10, v) for k, v in params.items() if v != 0.0})
 
     # Parameters for the simulation
     params.update(simulation_parameters(sample=20, ne=1, rcb_rate=mu, mu=mu, length=length))
@@ -113,7 +115,7 @@ def sfs_shape_verification():
        population
      - The SFS of an increasing or decreasing population
     """
-    # Fixed parameters for the simulation
+    # Parameters for the simulation
     params = simulation_parameters(sample=10, ne=1, rcb_rate=2e-2, mu=2e-2, length=1e5)
 
     # Constant scenario
@@ -150,7 +152,6 @@ def sfs_shape_verification():
         style=["solid", "solid", "solid", "solid", "dashed"],
         title="Unfold SFS for various scenarios", axis=True
     )
-
 
 ######################################################################
 # Grip point optimization                                            #
@@ -277,7 +278,7 @@ def dadi_params_optimisation(sample):
 # Inference with Dadi                                                #
 ######################################################################
 
-def likelihood_ratio_test(sfs_observed, models, sample, fixed, dof, value=None):
+def likelihood_ratio_test(sfs_observed, models, sample, fixed, path_data, dof, value=None):
     """
     Likelihood-ratio test to assesses the godness fit of two model.
 
@@ -339,9 +340,6 @@ def likelihood_ratio_test(sfs_observed, models, sample, fixed, dof, value=None):
     }
     execution = []
 
-    # Path data & name
-    path_data = "./Data/Dadi/"
-
     # Grid point for the extrapolation
     pts_list = [sample*10, sample*10 + 10, sample*10 + 20]
 
@@ -358,7 +356,7 @@ def likelihood_ratio_test(sfs_observed, models, sample, fixed, dof, value=None):
         # Dadi inference for M1
         m1_inferences, m1_execution = [], []
 
-        for _ in range(10):  # Run 1000 inferences with dadi from the observed sfs
+        for _ in range(100):  # Run 1000 inferences with dadi from the observed sfs
             start_inference = time.time()
 
             # Pairs (Log-likelihood, Inferred SFS, Params)
@@ -394,7 +392,7 @@ def likelihood_ratio_test(sfs_observed, models, sample, fixed, dof, value=None):
         return data
 
 
-def inference_dadi(simulation, models, fixed, value, path_data):
+def inference_dadi(simulation, models, path_data, fixed, value):
     """
     Inference with dadi.
 
@@ -423,41 +421,34 @@ def inference_dadi(simulation, models, fixed, value, path_data):
     col = ['Parameters', 'Positive hit', 'SNPs', 'SFS observed', 'M0', 'M1', 'Time']
     data = pd.DataFrame(columns=col)
 
-    if models['Inference'].__name__ == 'sudden_decline_model':
+    for _, row in simulation.iterrows():
+        sfs_observed, sample = row['SFS observed'], row['Parameters']['sample_size']
 
-        for _, row in simulation.iterrows():
-            sfs_observed, sample = row['SFS observed'], row['Parameters']['sample_size']
+        if fixed == 'tau' and round(row['Parameters']['Tau'], 2) == value:
+            inf = likelihood_ratio_test(sfs_observed, models, sample, fixed, path_data, dof=2,
+                                        value=value)
 
-            if fixed == 'tau' and round(row['Parameters']['Tau'], 2) == value:
-                inf = likelihood_ratio_test(sfs_observed, models, sample, fixed, dof=2,
-                                            value=value)
+        elif fixed == 'kappa' and round(row['Parameters']['Kappa'], 2) == value:
+            inf = likelihood_ratio_test(sfs_observed, models, sample, fixed, path_data, dof=2,
+                                        value=value)
 
-            elif fixed == 'kappa' and round(row['Parameters']['Kappa'], 2) == value:
-                inf = likelihood_ratio_test(sfs_observed, models, sample, fixed, dof=2,
-                                            value=value)
+        elif fixed is None:
+            inf = likelihood_ratio_test(sfs_observed, models, sample, fixed, path_data, dof=2)
 
-            elif fixed is None:
-                inf = likelihood_ratio_test(sfs_observed, models, sample, fixed, dof=2)
+        else:
+            continue
 
-            else:
-                continue
+        params = {k: v for k, v in row['Parameters'].items() if k in ['Tau', 'Kappa']}
 
-            params = {k: v for k, v in row['Parameters'].items() if k in ['Tau', 'Kappa']}
-
-            dico = {
-                'Parameters': params, 'Positive hit': inf['LRT'], 'SNPs': row['SNPs'],
-                'SFS observed': sfs_observed, 'M0': inf['M0'], 'M1': inf['M1'],
-                'Time': inf['Time']
-            }
-            data = data.append(dico, ignore_index=True)
-
-    elif models['Inference'].__name__ == 'two_pops_migration_model':
-        pass
+        dico = {
+            'Parameters': params, 'Positive hit': inf['LRT'], 'SNPs': row['SNPs'],
+            'SFS observed': sfs_observed, 'M0': inf['M0'], 'M1': inf['M1'], 'Time': inf['Time']
+        }
+        data = data.append(dico, ignore_index=True)
 
     # Export dataframe to json files
-    path_data = "./Data/Dadi/"
     if fixed is None:
-        name = "dadi-{}".format(models['Inference'])
+        name = "dadi-{}".format(models['Inference'].__name__)
     else:
         name = "dadi-{}-{}={}".format(models['Inference'].__name__, fixed, value)
     data.to_json("{}{}".format(path_data, name))
@@ -508,15 +499,50 @@ def main():
     """
     Le main du programme.
     """
-    # sfs_verification()
     # grid_optimisation()
 
     args = arg.arguments()
 
     if args.analyse == 'data':
 
+        # Simulation of constant population - inference of decline population
+        if args.model == 'cst':
+            # Parameters for the simulation
+            params = simulation_parameters(sample=20, ne=1, rcb_rate=8e-2, mu=8e-2, length=1e5)
+
+            dico = {'Parameters': params, 'SFS observed': [], 'SNPs': [], 'Time': []}
+            for i in range(100):
+                print("Simulation {}/100".format(i+1), end="\r")
+                start_time = time.time()
+
+                sfs_cst = ms.msprime_simulation(model=ms.constant_model, params=params)
+                dico['SFS observed'].append(sfs_cst)
+                dico['SNPs'].append(sum(sfs_cst))
+
+                dico['Time'].append(time.time() - start_time)
+
+            # Compute mean execution time
+            dico['Time'] = round(np.mean(dico['Time']), 4)
+
+            # Store data in pandas DataFrame
+            simulation = pd.DataFrame(columns=['Parameters', 'SFS observed', 'SNPs', 'Time'])
+            simulation = simulation.append(dico, ignore_index=True)
+
+            # Export to json
+            simulation.to_json("./Data/Msprime/sfs_cst/SFS_{}.json".format(args.model))
+
+            # # Path data
+            # path_data = "./Data/Dadi/{}/".format(args.model)
+
+            # # Inference with Dadi
+            # print("Inference with dadi")
+            # models = {'Inference': dadi.sudden_decline_model, 'Control': dadi.constant_model}
+            # inference_dadi(simulation, models, path_data, fixed=None, value=None)
+            print("Over")
+            sys.exit()
+
         # Analyse SNPs distribution
-        if args.snp:
+        elif args.snp:
             path_data = "./Data/Msprime/snp_distribution/sfs_{}/".format(args.model)
             filein = "SFS_{}-all.json".format(args.model)
 
@@ -568,8 +594,9 @@ def main():
             path_data = "./Data/Msprime/sfs_{0}/SFS_{0}-tau={1}_kappa={2}"\
                 .format(args.model, params['Tau'], params['Kappa'])
 
-        # Simulation of two populations migration models for various migration rate from
-        # population 2 to 1 and kappa
+        # Simulation of two populations migration models for various migration into 1 from
+        # 2 and no migration into 2 from 1
+        # Population 1 size is pop1 and population 2 size is pop2 = kappa*pop1
         elif args.model == 'migration':
             # Range of value for m12 & kappa
             m12_list, kappa_list = np.arange(-4, 2.5, 0.1), np.arange(-3.5, 3, 0.1)
@@ -577,11 +604,11 @@ def main():
             params = []
             for m12 in m12_list:
                 for kappa in kappa_list:
-                    params.append({'M12': round(m12, 2), 'Kappa': round(kappa, 2)})
+                    params.append({'m12': round(m12, 2), 'm21': 0.0, 'Kappa': round(kappa, 2)})
             params, model = params[args.value-1], ms.two_pops_migration_model
 
             path_data = "./Data/Msprime/sfs_{0}/SFS_{0}-m12={1}_kappa={2}"\
-                .format(args.model, params['M12'], params['Kappa'])
+                .format(args.model, params['m12'], params['Kappa'])
 
         path_length = "./Data/Msprime/length_factor-{}".format(args.model)
 
@@ -611,8 +638,10 @@ def main():
                 models = \
                     {'Inference': dadi.two_pops_migration_model, 'Control': dadi.constant_model}
 
-            inference_dadi(simulation, models, fixed=args.param, value=args.value,
-                           path_data=path_data)
+            # Path data
+            path_data = "./Data/Dadi/{}/".format(args.model)
+
+            inference_dadi(simulation, models, path_data, fixed=args.param, value=args.value)
 
         # Inference with stairway plot 2
         elif args.stairway:

@@ -35,12 +35,31 @@ def constant_model(ns, pts):
     return sfs
 
 
-def params_decline_model(params):
+def params_model(params):
+    """
+    Define parameters for the inference.
+
+    There are 4 cases:
+      - Fixed param: (Tau)
+        The length of time ago at which the event occured
+      - Fixed param: (Kappa)
+        The decline force (sudden decline model) or the difference in size between population 2
+        and 1 with Pop2 = Kappa * Pop1
+      - Fixed param: (Migration)
+        The migration rate from population 2 to 1
+      - Parameters: (Kappa, Tau) or (Kappa, Migration)
+        No fixed parameters
+
+    In each case, there are two parameters but we can fixed one of this to 'help' dadi fot the
+    inference.
+    """
     global FIXED, VALUE
-    if FIXED == "tau":  # Fixed param: (Tau)
+    if FIXED == "tau":  # Fixed param: (Tau), the length of time ago at which the event occured
         return params, VALUE
-    elif FIXED == "kappa":  # Fixed param: (Kappa)
+    elif FIXED == "kappa":  # Fixed param: (Kappa), the decline force
         return VALUE, params
+    elif FIXED == "migration":  # Fixed param: (m12), the migration rate into 1 from 2
+        return params, VALUE
     else:
         return params
 
@@ -49,21 +68,21 @@ def sudden_decline_model(params, ns, pts):
     """
     Sudden decline model of the population.
 
-    At time tau in the past, an equilibrium population of size nu undergoing a sudden decline,
-    reaching size nu * kappa with kappa the force.
+    At time tau in the past, an equilibrium population of size nu*kappa undergoing a sudden
+    decline, reaching size nu with kappa the decline force.
 
     Parameter
     ---------
     params
       - kappa: ratio of contemporary population's size to ancient population's size
-      - tau: time in the past at which size change happened
+      - tau: the length of time ago at which size change happened
     ns: int
         the number of sampled genomes in resulting spectrum
     pts: list
         the number of grid points to use in integration
     """
     # Params (Kappa, Tau)
-    kappa, tau = params_decline_model(params)
+    kappa, tau = params_model(params)
 
     # Define the grid we'll use
     grid = dadi.Numerics.default_grid(pts)
@@ -80,28 +99,29 @@ def sudden_decline_model(params, ns, pts):
     return sfs
 
 
-def params_migration_model(params):
-    global FIXED
-    if FIXED == "migration":
-        return params, 0  # No migration from population 1 to population 2
-
-
 def two_pops_migration_model(params, ns, pts):
     """
+    Two populations migration model.
+
+    In this model, there are:
+      - Two populations with population 1 of size p1 and population 2 of size p2 = kappa*p1
+      - Some migrations into population 1 from 2 with m12 the migration rate
+      - No migrations into population 2 to 1, so m21 = 0.0
 
     Parameter
     ---------
     params
       - kappa: ratio of population's 1 size to population's 2 size
-      - tau: time in the past of split
-      - m12: migration rate from population 2 to 1
-      - m21: migration rate from population 1 to 2
+      - m12: migration rate into population 1 from 2
+      - m21: migration rate into population 2 from 1
     ns: int
         the number of sampled genomes in resulting spectrum
     pts: list
         the number of grid points to use in integration
     """
-    kappa, tau, m12, m21 = params_migration_model(params)
+    # Params: (kappa, m12) - with m21 = 0.0
+    kappa, m12, m21 = params_model(params), 0.0
+    tau = 1.0  # time in the past of split
 
     # Define the grid we'll use
     grid = dadi.Numerics.default_grid(pts)
@@ -226,8 +246,10 @@ def inference(pts_list, model_func, fixed=None, value=None, verbose=0, path="./D
             # Param: (Tau)
             p0, lower_bound, upper_bound = [0.9], [1e-4], [1e4]
 
-        else:  # Params evaluate: (Kappa, Tau)
-            # Params: (Kappa, Tau)
+        elif FIXED == 'migration':  # Fixed param: (m12), the migration rate into 1 from 2
+            # Pram: (m12)
+            p0, lower_bound, upper_bound = [1.0], [1e-4], [1e3]
+        else:  # Params evaluate: (Kappa, Tau) or (Kappa, m12)
             p0, lower_bound, upper_bound = [1.0, 0.9], [1e-4, 1e-4], [1e3, 1e4]
 
         popt = parameters_optimization(p0, observed_sfs, model_func_extrapolated, pts_list,

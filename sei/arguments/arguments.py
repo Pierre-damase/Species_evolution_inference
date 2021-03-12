@@ -3,6 +3,7 @@ Define command-line options, arguments and sub-commands by using argparse.
 """
 
 import argparse
+import sys
 
 
 def data_type(value):
@@ -31,12 +32,12 @@ def arguments():
     #############################################
     data = subparsers.add_parser('data', help="Generate various unfolded sfs with msprime")
     data.add_argument(
-        '--model', dest='model', required=True, choices=['decline', 'migration'],
-        help="Kind of scenario to use for the generation of sfs with msprime - declin" \
-        ", migration, etc."
+        '--model', dest='model', required=True, choices=['decline', 'migration', 'cst'],
+        help="Kind of scenario to use for the generation of sfs with msprime - decline"
+        ", migration, cst for constant population"
     )
 
-    group = data.add_mutually_exclusive_group(required=True)
+    group = data.add_mutually_exclusive_group(required=sys.argv[3] != 'cst')
     group.add_argument(
         '--value', dest='value', type=data_type,
         help="Simulation with msprime for a given tau & kappa"
@@ -80,10 +81,12 @@ def arguments():
                       help="Inference of demographic history with Dadi")
     inf.add_argument(
         '--param', dest="param", choices=['tau', 'kappa', 'migration'], default=None,
-        help="Fixed parameters, either (tau), (kappa) or (m12)"
+        help="Fixed parameters, either (tau), (kappa) or (m12), m12 is the migration rate from"
+        " population 2 to 1."
     )
     inf.add_argument(
         '--value', dest='value', type=float, default=None,
+        required='--param' in sys.argv is not None,
         help="Value of the fixed parameters for the inference"
     )
 

@@ -132,8 +132,8 @@ def two_pops_migration_model(params, debug):
     ---------
     params: dictionary
       - Kappa: ratio of population's 1 size to population's 2 size
-      - m12: migration rate from population 2 to 1
-      - m21: migration rate from population 1 to 2
+      - m12: migration rate into population 1 from 2
+      - m21: migration rate into population 2 from 1 - by default it's 0
     """
     sample, pop, kappa, m12, m21 = \
         params['sample_size'], params['size_population'], params['Kappa'], params['m12'], \
