@@ -44,11 +44,14 @@ def simulation_parameters(sample, ne, rcb_rate, mu, length):
 # Generate a set of SFS with msprime                                 #
 ######################################################################
 
-def length_from_file(fichier, name, mu, snp):
-    with open(fichier, "r") as filin:
-        length_factor = filin.readlines()[0].split(" ")
-    index = int(name.split('-')[1]) - 1
-    return (snp / float(length_factor[index])) / (4 * 1 * mu)
+def length_from_file(fichier, params, mu, snp):
+    """
+    Extract length factor from file and return the length of the sequence.
+    """
+    res = pd.read_json(path_or_buf="{}".format(fichier), typ='frame')
+    factor = res[res['Parameters'] == params]['Factor'].values[0]
+
+    return (snp / factor) / (4 * 1 * mu)
 
 
 def generate_sfs(params, model, nb_simu, path_data, path_length):
@@ -61,13 +64,10 @@ def generate_sfs(params, model, nb_simu, path_data, path_length):
     data = pd.DataFrame(columns=['Parameters', 'SFS observed', 'SNPs', 'Time'])
 
     # Define length
-    #length = length_from_file(path_length, params, mu, snp=10000)
-    #print(length)
-    #sys.exit()
-    length = 1e5
+    length = length_from_file(path_length, params, mu, snp=100000)
 
     # Convert params from log scale
-    params = {k: np.power(10, v) for k, v in params.items()}
+    params.update({k: np.power(10, v) for k, v in params.items()})
 
     # Parameters for the simulation
     params.update(simulation_parameters(sample=20, ne=1, rcb_rate=mu, mu=mu, length=length))
@@ -83,8 +83,10 @@ def generate_sfs(params, model, nb_simu, path_data, path_length):
         execution.append(time.time() - start_time)
 
     # Export DataFrame to json file
-    row = {'Parameters': params, 'SFS observed': sfs, 'SNPs': snp,
-           'Time': round(np.mean(execution), 4)}
+    row = {
+        'Parameters': params, 'SFS observed': sfs, 'SNPs': snp,
+        'Time': round(np.mean(execution), 4)
+    }
     data = data.append(row, ignore_index=True)
 
     data.to_json("{}".format(path_data))

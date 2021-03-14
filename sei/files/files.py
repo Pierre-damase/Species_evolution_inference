@@ -138,8 +138,6 @@ def export_json_files(model, filein, path_data):
             res = pd.read_json(path_or_buf="{}{}".format(path_data, fichier), typ='frame')
             simulation = simulation.append(res, ignore_index=True)
 
-            print("SOME MODIF - file")
-            sys.exit()
             # Delete the json file
             os.remove("{}{}".format(path_data, fichier))
 

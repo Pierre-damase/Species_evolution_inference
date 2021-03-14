@@ -51,12 +51,9 @@ def length_from_file(fichier, params, mu, snp):
     Extract length factor from file and return the length of the sequence.
     """
     res = pd.read_json(path_or_buf="{}".format(fichier), typ='frame')
+    factor = res[res['Parameters'] == params]['Factor'].values[0]
 
-    print(res[res['Parameters'] == params])
-    print(params)
-    sys.exit()
-
-    return (snp / float(1)) / (4 * 1 * mu)
+    return (snp / factor) / (4 * 1 * mu)
 
 
 def generate_sfs(params, model, nb_simu, path_data, path_length):
@@ -69,15 +66,10 @@ def generate_sfs(params, model, nb_simu, path_data, path_length):
     data = pd.DataFrame(columns=['Parameters', 'SFS observed', 'SNPs', 'Time'])
 
     # Define length
-    #length = length_from_file(path_length, params, mu, snp=10000)
-    #print(length)
-    #sys.exit()
-    length = 1e4
-
-    print(params)
+    length = length_from_file(path_length, params, mu, snp=100000)
 
     # Convert params from log scale
-    params.update({k: np.power(10, v) for k, v in params.items() if v != 0.0})
+    params.update({k: np.power(10, v) for k, v in params.items()})
 
     # Parameters for the simulation
     params.update(simulation_parameters(sample=20, ne=1, rcb_rate=mu, mu=mu, length=length))
@@ -563,6 +555,23 @@ def main():
             # Export the observed SFS to DataFrame
             simulation = f.export_json_files(args.model, filein, path_data)
 
+
+            present = []
+            for i, param in enumerate(simulation['Parameters']):
+                tau = round(np.log10(param['Tau']), 2)
+                kappa = round(np.log10(param['Kappa']), 2)
+                present.append((tau, kappa))
+
+            tau_list, kappa_list = np.arange(-4, 2.5, 0.1), np.arange(-3.5, 3, 0.1)
+
+            absent = []
+            for tau in tau_list:
+                t = round(tau, 2)
+                for kappa in kappa_list:
+                    k = round(kappa, 2)
+                    if (t, k) not in present:
+                        absent.append((t, k))
+
             factor, theta = pd.DataFrame(columns=['Parameters', 'Factor']), 32000
             if args.model == 'decline':
                 # Convert Tau & kappa to log10
@@ -573,6 +582,12 @@ def main():
 
             # Compute mean SNPs
             factor['Factor'] = simulation['SNPs'].apply(lambda snp: np.mean(snp) / theta)
+
+            max_factor = max(factor['Factor'])
+            for val in absent:
+                dico = {'Parameters': {'Tau': val[0], 'Kappa': val[1]},
+                        'Factor': max_factor * np.power(val[1], val[1])}
+                factor = factor.append(dico, ignore_index=True)
 
             # Export pandas DataFrame factor to json file
             factor.to_json('./Data/Msprime/length_factor-{}'.format(args.model))
