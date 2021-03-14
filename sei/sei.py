@@ -51,6 +51,10 @@ def length_from_file(fichier, params, mu, snp):
     Extract length factor from file and return the length of the sequence.
     """
     res = pd.read_json(path_or_buf="{}".format(fichier), typ='frame')
+
+    for i, row in res.iterrows():  # bug with some value of tau or kappa - many decimal points
+        res.at[i, 'Parameters'] = {k: round(v, 2) for k, v in row['Parameters'].items()}
+
     factor = res[res['Parameters'] == params]['Factor'].values[0]
 
     return (snp / factor) / (4 * 1 * mu)
