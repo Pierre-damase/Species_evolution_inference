@@ -52,7 +52,9 @@ def length_from_file(fichier, params, mu, snp):
     """
     res = pd.read_json(path_or_buf="{}".format(fichier), typ='frame')
 
-    for i, row in res.iterrows():  # bug with some value of tau or kappa - many decimal points
+    # Bug of to_json or from_json method of pandas
+    # Some value of tau, kappa or m12 with many decimal points
+    for i, row in res.iterrows():
         res.at[i, 'Parameters'] = {k: round(v, 2) for k, v in row['Parameters'].items()}
 
     factor = res[res['Parameters'] == params]['Factor'].values[0]
@@ -70,10 +72,10 @@ def generate_sfs(params, model, nb_simu, path_data, path_length):
     data = pd.DataFrame(columns=['Parameters', 'SFS observed', 'SNPs', 'Time'])
 
     # Define length
-    length = length_from_file(path_length, params, mu, snp=100000)
+    length = length_from_file(path_length, params, mu, snp=10000)
 
     # Convert params from log scale
-    params.update({k: np.power(10, v) for k, v in params.items()})
+    params.update({k: np.power(10, v) if k != 'm21' else v for k, v in params.items()})
 
     # Parameters for the simulation
     params.update(simulation_parameters(sample=20, ne=1, rcb_rate=mu, mu=mu, length=length))
@@ -614,7 +616,7 @@ def main():
                 .format(args.model, params['Tau'], params['Kappa'])
 
         # Simulation of two populations migration models for various migration into 1 from
-        # 2 and no migration into 2 from 1
+        # 2 (with m12 the migration rate) and no migration into 2 from 1
         # Population 1 size is pop1 and population 2 size is pop2 = kappa*pop1
         elif args.model == 'migration':
             # Range of value for m12 & kappa
