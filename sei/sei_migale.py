@@ -69,7 +69,8 @@ def generate_sfs(params, model, nb_simu, path_data, path_length):
     data = pd.DataFrame(columns=['Parameters', 'SFS observed', 'SNPs', 'Time'])
 
     # Define length
-    length = length_from_file(path_length, params, mu, snp=100000)
+    # length = length_from_file(path_length, params, mu, snp=100000)
+    length = 2e2
 
     # Convert params from log scale
     params.update({k: np.power(10, v) for k, v in params.items()})
