@@ -42,53 +42,6 @@ def from_json_to_dataframe(path_data):
 
 
 ######################################################################
-# Plot Site Frequency Spectrum                                       #
-######################################################################
-
-def plot_sfs(sfs, label, color, title, style, axis=False, path_figure="./Figures/", name="sfs"):
-    """
-    Graphic representation of Site Frequency Spectrum (SFS), save to the folder ./Figures.
-
-    Parameter
-    ---------
-    sfs: list
-        list of sfs to plot
-    label: list
-        the label of each sfs
-    color: list
-        the color of each curve
-    style: list
-        the linestyle
-    title: string
-        title of the plot
-    """
-    # Plot
-    for i, spectrum in enumerate(sfs):
-        normalized_spectrum = normalization(spectrum)  # normalization of each sfs
-        plt.plot(normalized_spectrum, color=color[i], linestyle=style[i], label=label[i])
-
-    # Caption
-    plt.legend(loc="upper right", fontsize="large")
-
-    # Label axis
-    plt.xlabel("Allele frequency", fontsize="large")
-    plt.ylabel("Percent of SNPs", fontsize="large")
-
-    # X axis values
-    if axis:
-        x_ax, x_values = [], []
-        for i in range(len(sfs[0])):
-            x_ax.append(i)
-            x_values.append("{}/{}".format(i+1, len(sfs[0])+1))
-        plt.xticks(x_ax, x_values)
-
-    # Title + save plot to the folder ./Figures
-    plt.title(title, fontsize="xx-large")
-    plt.savefig("{}{}.png".format(path_figure, name))
-    plt.clf()
-
-
-######################################################################
 # Plot for the optimization of grid size                             #
 ######################################################################
 

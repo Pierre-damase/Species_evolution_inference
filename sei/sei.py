@@ -42,6 +42,28 @@ def simulation_parameters(sample, ne, rcb_rate, mu, length):
     return parameters
 
 
+def define_parameters(model):
+    if model == 'decline':
+        # Range of value for tau & kappa
+        tau_list, kappa_list = np.arange(-4, 2.5, 0.1), np.arange(-3.5, 3, 0.1)
+
+        params = []
+        for tau in tau_list:
+            for kappa in kappa_list:
+                params.append({'Tau': round(tau, 2), 'Kappa': round(kappa, 2)})
+
+    else:
+        # Range of value for m12 & kappa
+        m12_list, kappa_list = np.arange(-4, 2.5, 0.1), np.arange(-3.5, 3, 0.1)
+
+        params = []
+        for m12 in m12_list:
+            for kappa in kappa_list:
+                params.append({'m12': round(m12, 2), 'm21': 0.0, 'Kappa': round(kappa, 2)})
+
+    return params
+
+
 ######################################################################
 # Generate a set of SFS with msprime                                 #
 ######################################################################
@@ -99,57 +121,6 @@ def generate_sfs(params, model, nb_simu, path_data, path_length):
 
     data.to_json("{}".format(path_data))
 
-
-######################################################################
-# SFS verification                                                   #
-######################################################################
-
-def sfs_shape_verification():
-    """
-    Method to check the SFS obtained with msprime.
-
-    I.E. check that:
-     - The SFS of a constant population fits well to the theoretical SFS of any constant
-       population
-     - The SFS of an increasing or decreasing population
-    """
-    # Parameters for the simulation
-    params = simulation_parameters(sample=10, ne=1, rcb_rate=2e-2, mu=2e-2, length=1e5)
-
-    # Constant scenario
-    print("Constant scenario !")
-    sfs_cst = ms.msprime_simulation(model=ms.constant_model, params=params, debug=True)
-
-    # Define tau & kappa for decline/growth scenario
-    params.update({"Tau": 1.0, "Kappa": 10.0})
-
-    print("\n\nDeclin scenario !")
-    sfs_declin = \
-        ms.msprime_simulation(model=ms.sudden_decline_model, params=params, debug=True)
-
-    print("\n\nGrowth scenario !")
-    sfs_croissance = \
-        ms.msprime_simulation(model=ms.sudden_growth_model, params=params, debug=True)
-
-    # Migration scenario
-    print("\n\nMigration scenario !")
-    params.update({"Kappa": 10.0, "m12": 1.0, "m21": 0})
-    sfs_migration = \
-        ms.msprime_simulation(model=ms.two_pops_migration_model, params=params, debug=True)
-
-    # Theoretical SFS for any constant population
-    sfs_theorique = [0] * (params["sample_size"] - 1)
-    for i in range(len(sfs_theorique)):
-        sfs_theorique[i] = 1 / (i+1)
-
-    # Plot
-    plot.plot_sfs(
-        sfs=[sfs_cst, sfs_theorique, sfs_declin, sfs_croissance, sfs_migration],
-        label=["Constant", "Theoretical", "Declin", "Growth", "Migration"],
-        color=["tab:blue", "tab:orange", "tab:red", "tab:green", "tab:gray"],
-        style=["solid", "solid", "solid", "solid", "dashed"],
-        title="Unfold SFS for various scenarios", axis=True
-    )
 
 ######################################################################
 # Grip point optimization                                            #
@@ -562,21 +533,21 @@ def main():
             simulation = f.export_json_files(args.model, filein, path_data)
 
 
-            present = []
-            for i, param in enumerate(simulation['Parameters']):
-                tau = round(np.log10(param['Tau']), 2)
-                kappa = round(np.log10(param['Kappa']), 2)
-                present.append((tau, kappa))
+            # present = []
+            # for i, param in enumerate(simulation['Parameters']):
+            #     tau = round(np.log10(param['Tau']), 2)
+            #     kappa = round(np.log10(param['Kappa']), 2)
+            #     present.append((tau, kappa))
 
-            tau_list, kappa_list = np.arange(-4, 2.5, 0.1), np.arange(-3.5, 3, 0.1)
+            # tau_list, kappa_list = np.arange(-4, 2.5, 0.1), np.arange(-3.5, 3, 0.1)
 
-            absent = []
-            for tau in tau_list:
-                t = round(tau, 2)
-                for kappa in kappa_list:
-                    k = round(kappa, 2)
-                    if (t, k) not in present:
-                        absent.append((t, k))
+            # absent = []
+            # for tau in tau_list:
+            #     t = round(tau, 2)
+            #     for kappa in kappa_list:
+            #         k = round(kappa, 2)
+            #         if (t, k) not in present:
+            #             absent.append((t, k))
 
             factor, theta = pd.DataFrame(columns=['Parameters', 'Factor']), 32000
             if args.model == 'decline':
@@ -589,11 +560,11 @@ def main():
             # Compute mean SNPs
             factor['Factor'] = simulation['SNPs'].apply(lambda snp: np.mean(snp) / theta)
 
-            max_factor = max(factor['Factor'])
-            for val in absent:
-                dico = {'Parameters': {'Tau': val[0], 'Kappa': val[1]},
-                        'Factor': max_factor * np.power(val[1], val[1])}
-                factor = factor.append(dico, ignore_index=True)
+            # max_factor = max(factor['Factor'])
+            # for val in absent:
+            #     dico = {'Parameters': {'Tau': val[0], 'Kappa': val[1]},
+            #             'Factor': max_factor * np.power(val[1], val[1])}
+            #     factor = factor.append(dico, ignore_index=True)
 
             # Export pandas DataFrame factor to json file
             factor.to_json('./Data/Msprime/length_factor-{}'.format(args.model))
@@ -602,16 +573,8 @@ def main():
 
         # Simulation of sudden decline model with msprime for various tau & kappa
         if args.model == 'decline':
-            # Range of value for tau & kappa
-            tau_list, kappa_list = np.arange(-4, 2.5, 0.1), np.arange(-3.5, 3, 0.1)
-
-            params = []
-            for tau in tau_list:
-                for kappa in kappa_list:
-                    params.append({'Tau': round(tau, 2), 'Kappa': round(kappa, 2)})
-
+            params = define_parameters(args.model)
             params, model = params[args.value-1], ms.sudden_decline_model
-
             path_data = "./Data/Msprime/sfs_{0}/SFS_{0}-tau={1}_kappa={2}"\
                 .format(args.model, params['Tau'], params['Kappa'])
 
@@ -619,24 +582,16 @@ def main():
         # 2 (with m12 the migration rate) and no migration into 2 from 1
         # Population 1 size is pop1 and population 2 size is pop2 = kappa*pop1
         elif args.model == 'migration':
-            # Range of value for m12 & kappa
-            m12_list, kappa_list = np.arange(-4, 2.5, 0.1), np.arange(-3.5, 3, 0.1)
-
-            params = []
-            for m12 in m12_list:
-                for kappa in kappa_list:
-                    params.append({'m12': round(m12, 2), 'm21': 0.0, 'Kappa': round(kappa, 2)})
+            params = define_parameters(args.model)
             params, model = params[args.value-1], ms.two_pops_migration_model
-
             path_data = "./Data/Msprime/sfs_{0}/SFS_{0}-m12={1}_kappa={2}"\
                 .format(args.model, params['m12'], params['Kappa'])
 
+        print(params)
+        sys.exit()
         path_length = "./Data/Msprime/length_factor-{}".format(args.model)
 
         generate_sfs(params, model, nb_simu=2, path_data=path_data, path_length=path_length)
-
-    elif args.analyse == 'msprime':
-        sfs_shape_verification()
 
     elif args.analyse == 'opt':
         dadi_params_optimisation(args.number)
