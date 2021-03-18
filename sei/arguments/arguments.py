@@ -37,18 +37,21 @@ def arguments():
         ", migration, cst for constant population"
     )
 
-    group = data.add_mutually_exclusive_group(required=sys.argv[3] != 'cst')
+    group = \
+        data.add_mutually_exclusive_group(required=(len(sys.argv) > 3 and sys.argv[3] != 'cst'))
+
     group.add_argument(
-        '--value', dest='value', type=data_type,
-        help="Simulation with msprime for a given tau & kappa"
+        '--job', dest='job', type=data_type,
+        help="Simulation with msprime for a given tau & kappa - to sumit job-array with migale"
+        " cluster, from 1 to 4225"
     )
 
-    sub_group = group.add_mutually_exclusive_group()
-    sub_group.add_argument(
+    #sub_group = group.add_mutually_exclusive_group()
+    group.add_argument(
         '--snp', dest='snp', action='store_true',
         help="To determine and plot the snp distribution for a given model"
     )
-    sub_group.add_argument(
+    group.add_argument(
         '--file', dest='file', action='store_true',
         help="Determine the length factor for each (tau, kappa) pairs"
     )
@@ -80,7 +83,13 @@ def arguments():
     tool.add_argument('-dadi', action='store_true',
                       help="Inference of demographic history with Dadi")
     inf.add_argument(
-        '--param', dest="param", choices=['tau', 'kappa', 'migration'], default=None,
+        '--job', dest='job', type=data_type, required='-dadi' in sys.argv is True,
+        help="Inference with dadi for a given tau/m12 & kappa - to sumit job-array with migale"
+        " cluster, if param empty from 1 to 4225 else from 1 to 65"
+    )
+
+    inf.add_argument(
+        '--param', dest="param", choices=['tau', 'kappa', 'migr'], default=None,
         help="Fixed parameters, either (tau), (kappa) or (m12), m12 is the migration rate from"
         " population 2 to 1."
     )
