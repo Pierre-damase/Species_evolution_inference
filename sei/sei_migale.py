@@ -83,7 +83,6 @@ def length_from_file(fichier, params, mu, snp):
     return (snp / factor) / (4 * 1 * mu)
 
 
-
 def generate_sfs(params, model, nb_simu, path_data, path_length):
     """
     Generate a set of unfolded sfs of fixed SNPs size with msprime.
@@ -323,7 +322,8 @@ if __name__ == "__main__":
             "SFS_{0}-m12={1}_kappa={2}" \
                 .format(args.model, params['m12'], params['Kappa'])
 
-        path_length = "./Data/Msprime/length_factor-{}".format(args.model)
+        path_length = "/home/pimbert/work/Species_evolution_inference/Data/Msprime/"
+        "length_factor-{}".format(args.model)
 
         generate_sfs(params, model, nb_simu=2, path_data=path_data, path_length=path_length)
 
