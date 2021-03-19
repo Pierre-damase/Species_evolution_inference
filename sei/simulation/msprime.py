@@ -116,7 +116,7 @@ def sudden_growth_model(params, debug):
     return configuration_pop, history, migration_matrix
 
 
-def two_pops_migration_model(params, debug):
+def twopops_migration_model(params, debug):
     """
     Migration model with msprime.
 

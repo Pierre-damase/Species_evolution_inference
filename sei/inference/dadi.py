@@ -99,7 +99,7 @@ def sudden_decline_model(params, ns, pts):
     return sfs
 
 
-def two_pops_migration_model(params, ns, pts):
+def twopops_migration_model(params, ns, pts):
     """
     Two populations migration model.
 
@@ -121,7 +121,7 @@ def two_pops_migration_model(params, ns, pts):
     """
     # Params: (kappa, m12) - with m21 = 0.0
     kappa, m12, m21 = params_model(params), 0.0
-    tau = 1.0  # time in the past of split
+    tau = 10.0  # time in the past of split
 
     # Define the grid we'll use
     grid = dadi.Numerics.default_grid(pts)
@@ -129,8 +129,11 @@ def two_pops_migration_model(params, ns, pts):
     # Define the phi_ancestral, i.e. phi for the equilibrium ancestral population
     phi_ancestral = dadi.PhiManip.phi_1D(grid)
 
+    # Split the ancestral population into two population
+    phi = dadi.phi_1D_to_2D(grid, phi_ancestral)
+
     # Define the sudden decline event at a time tau in past
-    phi = dadi.Integration.two_pops(phi_ancestral, grid, tau, nu1=1.0, nu2=1.0*kappa, m12=m12,
+    phi = dadi.Integration.two_pops(phi, grid, tau, nu1=1.0, nu2=1.0*kappa, m12=m12,
                                     m21=m21)
 
     # Calculate the spectrum from phi

@@ -407,10 +407,13 @@ def inference_dadi(simulation, models, path_data, job, fixed, value):
     data = pd.DataFrame(dico)
 
     # Export dataframe to json files
+    print(models['Inference'].__name__.split('_')[1])
+
     if fixed is None:
-        name = "dadi-{}-{}".format(models['Inference'].__name__, job)
+        name = "dadi_{}-{}".format(models['Inference'].__name__.split('_')[1], job)
     else:
-        name = "dadi-{}-{}={}-{}".format(models['Inference'].__name__, fixed, value, job)
+        name = "dadi_{}_{}={}-{}" \
+            .format(models['Inference'].__name__.split('_')[1], fixed, value, job)
     data.to_json("{}{}".format(path_data, name))
 
     # Remove SFS file
@@ -504,10 +507,10 @@ def main():
         # Analyse SNPs distribution
         elif args.snp:
             path_data = "./Data/Msprime/snp_distribution/sfs_{}/".format(args.model)
-            filein = "SFS_{}-all.json".format(args.model)
+            filin = "SFS_{}-all.json".format(args.model)
 
             # Export the observed SFS to DataFrame
-            simulation = f.export_json_files(args.model, filein, path_data)
+            simulation = f.export_simulation_files(filin, path_data)
 
             # Plot SNPs distribution
             plot.snp_distribution_3d(simulation)
@@ -518,10 +521,10 @@ def main():
         # Generate length factor file
         elif args.file:
             path_data = "./Data/Msprime/sfs_{}/".format(args.model)
-            filein = "SFS_{}-all.json".format(args.model)
+            filin = "SFS_{}-all.json".format(args.model)
 
             # Export the observed SFS to DataFrame
-            simulation = f.export_json_files(args.model, filein, path_data)
+            simulation = f.export_simulation_files(filin, path_data)
 
 
             # present = []
@@ -574,7 +577,7 @@ def main():
         # Population 1 size is pop1 and population 2 size is pop2 = kappa*pop1
         elif args.model == 'migration':
             params = define_parameters(args.model)
-            params, model = params[args.job-1], ms.two_pops_migration_model
+            params, model = params[args.job-1], ms.twopops_migration_model
             path_data = "./Data/Msprime/sfs_{0}/SFS_{0}-m12={1}_kappa={2}"\
                 .format(args.model, params['m12'], params['Kappa'])
 
@@ -587,10 +590,10 @@ def main():
 
     elif args.analyse == 'inf':
         path_data = "./Data/Msprime/sfs_{}/".format(args.model)
-        filein = "SFS_{}-all.json".format(args.model)
+        filin = "SFS_{}-all.json".format(args.model)
 
         # Export the observed SFS to DataFrame
-        simulation = f.export_json_files(args.model, filein, path_data)
+        simulation = f.export_simulation_files(filin, path_data)
 
         # Inference with dadi
         if args.dadi:
@@ -601,7 +604,7 @@ def main():
                     {'Inference': dadi.sudden_decline_model, 'Control': dadi.constant_model}
             elif args.model == "migration":
                 models = \
-                    {'Inference': dadi.two_pops_migration_model, 'Control': dadi.constant_model}
+                    {'Inference': dadi.twopops_migration_model, 'Control': dadi.constant_model}
 
             # Select observed data for the inference
             if args.param is None:
@@ -609,11 +612,14 @@ def main():
                 path_data = "./Data/Dadi/{}/all/".format(args.model)
 
             else:
+                param = args.param.capitalize()
                 simulation = [
                     ele for _, ele in simulation.iterrows()
-                    if ele['Parameters'][args.param.capitalize()] == args.value
+                    if round(np.log10(ele['Parameters'][param]), 2) == args.value
                 ][args.job-1]
                 path_data = "./Data/Dadi/{}/{}/".format(args.model, args.param)
+
+                args.value = np.power(10, args.value)
 
             inference_dadi(simulation, models, path_data, args.job, fixed=args.param,
                            value=args.value)

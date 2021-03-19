@@ -188,11 +188,13 @@ def likelihood_ratio_test(sfs_observed, models, sample, path_data, job, dof, fix
 
     for sfs in sfs_observed:
         # Generate the SFS file compatible with dadi
-        f.dadi_data(sfs, models['Inference'].__name__, path=path_data)
+        f.dadi_data(sfs, models['Inference'].__name__, path=path_data,
+                    name="SFS-{}".format(job))
 
         # Dadi inference for M0
         # Pairs (Log-likelihood, Inferred SFS)
-        m0_inference = dadi.inference(pts_list, models['Control'], path=path_data)
+        m0_inference = dadi.inference(pts_list, models['Control'], path=path_data,
+                                      name="SFS-{}".format(job))
         data['M0']['LL'].append(m0_inference[0])
         data['M0']['SFS'].append(m0_inference[1])
 
@@ -272,6 +274,7 @@ def inference_dadi(simulation, models, path_data, job, fixed, value):
         k: v for k, v in simulation['Parameters'].items() if k in ['Tau', 'Kappa', 'm12', 'm21']
     }
 
+    # Create DataFrame form dictionary
     dico = {
         'Parameters': [params], 'Positive hit': [inf['LRT']], 'SNPs': [simulation['SNPs']],
         'SFS observed': [sfs_observed], 'M0': [inf['M0']], 'M1': [inf['M1']],
@@ -281,9 +284,10 @@ def inference_dadi(simulation, models, path_data, job, fixed, value):
 
     # Export dataframe to json files
     if fixed is None:
-        name = "dadi-{}-{}".format(models['Inference'].__name__, job)
+        name = "dadi-{}-{}".format(models['Inference'].__name__.split('_')[1], job)
     else:
-        name = "dadi-{}-{}={}-{}".format(models['Inference'].__name__, fixed, value, job)
+        name = "dadi-{}-{}={}-{}" \
+            .format(models['Inference'].__name__.split('_')[1], fixed, value, job)
     data.to_json("{}{}".format(path_data, name))
 
     # Remove SFS file
@@ -307,8 +311,8 @@ if __name__ == "__main__":
             params = define_parameters(args.model)
             params, model = params[args.job-1], ms.sudden_decline_model
 
-            path_data = "/home/pimbert/work/Species_evolution_inference/Data/Msprime/sfs_{0}/"
-            "SFS_{0}-tau={1}_kappa={2}" \
+            path_data = "/home/pimbert/work/Species_evolution_inference/Data/Msprime/sfs_{0}/" \
+                "SFS_{0}-tau={1}_kappa={2}" \
                 .format(args.model, params['Tau'], params['Kappa'])
 
         # Simulation of two populations migration models for various migration into 1 from
@@ -322,18 +326,18 @@ if __name__ == "__main__":
             "SFS_{0}-m12={1}_kappa={2}" \
                 .format(args.model, params['m12'], params['Kappa'])
 
-        path_length = "/home/pimbert/work/Species_evolution_inference/Data/Msprime/"
-        "length_factor-{}".format(args.model)
+        path_length = "/home/pimbert/work/Species_evolution_inference/Data/Msprime/" \
+            "length_factor-{}".format(args.model)
 
-        generate_sfs(params, model, nb_simu=2, path_data=path_data, path_length=path_length)
+        generate_sfs(params, model, nb_simu=100, path_data=path_data, path_length=path_length)
 
     elif args.analyse == 'inf':
         path_data = "/home/pimbert/work/Species_evolution_inference/Data/Msprime/sfs_{}/" \
             .format(args.model)
-        filein = "SFS_{}-all.json".format(args.model)
+        filin = "SFS_{}-all.json".format(args.model)
 
         # Export the observed SFS to DataFrame
-        simulation = f.export_json_files(args.model, filein, path_data)
+        simulation = f.export_json_files(filin, path_data)
 
         # Inference with dadi
         if args.dadi:
@@ -353,12 +357,16 @@ if __name__ == "__main__":
                     .format(args.model)
 
             else:
+                param = args.param.capitalize()
                 simulation = [
                     ele for _, ele in simulation.iterrows()
-                    if ele['Parameters'][args.param.capitalize()] == args.value
+                    if round(np.log10(ele['Parameters'][param]), 2) == args.value
                 ][args.job-1]
+
                 path_data = "/home/pimbert/work/Species_evolution_inference/Data/Dadi/{}/{}/" \
                     .format(args.model, args.param)
+
+                args.value = np.power(10, args.value)
 
             inference_dadi(simulation, models, path_data, args.job, fixed=args.param,
                            value=args.value)

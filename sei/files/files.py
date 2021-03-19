@@ -116,20 +116,17 @@ def stairway_data(name, data, path):
 # Export json files                                                  #
 ######################################################################
 
-def export_json_files(model, filein, path_data):
+def export_simulation_files(filin, path_data):
     """
     Export each json file generated with msprime into a single DataFrame.
-
     Then export this DataFrame to a json file.
 
     Parameters
     ----------
-    model:
-        kind of model - decline, growth, migration, etc.
     path_data:
         path of each json file
     """
-    if filein not in os.listdir(path_data):
+    if filin not in os.listdir(path_data):
         # Pandas DataFrame
         simulation = pd.DataFrame(columns=['Parameters', 'SNPs', 'SFS observed', 'Time'])
 
@@ -142,13 +139,61 @@ def export_json_files(model, filein, path_data):
             os.remove("{}{}".format(path_data, fichier))
 
         # Export pandas DataFrame simulation to json file
-        simulation.to_json("{}SFS_{}-all.json".format(path_data, model))
+        simulation.to_json("{}{}".format(path_data, filin))
 
     else:
         simulation = \
-            pd.read_json(path_or_buf="{}{}".format(path_data, filein), typ='frame')
+            pd.read_json(path_or_buf="{}{}".format(path_data, filin), typ='frame')
 
     return simulation
+
+
+def export_inference_files(model, param, value=None):
+    """
+    Export each json file generated with dadi into a single DataFrame.
+    Then export this DataFrame to a json file.
+
+    Parameter
+    ---------
+    model: either cst, decline or migration
+    param: either all, tau, kappa or ne
+    value: not None if param is tau or kappa, it's the value of the fixed parameters for the
+    inference
+    """
+    # Data
+    col = ['Parameters', 'Positive hit', 'SNPs', 'SFS observed', 'M0', 'M1', 'Time']
+    inference = pd.DataFrame(columns=col)
+
+    # Path data and filin
+    path_data = "./Data/Dadi/{}/{}/".format(model, param)
+    if param == 'all':
+        filin = "dadi_{}-all".format(model)
+    else:
+        filin = "dadi_{}={}-all".format(model, value)
+
+    # Read file
+    if filin not in os.listdir(path_data):
+
+        fichiers = os.listdir(path_data)
+        if param != 'all':
+            fichiers = [
+                ele for ele in fichiers if float(ele.split('=')[1].split('-')[0]) == value
+            ]
+
+        for fichier in fichiers:
+            res = pd.read_json(path_or_buf="{}{}".format(path_data, fichier), typ='frame')
+            inference = inference.append(res, ignore_index=True)
+
+            # Delete the json file
+            os.remove("{}{}".format(path_data, fichier))
+
+        # Export pandas DataFrame inference to json file
+        inference.to_json("{}{}".format(path_data, filin))
+
+    else:
+        inference = pd.read_json(path_or_buf="{}{}".format(path_data, filin), typ='frame')
+
+    return inference
 
 
 ######################################################################

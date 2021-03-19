@@ -96,7 +96,7 @@ def arguments():
     inf.add_argument(
         '--value', dest='value', type=float, default=None,
         required='--param' in sys.argv is not None,
-        help="Value of the fixed parameters for the inference"
+        help="Value of the fixed parameters for the inference - value in log scale"
     )
 
     # Stairway
