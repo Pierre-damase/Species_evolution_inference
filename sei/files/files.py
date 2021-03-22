@@ -98,7 +98,7 @@ def stairway_data(name, data, path):
         filout.write("# Output settings\n")
         filout.write("mu: {} # assumed mutation rate per site per generation\n".format(mu))
         filout.write(
-            "year_per_generation: {} # assumed generation time (in year)\n".format(year))
+            "year_per_generation: {} # assumed generation time (in year)\n".format(1))
 
         # Plot
         filout.write("# Plot settings\n")
@@ -167,9 +167,9 @@ def export_inference_files(model, param, value=None):
     # Path data and filin
     path_data = "./Data/Dadi/{}/{}/".format(model, param)
     if param == 'all':
-        filin = "dadi_{}-all".format(model)
+        filin = "dadi_{}-all.json".format(model)
     else:
-        filin = "dadi_{}={}-all".format(model, value)
+        filin = "dadi_{}={}-all.json".format(model, value)
 
     # Read file
     if filin not in os.listdir(path_data):

@@ -355,7 +355,7 @@ def likelihood_ratio_test(sfs_observed, models, sample, path_data, job, dof, fix
             data['LRT'].append(1)  # Test significant and reject of H0
 
     # Sum positive hits
-    data['Positive hit'] = sum(data['Positive hit'])
+    data['Positive hit'] = sum(data['LRT'])
 
     # Mean execution time for the inference
     data['Time'] = round(sum(execution) / len(sfs_observed), 4)
@@ -528,7 +528,6 @@ def main():
 
             # Export the observed SFS to DataFrame
             simulation = f.export_simulation_files(filin, path_data)
-
 
             # present = []
             # for i, param in enumerate(simulation['Parameters']):
