@@ -14,12 +14,6 @@ L'utilisation de Miniconda3 est fortement recommandée pour l'utilisation de ce 
 https://github.com/Pierre-damase/Species_evolution_inference.git
 ```
 
-> Lien SSH
-
-```
-git@github.com:Pierre-damase/Species_evolution_inference.git
-```
-
 2. Initialiser l'environnement conda à partir du fichier sei-3.8.5.yml
 
 ```
