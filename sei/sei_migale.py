@@ -337,7 +337,7 @@ if __name__ == "__main__":
     elif args.analyse == 'inf':
         path_data = "/home/pimbert/work/Species_evolution_inference/Data/Msprime/sfs_{}/" \
             .format(args.model)
-        filin = "SFS_{}-all.json".format(args.model)
+        filin = "SFS_{}-all".format(args.model)
 
         # Export the observed SFS to DataFrame
         simulation = f.export_simulation_files(filin, path_data)

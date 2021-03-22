@@ -410,8 +410,6 @@ def inference_dadi(simulation, models, path_data, job, fixed, value):
     data = pd.DataFrame(dico)
 
     # Export dataframe to json files
-    print(models['Inference'].__name__.split('_')[1])
-
     if fixed is None:
         name = "dadi_{}-{}".format(models['Inference'].__name__.split('_')[1], job)
     else:
