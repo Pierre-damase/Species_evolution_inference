@@ -234,7 +234,7 @@ def likelihood_ratio_test(sfs_observed, models, sample, path_data, job, dof, fix
     # Sum positive hits
     data['Positive hit'] = sum(data['LRT'])
 
-   # Mean execution time for the inference
+    # Mean execution time for the inference
     data['Time'] = round(sum(execution) / len(sfs_observed), 4)
 
     return data
