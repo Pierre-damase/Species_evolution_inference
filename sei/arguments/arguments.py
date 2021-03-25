@@ -46,11 +46,6 @@ def arguments():
         " cluster, from 1 to 4225"
     )
 
-    #sub_group = group.add_mutually_exclusive_group()
-    group.add_argument(
-        '--snp', dest='snp', action='store_true',
-        help="To determine and plot the snp distribution for a given model"
-    )
     group.add_argument(
         '--file', dest='file', action='store_true',
         help="Determine the length factor for each (tau, kappa) pairs"
@@ -126,9 +121,6 @@ def arguments():
         '--param', dest='param', choices=['tau', 'kappa', 'tau-kappa'], required=True,
         help="Parameter to evaluate - (tau) - default, (kappa), (kappa, tau)"
     )
-
-    # Plot SNPs distribution for various tau
-    snp = subparsers.add_parser('snp', help="Plot SNPs distribution for various tau")
 
     # Inference with stairway plot
     stairway = subparsers.add_parser('stairway', help="Stairway plots")

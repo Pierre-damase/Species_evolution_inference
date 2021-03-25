@@ -45,8 +45,7 @@ def simulation_parameters(sample, ne, rcb_rate, mu, length):
 def define_parameters(model):
     if model == 'decline':
         # Range of value for tau & kappa
-        #tau_list, kappa_list = np.arange(-4, 2.5, 0.1), np.arange(-3.5, 3, 0.1)
-        tau_list, kappa_list = np.arange(-4, 1, 0.1), np.arange(1.3, 3, 0.1)
+        tau_list, kappa_list = np.arange(-4, 2.5, 0.1), np.arange(-3.5, 3, 0.1)
 
         params = []
         for tau in tau_list:
@@ -90,7 +89,8 @@ def generate_sfs(params, model, nb_simu, path_data, path_length):
     Generate a set of unfolded sfs of fixed SNPs size with msprime.
     """
     # Define length
-    length = length_from_file(path_length, params, mu=8e-2, snp=100000)
+    # length = length_from_file(path_length, params, mu=8e-2, snp=100000)
+    length = 1e3
 
     # Convert params from log scale
     params.update({k: np.power(10, v) if k != 'm21' else v for k, v in params.items()})
@@ -354,9 +354,6 @@ def likelihood_ratio_test(sfs_observed, models, sample, path_data, job, dof, fix
         else:
             data['LRT'].append(1)  # Test significant and reject of H0
 
-    # Sum positive hits
-    data['Positive hit'] = sum(data['LRT'])
-
     # Mean execution time for the inference
     data['Time'] = round(sum(execution) / len(sfs_observed), 4)
 
@@ -403,7 +400,7 @@ def inference_dadi(simulation, models, path_data, job, fixed, value):
 
     # Create DataFrame from dictionary
     dico = {
-        'Parameters': [params], 'Positive hit': [inf['LRT']], 'SNPs': [simulation['SNPs']],
+        'Parameters': [params], 'Positive hit': [sum(inf['LRT'])], 'SNPs': [simulation['SNPs']],
         'SFS observed': [sfs_observed], 'M0': [inf['M0']], 'M1': [inf['M1']],
         'Time': [inf['Time']]
     }
@@ -505,23 +502,9 @@ def main():
             print("Over")
             sys.exit()
 
-        # Analyse SNPs distribution
-        elif args.snp:
-            path_data = "./Data/Msprime/snp_distribution/sfs_{}/".format(args.model)
-            filin = "SFS_{}-all.json".format(args.model)
-
-            # Export the observed SFS to DataFrame
-            simulation = f.export_simulation_files(filin, path_data)
-
-            # Plot SNPs distribution
-            plot.snp_distribution_3d(simulation)
-            os.system("jupyter lab sei/graphics/plot.ipynb")
-
-            sys.exit()
-
         # Generate length factor file
         elif args.file:
-            path_data = "./Data/Msprime/sfs_{}/".format(args.model)
+            path_data = "./Data/Msprime/{}/".format(args.model)
             filin = "SFS_{}-all.json".format(args.model)
 
             # Export the observed SFS to DataFrame
@@ -569,7 +552,7 @@ def main():
         if args.model == 'decline':
             params = define_parameters(args.model)
             params, model = params[args.job-1], ms.sudden_decline_model
-            path_data = "./Data/Msprime/sfs_{0}/SFS_{0}-tau={1}_kappa={2}"\
+            path_data = "./Data/Msprime/{0}/SFS_{0}-tau={1}_kappa={2}"\
                 .format(args.model, params['Tau'], params['Kappa'])
 
         # Simulation of two populations migration models for various migration into 1 from
@@ -578,7 +561,7 @@ def main():
         elif args.model == 'migration':
             params = define_parameters(args.model)
             params, model = params[args.job-1], ms.twopops_migration_model
-            path_data = "./Data/Msprime/sfs_{0}/SFS_{0}-m12={1}_kappa={2}"\
+            path_data = "./Data/Msprime/{0}/SFS_{0}-m12={1}_kappa={2}"\
                 .format(args.model, params['m12'], params['Kappa'])
 
         path_length = "./Data/Msprime/length_factor-{}".format(args.model)
@@ -589,7 +572,7 @@ def main():
         dadi_params_optimisation(args.number)
 
     elif args.analyse == 'inf':
-        path_data = "./Data/Msprime/sfs_{}/".format(args.model)
+        path_data = "./Data/Msprime/{}/".format(args.model)
         filin = "SFS_{}-all".format(args.model)
 
         # Export the observed SFS to DataFrame

@@ -177,8 +177,9 @@ def export_inference_files(model, param, value=None):
         fichiers = os.listdir(path_data)
         if param != 'all':
             fichiers = [
-                ele for ele in fichiers
-                if round(float(ele.split('=')[1].split('-')[0]), 2) == value
+                fichier for fichier in fichiers
+                if not fichier.endswith('.json')
+                and round(float(fichier.split('=')[1].split('-')[0]), 2) == value
             ]
 
         for fichier in fichiers:

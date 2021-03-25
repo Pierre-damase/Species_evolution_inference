@@ -71,6 +71,8 @@ def sudden_decline_model(params, debug):
     configuration_pop = [
         msprime.PopulationConfiguration(sample_size=sample, initial_size=pop, growth_rate=0)
     ]
+
+    # Ancestral population
     history = [
         msprime.PopulationParametersChange(time=tau, initial_size=pop*kappa, growth_rate=0)
     ]
