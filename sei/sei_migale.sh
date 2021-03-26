@@ -1,10 +1,10 @@
 #!/bin/bash
 
 # Nom du job
-#$ -N dadi_opt
+#$ -N msprime_data
 
 # Number of separate submissions to the cluster
-#$ -t 1-2
+#$ -t 1-4225
 
 # Short pour un job < 12h
 #$ -q short.q
