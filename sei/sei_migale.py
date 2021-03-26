@@ -326,23 +326,21 @@ if __name__ == "__main__":
             # SUPR #
             model = ms.twopops_migration_model
 
-            path_data = "/home/pimbert/work/Species_evolution_inference/Data/Msprime/{0}/" \
-                .format(args.model)
-            filin = "SFS_migration-all"
-            data = f.export_simulation_files(filin, path_data)
+            data2 = \
+                pd.read_json("/home/pimbert/work/Species_evolution_inference/Data/Msprime/snp_distribution/sfs_migration/SFS_migration-all")
 
             tmp = []
             for m12 in np.arange(-4, 2.5, 0.1):
                 for kappa in np.arange(-3.5, 3, 0.1):
-                    tmp.append({"m12": round(m12, 2), "m21": 0.0, "Kappa": round(kappa, 2)})
+                    tmp.append({'m12': round(m12, 2), 'm21': 0.0, 'Kappa': round(kappa, 2)})
 
             present = []
-            for _, row in data.iterrows():
+            for _, row in data2.iterrows():
                 p = {
                     'm12': round(np.log10(row['Parameters']['m12']), 2), 'm21': 0.0,
                     'Kappa': round(np.log10(row['Parameters']['Kappa']), 2)
                 }
-                present.append(p)
+            present.append(p)
 
             absent = []
             for p in tmp:
@@ -350,6 +348,7 @@ if __name__ == "__main__":
                     absent.append(p)
 
             params = absent[args.job-1]
+            print(params)
             # SUPR #
 
             path_data = "/home/pimbert/work/Species_evolution_inference/Data/Msprime/{0}/" \
@@ -359,7 +358,7 @@ if __name__ == "__main__":
         path_length = "/home/pimbert/work/Species_evolution_inference/Data/Msprime/" \
             "length_factor-{}".format(args.model)
 
-        generate_sfs(params, model, nb_simu=100, path_data=path_data, path_length=path_length)
+        generate_sfs(params, model, nb_simu=1, path_data=path_data, path_length=path_length)
 
     elif args.analyse == 'inf':
         path_data = "/home/pimbert/work/Species_evolution_inference/Data/Msprime/{}/" \

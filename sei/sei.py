@@ -89,8 +89,8 @@ def generate_sfs(params, model, nb_simu, path_data, path_length):
     Generate a set of unfolded sfs of fixed SNPs size with msprime.
     """
     # Define length
-    # length = length_from_file(path_length, params, mu=8e-2, snp=100000)
-    length = 1e2  # 1e3
+    length = length_from_file(path_length, params, mu=8e-2, snp=10000)
+    #length = 1e2  # 1e3
 
     # Convert params from log scale
     params.update({k: np.power(10, v) if k != 'm21' else v for k, v in params.items()})
@@ -505,26 +505,10 @@ def main():
         # Generate length factor file
         elif args.file:
             path_data = "./Data/Msprime/{}/".format(args.model)
-            filin = "SFS_{}-all.json".format(args.model)
+            filin = "SFS_{}-big".format(args.model)
 
             # Export the observed SFS to DataFrame
             simulation = f.export_simulation_files(filin, path_data)
-
-            # present = []
-            # for i, param in enumerate(simulation['Parameters']):
-            #     tau = round(np.log10(param['Tau']), 2)
-            #     kappa = round(np.log10(param['Kappa']), 2)
-            #     present.append((tau, kappa))
-
-            # tau_list, kappa_list = np.arange(-4, 2.5, 0.1), np.arange(-3.5, 3, 0.1)
-
-            # absent = []
-            # for tau in tau_list:
-            #     t = round(tau, 2)
-            #     for kappa in kappa_list:
-            #         k = round(kappa, 2)
-            #         if (t, k) not in present:
-            #             absent.append((t, k))
 
             factor, theta = pd.DataFrame(columns=['Parameters', 'Factor']), 32000
             if args.model == 'decline':
@@ -534,14 +518,15 @@ def main():
                     'Kappa': round(np.log10(ele['Kappa']), 2)
                 })
 
+            else:
+                # Convert m12 & kappa to log10
+                factor['Parameters'] = simulation['Parameters'].apply(lambda ele: {
+                    'm12': round(np.log10(ele['m12']), 2), 'm21': ele['m21'],
+                    'Kappa': round(np.log10(ele['Kappa']), 2)
+                })
+
             # Compute mean SNPs
             factor['Factor'] = simulation['SNPs'].apply(lambda snp: np.mean(snp) / theta)
-
-            # max_factor = max(factor['Factor'])
-            # for val in absent:
-            #     dico = {'Parameters': {'Tau': val[0], 'Kappa': val[1]},
-            #             'Factor': max_factor * np.power(val[1], val[1])}
-            #     factor = factor.append(dico, ignore_index=True)
 
             # Export pandas DataFrame factor to json file
             factor.to_json('./Data/Msprime/length_factor-{}'.format(args.model))
@@ -559,38 +544,8 @@ def main():
         # 2 (with m12 the migration rate) and no migration into 2 from 1
         # Population 1 size is pop1 and population 2 size is pop2 = kappa*pop1
         elif args.model == 'migration':
-            #params = define_parameters(args.model)
-            #params, model = params[args.job-1], ms.twopops_migration_model
-
-            # SUPR #
-            model = ms.twopops_migration_model
-
-            path_data = "./Data/Msprime/{0}/" \
-                .format(args.model)
-            filin = "SFS_migration-all"
-            data = f.export_simulation_files(filin, path_data)
-
-            tmp = []
-            for m12 in np.arange(-4, 2.5, 0.1):
-                for kappa in np.arange(-3.5, 3, 0.1):
-                    tmp.append({"m12": round(m12, 2), "m21": 0.0, "Kappa": round(kappa, 2)})
-
-            present = []
-            for _, row in data.iterrows():
-                p = {
-                    'm12': round(np.log10(row['Parameters']['m12']), 2), 'm21': 0.0,
-                    'Kappa': round(np.log10(row['Parameters']['Kappa']), 2)
-                }
-                present.append(p)
-
-            absent = []
-            for p in tmp:
-                if p not in present:
-                    absent.append(p)
-
-            params = absent[args.job-1]
-            # SUPR #
-
+            params = define_parameters(args.model)
+            params, model = params[args.job-1], ms.twopops_migration_model
             path_data = "./Data/Msprime/{0}/SFS_{0}-m12={1}_kappa={2}"\
                 .format(args.model, params['m12'], params['Kappa'])
 
