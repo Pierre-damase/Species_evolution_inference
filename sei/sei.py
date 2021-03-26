@@ -93,7 +93,7 @@ def generate_sfs(params, model, nb_simu, path_data, path_length):
     #length = 1e2  # 1e3
 
     # Convert params from log scale
-    params.update({k: np.power(10, v) if k != 'm21' else v for k, v in params.items()})
+    params.update({k: (np.power(10, v) if k != 'm21' else v) for k, v in params.items()})
 
     # Parameters for the simulation
     params.update(simulation_parameters(sample=20, ne=1, rcb_rate=8e-2, mu=8e-2, length=length))
@@ -505,7 +505,7 @@ def main():
         # Generate length factor file
         elif args.file:
             path_data = "./Data/Msprime/{}/".format(args.model)
-            filin = "SFS_{}-big".format(args.model)
+            filin = "SFS_{}-all".format(args.model)
 
             # Export the observed SFS to DataFrame
             simulation = f.export_simulation_files(filin, path_data)

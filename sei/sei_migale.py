@@ -88,14 +88,14 @@ def generate_sfs(params, model, nb_simu, path_data, path_length):
     Generate a set of unfolded sfs of fixed SNPs size with msprime.
     """
     # Define length
-    # length = length_from_file(path_length, params, mu=8e-2, snp=100000)
-    length = 1e2  # 1e3
+    length = length_from_file(path_length, params, mu=8e-2, snp=10000)
 
     # Convert params from log scale
-    params.update({k: np.power(10, v) if k != 'm21' else v for k, v in params.items()})
+    params.update({k: (np.power(10, v) if k != 'm21' else v) for k, v in params.items()})
 
     # Parameters for the simulation
-    params.update(simulation_parameters(sample=20, ne=1, rcb_rate=8e-2, mu=8e-2, length=length))
+    params.update(
+        simulation_parameters(sample=20, ne=1, rcb_rate=8e-2, mu=8e-2, length=length))
 
     sfs, snp, execution = [], [], []
     for _ in range(nb_simu):
@@ -320,36 +320,8 @@ if __name__ == "__main__":
         # 2 (with m12 the migration rate) and no migration into 2 from 1
         # Population 1 size is pop1 and population 2 size is pop2 = kappa*pop1
         elif args.model == 'migration':
-            #params = define_parameters(args.model)
-            #params, model = params[args.job-1], ms.twopops_migration_model
-
-            # SUPR #
-            model = ms.twopops_migration_model
-
-            data2 = \
-                pd.read_json("/home/pimbert/work/Species_evolution_inference/Data/Msprime/snp_distribution/sfs_migration/SFS_migration-all")
-
-            tmp = []
-            for m12 in np.arange(-4, 2.5, 0.1):
-                for kappa in np.arange(-3.5, 3, 0.1):
-                    tmp.append({'m12': round(m12, 2), 'm21': 0.0, 'Kappa': round(kappa, 2)})
-
-            present = []
-            for _, row in data2.iterrows():
-                p = {
-                    'm12': round(np.log10(row['Parameters']['m12']), 2), 'm21': 0.0,
-                    'Kappa': round(np.log10(row['Parameters']['Kappa']), 2)
-                }
-            present.append(p)
-
-            absent = []
-            for p in tmp:
-                if p not in present:
-                    absent.append(p)
-
-            params = absent[args.job-1]
-            print(params)
-            # SUPR #
+            params = define_parameters(args.model)
+            params, model = params[args.job-1], ms.twopops_migration_model
 
             path_data = "/home/pimbert/work/Species_evolution_inference/Data/Msprime/{0}/" \
                 "SFS_{0}-m12={1}_kappa={2}" \
