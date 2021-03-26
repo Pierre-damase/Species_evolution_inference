@@ -89,14 +89,14 @@ def generate_sfs(params, model, nb_simu, path_data, path_length):
     Generate a set of unfolded sfs of fixed SNPs size with msprime.
     """
     # Define length
-    length = length_from_file(path_length, params, mu=8e-2, snp=10000)
-    #length = 1e2  # 1e3
+    length = length_from_file(path_length, params, mu=8e-2, snp=100000)
 
     # Convert params from log scale
     params.update({k: (np.power(10, v) if k != 'm21' else v) for k, v in params.items()})
 
     # Parameters for the simulation
-    params.update(simulation_parameters(sample=20, ne=1, rcb_rate=8e-2, mu=8e-2, length=length))
+    params.update(
+        simulation_parameters(sample=20, ne=1, rcb_rate=8e-2, mu=8e-2, length=length))
 
     sfs, snp, execution = [], [], []
     for _ in range(nb_simu):
@@ -546,12 +546,13 @@ def main():
         elif args.model == 'migration':
             params = define_parameters(args.model)
             params, model = params[args.job-1], ms.twopops_migration_model
+
             path_data = "./Data/Msprime/{0}/SFS_{0}-m12={1}_kappa={2}"\
                 .format(args.model, params['m12'], params['Kappa'])
 
         path_length = "./Data/Msprime/length_factor-{}".format(args.model)
 
-        generate_sfs(params, model, nb_simu=2, path_data=path_data, path_length=path_length)
+        generate_sfs(params, model, nb_simu=10, path_data=path_data, path_length=path_length)
 
     elif args.analyse == 'opt':
         dadi_params_optimisation(args.number)

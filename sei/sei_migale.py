@@ -330,7 +330,7 @@ if __name__ == "__main__":
         path_length = "/home/pimbert/work/Species_evolution_inference/Data/Msprime/" \
             "length_factor-{}".format(args.model)
 
-        generate_sfs(params, model, nb_simu=1, path_data=path_data, path_length=path_length)
+        generate_sfs(params, model, nb_simu=2, path_data=path_data, path_length=path_length)
 
     elif args.analyse == 'inf':
         path_data = "/home/pimbert/work/Species_evolution_inference/Data/Msprime/{}/" \
