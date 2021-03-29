@@ -2,6 +2,7 @@
 Decline estimation from genomic data.
 """
 
+import copy
 import os
 import random
 import sys
@@ -317,31 +318,75 @@ def dadi_params_optimisation(sample):
 # Inference with Dadi                                                #
 ######################################################################
 
-def likelihood_ratio_test(sfs_observed, models, sample, path_data, job, dof, fixed, value):
+def likelihood_ratio_test(ll_m0, ll_m1, dof):
     """
     Likelihood-ratio test to assesses the godness fit of two model.
 
-    Allows you to test whether adding parameters to models significantly increases the
-    likelihood of the model.
+    c.f. jupyter notebook "analyse.ipynb" for more information
 
-    Model:
-      - M0 a n0-parameter model, the model with less parameters
-      - M1 a n1-parameter model, the model with more parameters
+    Parameters
+    ----------
+    ll_m0: float
+        log-likelihood of model m0
+    ll_m1: float
+        log-likelihood of model m1
+    dof: int
+        degree of freedom
 
-      with n0 < n1 (number of parameters)
+    Return
+    ------
+    Either 1 - test significant and reject of H0
+        Or 0 - test insignificant and no reject of H0
+    """
+    lrt = 2 * (ll_m1 - ll_m0)  # LL ratio test
+    p_value = chi2.sf(lrt, dof)  # Chi2 test
 
-      The degrees of freedom is the difference in the number of parameters between M0 and M1.
+    if p_value > 0.05:
+        return 0  # test insignificant and no reject of h0
+    return 1  # test significant and reject of h0
 
-    Hypothesis:
-      - H0 the null hypothesis:
-        Adding the parameter(s) does not significantly increase the likelihood of the model.
-      - H1 the alternative hypothesis:
-        Adding the parameter(s) significantly increase the likelihood of the model.
 
-    Decision rule - alpha = 0.05
-      - If p-value >= alpha then the test is insignificant and do not reject of H0
-      - If p-value < alpha then the test is significant and reject of H0
+def weighted_square_distance(sfs):
+    """
+    Compute the weighted square distance d2.
 
+    c.f. jupyter notebook "analyse.ipynb" for more information
+
+    Parameter
+    ---------
+    sfs: dictionary
+        Either observed SFS and inferred SFS with M1
+            Or inferred SFS of two models - M0 & M1
+
+    Return
+    ------
+    d2: float
+        the weighted square distance
+    """
+    # Normalization of the SFS
+    normalized_sfs = {}
+    for key in sfs.keys():
+        normalized_sfs[key] = [ele / sum(sfs[key]) for ele in sfs[key]]
+
+    # Weighted square distance
+    if "Observed" in sfs.keys():
+        d2 = [
+            np.power(eta_model - eta_obs, 2) / eta_model for eta_obs, eta_model in
+            zip(normalized_sfs['Observed'], normalized_sfs['Model'])
+        ]
+    else:
+        d2 = [
+            np.power(eta_m0 - eta_m1, 2) / (np.mean([eta_m0, eta_m1])) for eta_m0, eta_m1 in
+            zip(normalized_sfs['M0'], normalized_sfs['M1'])
+        ]
+
+    del normalized_sfs
+
+    return sum(d2)
+
+
+def compute_dadi_inference(sfs_observed, models, sample, path_data, job, dof, fixed, value):
+    """
     Parameter
     ---------
     sfs_observed: list
@@ -362,8 +407,7 @@ def likelihood_ratio_test(sfs_observed, models, sample, path_data, job, dof, fix
     ------
     data: dictionary
       - LRT
-        Likelihood ratio test, either 1 - test significant and reject of H0
-                                   or 0 - test insignificant and no reject of H0
+        Likelihood ratio test
       - M0
         List of log likelihood and sfs for the inference with M0
       - M1
@@ -372,17 +416,21 @@ def likelihood_ratio_test(sfs_observed, models, sample, path_data, job, dof, fix
         best one is kept. I.E. the one with the highest log-likelihood.
       - Time
         Mean execution time for the inference
+      - d2 observed inferred
+        Weighted square distance between observed SFS & inferred SFS with M1
+      - d2 models
+        Weighted square distance between inferred SFS with M0 & M1
     """
     data = {
         'LRT': [], 'M0': {'LL': [], 'SFS': []}, 'M1': {'LL': [], 'SFS': [], 'Estimated': []},
-        'Time': 0
+        'Time': 0, 'd2 observed inferred': [], 'd2 models': []
     }
     execution = []
 
     # Grid point for the extrapolation
     pts_list = [sample*10, sample*10 + 10, sample*10 + 20]
 
-    for sfs in sfs_observed:
+    for i, sfs in enumerate(sfs_observed):
         # Generate the SFS file compatible with dadi
         f.dadi_data(sfs, models['Inference'].__name__, path=path_data,
                     name="SFS-{}".format(job))
@@ -407,7 +455,7 @@ def likelihood_ratio_test(sfs_observed, models, sample, path_data, job, dof, fix
             m1_inferences.append(tmp)
             m1_execution.append(time.time() - start_inference)
 
-        execution.append(sum(m1_execution) / 10)
+        execution.append(np.mean(m1_execution))
 
         # m1_inferences is a list of pairs (Log-likelihood, Inferred SFS, Params)
         # Compare each item of this list by the value at index 0, i.e. the log-likelihood and
@@ -419,13 +467,18 @@ def likelihood_ratio_test(sfs_observed, models, sample, path_data, job, dof, fix
         data['M1']['Estimated'].append(m1_inferences[index_best_ll][2])
 
         # Compute the log-likelihood ratio test between M0 and M1
-        lrt = 2 * (m1_inferences[index_best_ll][0] - m0_inference[0])  # LL ratio test
-        p_value = chi2.sf(lrt, dof)  # Chi2 test
+        data['LRT'].append(
+            likelihood_ratio_test(data['M0']['LL'][i], data['M1']['LL'][i], dof)
+        )
 
-        if p_value > 0.05:
-            data['LRT'].append(0)  # Test insignificant and no reject of H0
-        else:
-            data['LRT'].append(1)  # Test significant and reject of H0
+        # Compute weighted square distance
+        data['d2 observed inferred'].append(
+            weighted_square_distance({'Observed': sfs, 'Model': data['M1']['SFS'][i]})
+        )  # d2 between the observed SFS & inferred SFS with M1
+
+        data['d2 models'].append(
+            weighted_square_distance({'M0': data['M0']['SFS'][i], 'M1': data['M1']['SFS'][i]})
+        )  # d2 between the inferred SFS of two models - M0 & M1
 
     # Mean execution time for the inference
     data['Time'] = round(sum(execution) / len(sfs_observed), 4)
@@ -433,7 +486,7 @@ def likelihood_ratio_test(sfs_observed, models, sample, path_data, job, dof, fix
     return data
 
 
-def inference_dadi(simulation, models, path_data, job, fixed, value):
+def save_dadi_inference(simulation, models, path_data, job, fixed, value):
     """
     Inference with dadi.
 
@@ -463,8 +516,8 @@ def inference_dadi(simulation, models, path_data, job, fixed, value):
     # Inference
     sfs_observed, sample = simulation['SFS observed'], simulation['Parameters']['sample_size']
 
-    inf = likelihood_ratio_test(sfs_observed, models, sample, path_data, job, dof=2,
-                                fixed=fixed, value=value)
+    inf = compute_dadi_inference(sfs_observed, models, sample, path_data, job, dof=2,
+                                 fixed=fixed, value=value)
 
     # Save data
     params = {
@@ -475,7 +528,8 @@ def inference_dadi(simulation, models, path_data, job, fixed, value):
     dico = {
         'Parameters': [params], 'Positive hit': [sum(inf['LRT'])], 'SNPs': [simulation['SNPs']],
         'SFS observed': [sfs_observed], 'M0': [inf['M0']], 'M1': [inf['M1']],
-        'Time': [inf['Time']]
+        'Time': [inf['Time']], 'd2 observed inferred': [np.mean(inf['d2 observed inferred'])],
+        'd2 models': [np.mean(inf['d2 models'])]
     }
     data = pd.DataFrame(dico)
 
@@ -571,7 +625,7 @@ def main():
             # # Inference with Dadi
             # print("Inference with dadi")
             # models = {'Inference': dadi.sudden_decline_model, 'Control': dadi.constant_model}
-            # inference_dadi(simulation, models, path_data, fixed=None, value=None)
+            # save_dadi_inference(simulation, models, path_data, fixed=None, value=None)
             print("Over")
             sys.exit()
 
@@ -663,8 +717,9 @@ def main():
 
                 args.value = np.power(10, args.value)
 
-            inference_dadi(simulation, models, path_data, args.job, fixed=args.param,
-                           value=args.value)
+            save_dadi_inference(simulation, models, path_data, args.job, fixed=args.param,
+                                value=args.value)
+            print(simulation)
 
         # Inference with stairway plot 2
         elif args.stairway:
