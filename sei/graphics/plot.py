@@ -22,23 +22,69 @@ def normalization(data):
     return normalized_data
 
 
-def from_json_to_dataframe(path_data):
-    """
-    Export json file to pandas DataFrame.
-    """
-    dico = {
-        "Parameters": np.array([], dtype=object), "Positive hit": np.array([], dtype=int),
-        "Model0 ll": np.array([], dtype=list), "Model1 ll": np.array([], dtype=list),
-        "SNPs": np.array([], dtype=int)
-    }
-    data = pd.DataFrame(dico)
+######################################################################
+# SFS shape verification                                             #
+######################################################################
 
-    for fichier in [ele for ele in os.listdir(path_data)]:
-        res = pd.read_json(path_or_buf="{}{}".format(path_data, fichier), typ='frame')
-        # res['Tau'] = np.log10(res['Tau'])
-        data = data.append(res, ignore_index=True)
+def plot_sfs(data, save=False):
+    """
+    Graphic representation of Site Frequency Spectrum (SFS), save to the folder ./Figures.
 
-    return data
+    Parameter
+    ---------
+    data: tupple
+        - 0: dictionary of {model: sfs}
+        - 1: dictionary of {model: model_parameter}, with  model_parameter either (tau, kappa)
+          or (m12, kappa)
+        - 2: dictionary of msprime simulation
+
+    save: boolean
+        If set to True save the plot in ./Figures/SFS-shape
+    """
+    color = ["tab:blue", "tab:orange", "tab:red", "tab:green", "tab:gray"]
+
+    # Set up plot
+    plt.figure(figsize=(12,9), constrained_layout=True)
+
+    cpt = 0
+    for key, sfs in data[0].items():
+        # Normalization of SFS - sum to 1
+        normalized_sfs = [ele / sum(sfs) for ele in sfs]
+
+        # Label
+        if key in ['Constant model', 'Theoretical model']:
+            label = key
+        else:
+            label = "{} - {}".format(key, data[1][key])
+
+        # Plot
+        plt.plot(normalized_sfs, color=color[cpt], label=label)
+
+        cpt += 1
+
+    # Caption
+    plt.legend(loc="upper right", fontsize="x-large")
+
+    # Label axis
+    plt.xlabel("Allele frequency", fontsize="x-large")
+    plt.ylabel("Percent of SNPs", fontsize="x-large")
+
+    # X axis values
+    x_ax, x_values = [], []
+    for i in range(len(sfs)):
+        x_ax.append(i)
+        x_values.append("{}/{}".format(i+1, len(sfs)+1))
+    plt.xticks(x_ax, x_values)
+
+    # Title + show
+    title = "Unfold SFS for various scenario with Ne={}, mu={}, rcb={}, L={:.1E}" \
+        .format(data[2]['size_population'], data[2]['mu'], data[2]['rcb_rate'],
+                round(data[2]['length']))
+    plt.title(title, fontsize="xx-large")
+
+    if save:
+        plt.savefig('./Figures/SFS-shape')
+    plt.show()
 
 
 ######################################################################

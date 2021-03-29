@@ -2,10 +2,52 @@
 This module allows you to read or write files.
 """
 
+import ast
+import json
 import os
 import sys
 import numpy as np
 import pandas as pd
+
+import sei.sei as sei
+
+
+######################################################################
+# SFS shape verification                                             #
+######################################################################
+
+def load_sfs(generate=False):
+    """
+    If generate True, create a new set of SFS for various scenario.
+
+    If generate False, load a set of SFS for various scenario.
+    """
+    if generate:
+        all_sfs, params, params_simulation = sei.generate_sfs()
+        with open("./Data/Msprime/sfs_shape_verification", 'w') as filout:
+            filout.write("SFS shape verification and simulations parameters - {}\n"
+                         .format(params_simulation))
+
+            for model, sfs in all_sfs.items():
+                if model in params.keys():
+                    filout.write("{} - {} - {}\n".format(model, sfs, params[model]))
+                else:
+                    filout.write("{} - {}\n".format(model, sfs))
+
+    else:
+        all_sfs, params = {}, {}
+        with open("./Data/Msprime/sfs_shape_verification", 'r') as filin:
+            lines = filin.readlines()
+            params_simulation = ast.literal_eval(lines[0].strip().split(' - ')[1])
+
+            for line in lines[1:]:
+                tmp = line.strip().split(' - ')
+                if tmp[0] not in ['Constant model', 'Theoretical model']:
+                    params[tmp[0]] = ast.literal_eval(tmp[2])
+                all_sfs[tmp[0]] = json.loads(tmp[1])
+
+    return all_sfs, params, params_simulation
+
 
 ######################################################################
 # SFS - Dadi                                                         #
@@ -196,39 +238,6 @@ def export_inference_files(model, param, value=None):
         inference = pd.read_json(path_or_buf="{}{}".format(path_data, filin), typ='frame')
 
     return inference
-
-
-######################################################################
-# A SUPPRIMER - probablement                                         #
-######################################################################
-
-def export_to_dataframe(path_data):
-    """
-    Export json file to a Pandas DataFrame.
-    """
-    col = [
-        "Parameters", "Positive hit", "SNPs", "SFS obs", "SFS M0", "SFS M1",
-        "Model0 ll", "Model1 ll", "Time simulation", "Time inference"
-    ]
-    data = pd.DataFrame(columns=col)
-
-    for fichier in [ele for ele in os.listdir(path_data)]:
-        res = pd.read_json(path_or_buf="{}{}".format(path_data, fichier), typ='frame')
-        data = data.append(res, ignore_index=True)
-
-    return data
-
-
-def factor_to_file(data):
-    """
-    Compute the length factor of each (tau, kappa) pairs nad save it to a file.
-    """
-    theoritical_theta = 32000
-
-    length_factor = [np.mean(ele) / theoritical_theta for ele in data['SNPs']]
-    with open("./Data/length_factor-decline", "w") as filout:
-        for ele in sorted(length_factor, reverse=True):
-            filout.write("{} ".format(ele))
 
 
 if __name__ == "__main__":

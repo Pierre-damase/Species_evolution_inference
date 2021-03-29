@@ -323,7 +323,7 @@ if __name__ == "__main__":
 
             # SUPR #
             tmp = define_parameters(args.model)
-            data = pd.read_json("/home/pimbert/work/Species_evolution_inference/Data/Msprime/migration/SFS-migration-all")
+            data = pd.read_json("/home/pimbert/work/Species_evolution_inference/Data/Msprime/migration/SFS_migration-all")
 
             # Mean SNPs
             data['SNPs'] = data['SNPs'].apply(np.mean)

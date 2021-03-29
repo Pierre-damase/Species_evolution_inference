@@ -65,6 +65,79 @@ def define_parameters(model):
 
 
 ######################################################################
+# SFS shape verification                                             #
+######################################################################
+
+def  compute_theoritical_sfs(length):
+    """
+    Compute the theoritical SFS of any constant population.
+    """
+    theoritical_sfs = [0] * (length)
+    for i in range(length):
+        theoritical_sfs[i] = 1 / (i+1)
+    return theoritical_sfs
+
+
+def generate_set_sfs():
+    """
+    Generate a set of sfs for various scenario:
+
+      - Constant population
+      - Theoritical SFS for any constant population
+      - Sudden growth model - growth of force kappa at a time tau in the past
+      - Sudden decline model - decline of force kappa at a time tau in the past
+      - Migration model - migration into population 1 from 2 and no migration into 2 from 1
+
+    Return
+    ------
+    sfs: dictionary
+        sfs for various scenario
+    parameters: dictionary
+        specific value of tau & kappa for the growth and decline model
+        specifiv value of m12, m21 & kappa for the migration model
+    params_simulation:
+        Ne, sample size, length, mutation & recombination rate
+    """
+    sfs, parameters = {}, {}
+
+    # Parameters for the simulation
+    params = simulation_parameters(sample=10, ne=1, rcb_rate=2e-2, mu=2e-2, length=1e5)
+
+    # Constant scenario
+    sfs['Constant model'] = \
+        ms.msprime_simulation(model=ms.constant_model, params=params, debug=True)
+
+    # Theoretical SFS for any constant population
+    sfs['Theoretical model'] = \
+        compute_theoritical_sfs(length=params["sample_size"] - 1)
+
+    # Define tau & kappa for decline/growth scenario
+    params.update({"Tau": 1.0, "Kappa": 10.0})
+
+    sfs['Decline model'] = \
+        ms.msprime_simulation(model=ms.sudden_decline_model, params=params, debug=True)
+    parameters['Decline model'] = {k: v for k, v in params.items() if k in ['Tau', 'Kappa']}
+
+    sfs['Growth model'] = \
+        ms.msprime_simulation(model=ms.sudden_growth_model, params=params, debug=True)
+    parameters['Growth model'] = {k: v for k, v in params.items() if k in ['Tau', 'Kappa']}
+
+    # Migration scenario
+    params.update({"Kappa": 10.0, "m12": 1.0, "m21": 0})
+
+    sfs['Migration model'] = \
+        ms.msprime_simulation(model=ms.two_pops_migration_model, params=params, debug=True)
+    parameters['Migration model'] = {
+        k: v for k, v in params.items() if k in ['m12', 'm21', 'Kappa']
+    }
+
+    params_simulation = \
+        {k: v for k, v in params.items() if k not in ['m12', 'm21', 'Kappa', 'Tau']}
+
+    return sfs, parameters, params_simulation
+
+
+######################################################################
 # Generate a set of SFS with msprime                                 #
 ######################################################################
 
