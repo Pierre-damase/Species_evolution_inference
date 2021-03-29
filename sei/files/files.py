@@ -3,6 +3,7 @@ This module allows you to read or write files.
 """
 
 import ast
+import copy
 import json
 import os
 import sys
@@ -51,7 +52,7 @@ def load_sfs(function, generate=False):
 # SFS - Dadi                                                         #
 ######################################################################
 
-def dadi_data(sfs, fichier, path="./Data/", name="SFS"):
+def dadi_data(sfs_observed, fichier, path="./Data/", name="SFS"):
     """
     Create SFS of a scenario in the format compatible with the dadi software.
 
@@ -72,6 +73,8 @@ def dadi_data(sfs, fichier, path="./Data/", name="SFS"):
     fichier: str
         file in which the SFS will be written in the format compatible with dadi
     """
+    sfs = copy.deepcopy(sfs_observed)
+
     with open("{}{}.fs".format(path, name), "w") as filout:
         filout.write("{} unfolded \"{}\"\n".format(len(sfs)+2, fichier))
 
@@ -87,6 +90,9 @@ def dadi_data(sfs, fichier, path="./Data/", name="SFS"):
                 filout.write("1 ")
             else:
                 filout.write("0 ")
+
+    del sfs
+
 
 ######################################################################
 # SFS - Stairway plot 2                                              #
