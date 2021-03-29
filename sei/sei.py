@@ -1,5 +1,5 @@
 """
-Programme pour inférer l'évolution d'une population à partir de données génomiques.
+Decline estimation from genomic data.
 """
 
 import os

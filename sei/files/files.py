@@ -9,21 +9,19 @@ import sys
 import numpy as np
 import pandas as pd
 
-import sei.sei as sei
-
 
 ######################################################################
 # SFS shape verification                                             #
 ######################################################################
 
-def load_sfs(generate=False):
+def load_sfs(function, generate=False):
     """
     If generate True, create a new set of SFS for various scenario.
 
     If generate False, load a set of SFS for various scenario.
     """
     if generate:
-        all_sfs, params, params_simulation = sei.generate_sfs()
+        all_sfs, params, params_simulation = function()
         with open("./Data/Msprime/sfs_shape_verification", 'w') as filout:
             filout.write("SFS shape verification and simulations parameters - {}\n"
                          .format(params_simulation))
