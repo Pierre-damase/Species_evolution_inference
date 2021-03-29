@@ -43,22 +43,22 @@ def simulation_parameters(sample, ne, rcb_rate, mu, length):
 
 
 def define_parameters(model):
+    """
+    Define pairs of (Tau, Kappa) - sudden decline/growth model - and (m12, Kappa) - migration
+    model.
+    """
     if model == 'decline':
         # Range of value for tau & kappa
-        tau_list, kappa_list = np.arange(-4, 2.5, 0.1), np.arange(-3.5, 3, 0.1)
-
         params = []
-        for tau in tau_list:
-            for kappa in kappa_list:
+        for tau in np.arange(-4, 2.5, 0.1):
+            for kappa in np.arange(-3.5, 3, 0.1):
                 params.append({'Tau': round(tau, 2), 'Kappa': round(kappa, 2)})
 
     else:
         # Range of value for m12 & kappa
-        m12_list, kappa_list = np.arange(-4, 2.5, 0.1), np.arange(-3.5, 3, 0.1)
-
         params = []
-        for m12 in m12_list:
-            for kappa in kappa_list:
+        for m12 in np.arange(-4, 2.5, 0.1):
+            for kappa in np.arange(-3.5, 3, 0.1):
                 params.append({'m12': round(m12, 2), 'm21': 0.0, 'Kappa': round(kappa, 2)})
 
     return params

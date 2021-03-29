@@ -41,23 +41,22 @@ def simulation_parameters(sample, ne, rcb_rate, mu, length):
 
 
 def define_parameters(model):
+    """
+    Define pairs of (Tau, Kappa) - sudden decline/growth model - and (m12, Kappa) - migration
+    model.
+    """
     if model == 'decline':
         # Range of value for tau & kappa
-        #tau_list, kappa_list = np.arange(-4, 2.5, 0.1), np.arange(-3.5, 3, 0.1)
-        tau_list, kappa_list = np.arange(-4, 1, 0.1), np.arange(1.3, 3, 0.1)
-
         params = []
-        for tau in tau_list:
-            for kappa in kappa_list:
+        for tau in np.arange(-4, 2.5, 0.1):
+            for kappa in np.arange(-3.5, 3, 0.1):
                 params.append({'Tau': round(tau, 2), 'Kappa': round(kappa, 2)})
 
     else:
         # Range of value for m12 & kappa
-        m12_list, kappa_list = np.arange(-4, 2.5, 0.1), np.arange(-3.5, 3, 0.1)
-
         params = []
-        for m12 in m12_list:
-            for kappa in kappa_list:
+        for m12 in np.arange(-4, 2.5, 0.1):
+            for kappa in np.arange(-3.5, 3, 0.1):
                 params.append({'m12': round(m12, 2), 'm21': 0.0, 'Kappa': round(kappa, 2)})
 
     return params
@@ -320,7 +319,28 @@ if __name__ == "__main__":
         # 2 (with m12 the migration rate) and no migration into 2 from 1
         # Population 1 size is pop1 and population 2 size is pop2 = kappa*pop1
         elif args.model == 'migration':
-            params = define_parameters(args.model)
+            # params = define_parameters(args.model)
+
+            # SUPR #
+            tmp = define_parameters(args.model)
+            data = pd.read_json("/home/pimbert/work/Species_evolution_inference/Data/Msprime/migration/SFS-migration-all")
+
+            # Mean SNPs
+            data['SNPs'] = data['SNPs'].apply(np.mean)
+
+            params, present = [], []
+            for _, row in data.iterrows():
+                p = {'m12': round(np.log10(row['Parameters']['m12']), 2), 'm21': 0.0,
+                     'Kappa': round(np.log10(row['Parameters']['Kappa']), 2)}
+                present.append(p)
+                if not 80000 < row['SNPs'] < 120000:
+                    params.append(p)
+
+            for p in tmp:
+                if p not in present:
+                    params.append(p)
+            # SUPR #
+
             params, model = params[args.job-1], ms.twopops_migration_model
 
             path_data = "/home/pimbert/work/Species_evolution_inference/Data/Msprime/{0}/" \
@@ -330,7 +350,7 @@ if __name__ == "__main__":
         path_length = "/home/pimbert/work/Species_evolution_inference/Data/Msprime/" \
             "length_factor-{}".format(args.model)
 
-        generate_sfs(params, model, nb_simu=2, path_data=path_data, path_length=path_length)
+        generate_sfs(params, model, nb_simu=100, path_data=path_data, path_length=path_length)
 
     elif args.analyse == 'inf':
         path_data = "/home/pimbert/work/Species_evolution_inference/Data/Msprime/{}/" \
