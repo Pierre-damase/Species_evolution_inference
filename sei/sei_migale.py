@@ -338,9 +338,9 @@ def save_dadi_inference(simulation, models, path_data, job, fixed, value):
 
     # Export dataframe to json files
     if fixed is None:
-        name = "dadi-{}-{}".format(models['Inference'].__name__.split('_')[1], job)
+        name = "dadi_{}-{}".format(models['Inference'].__name__.split('_')[1], job)
     else:
-        name = "dadi-{}-{}={}-{}" \
+        name = "dadi_{}_{}={}-{}" \
             .format(models['Inference'].__name__.split('_')[1], fixed, value, job)
     data.to_json("{}{}".format(path_data, name))
 
