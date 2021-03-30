@@ -563,7 +563,10 @@ def inference_stairway_plot(simulation, model):
 
         for sfs in row['SFS observed']:
             # Generate the SFS file compatible with stairway plot v2
-            data = {k: v for k, v in row['Parameters'].items() if k in['sample_size', 'length', 'mu']}
+            data = {
+                k: v for k, v in row['Parameters'].items() if k in ['sample_size', 'length',
+                                                                    'mu']
+            }
             data['sfs'], data['year'], data['ninput'] = sfs, 1, 200
 
             f.stairway_data(name, data, path_data)
@@ -577,6 +580,8 @@ def inference_stairway_plot(simulation, model):
 
             # Remove all blueprint file
             os.system("rm -rf {}{}.blueprint*".format(path_data, name))
+            break
+        break
 
 
 ######################################################################
@@ -723,38 +728,8 @@ def main():
 
         # Inference with stairway plot 2
         elif args.stairway:
-
             inference_stairway_plot(simulation, model=args.model)
 
-    elif args.analyse == 'er':
-        for sample in [10, 20, 40, 60, 100]:
-            plot.plot_error_rate(sample)
-
-    elif args.analyse == 'ases':
-        path_data = "./Data/Optimization_{}_d2/".format(args.param)
-        data = f.export_to_dataframe(path_data)
-
-        plot.plot_weighted_square_distance(data)
-
-        # Generate plot puissance
-        path_data = "./Data/Optimization_{}/".format(args.param)
-        col = [
-            "Parameters", "Positive hit", "SNPs",
-            "Model0 ll", "Model1 ll", "Time simulation", "Time inference"
-        ]
-        data = pd.DataFrame(columns=col)
-
-        for fichier in [ele for ele in os.listdir(path_data) if ele.startswith("opt")]:
-            res = pd.read_json(path_or_buf="{}{}".format(path_data, fichier), typ='frame')
-            #data = data.append(res, ignore_index=True)
-
-        #plot.plot_lrt(data)
-
-    elif args.analyse == 'snp':
-        plot.snp_distribution()
-
-    elif args.analyse == 'stairway':
-        pass
 
 if __name__ == "__main__":
     warnings.filterwarnings('ignore')
