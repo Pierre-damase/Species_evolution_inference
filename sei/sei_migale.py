@@ -349,6 +349,45 @@ def save_dadi_inference(simulation, models, path_data, job, fixed, value):
 
 
 ######################################################################
+# Inference with stairway plot 2                                     #
+######################################################################
+
+def inference_stairway_plot(simulation, model):
+    """
+    Inference with stairway plot.
+    """
+    for _, row in simulation.iterrows():
+        path_data = "/home/damase/All/Cours/M2BI-Diderot/Species_evolution_inference/sei/" \
+            "inference/stairway_plot_v2.1.1/"
+
+        if model == 'decline':
+            name = "stairway_{}-tau={}_kappa={}"\
+                .format(model, row['Parameters']['Tau'], row['Parameters']['Kappa'])
+
+        for sfs in row['SFS observed']:
+            # Generate the SFS file compatible with stairway plot v2
+            data = {
+                k: v for k, v in row['Parameters'].items() if k in ['sample_size', 'length',
+                                                                    'mu']
+            }
+            data['sfs'], data['year'], data['ninput'] = sfs, 1, 200
+
+            f.stairway_data(name, data, path_data)
+
+            # Create the batch file
+            os.system("java -cp {0}stairway_plot_es Stairbuilder {0}{1}.blueprint"
+                      .format(path_data, name))
+
+            # Run the batch file
+            os.system("bash {}{}.blueprint.sh".format(path_data, name))
+
+            # Remove all blueprint file
+            os.system("rm -rf {}{}.blueprint*".format(path_data, name))
+            break
+        break
+
+
+######################################################################
 # Main                                                               #
 ######################################################################
 

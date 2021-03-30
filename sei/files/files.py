@@ -207,13 +207,18 @@ def export_inference_files(model, param, value=None):
     inference
     """
     # Data
-    col = ['Parameters', 'Positive hit', 'SNPs', 'SFS observed', 'M0', 'M1', 'Time']
+    col = ['Parameters', 'Positive hit', 'SNPs', 'SFS observed', 'M0', 'M1', 'Time',
+           'd2 observed inferred', 'd2 models']
     inference = pd.DataFrame(columns=col)
 
     # Path data and filin
     path_data = "./Data/Dadi/{}/{}/".format(model, param)
     if param == 'all':
-        filin = "dadi_{}-all.json".format(model)
+        filin = "dadi_{}-all".format(model)
+        if '{}.zip'.format(filin) in os.listdir(path_data):
+            os.system('unzip {0}{1}.zip -d {0}'.format(path_data, filin))
+        filin += ".json"
+
     else:
         filin = "dadi_{}={}-all.json".format(model, value)
 
@@ -241,8 +246,16 @@ def export_inference_files(model, param, value=None):
     else:
         inference = pd.read_json(path_or_buf="{}{}".format(path_data, filin), typ='frame')
 
-    return inference
+        # File > 100 Mb
+    if os.stat("{}{}".format(path_data, filin)).st_size > 1e8:
+        # Zip
+        if "{}.zip".format(filin.split('.')[0]) not in os.listdir(path_data):
+            os.system('zip -j {0}{1}.zip {0}{2}'.format(path_data, filin.split('.')[0], filin))
 
+        # Remove
+        os.remove("{}{}".format(path_data, filin))
+
+    return inference
 
 if __name__ == "__main__":
     sys.exit()  # No actions desired
