@@ -114,7 +114,7 @@ def stairway_data(name, data, path):
         filout.write("nseq: {} # number of sequences\n".format(nseq))
         filout.write(
             "L: {} # total number of observed nucleic sites, including poly-/mono-morphic\n"
-            .format(int(length)))
+            .format(sum(sfs)))  # int(length)
         filout.write("whether_folded: false # unfolded SFS\n")
 
         # SFS

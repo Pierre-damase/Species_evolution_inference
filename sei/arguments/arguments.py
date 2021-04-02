@@ -78,12 +78,6 @@ def arguments():
     tool.add_argument('-dadi', action='store_true',
                       help="Inference of demographic history with Dadi")
     inf.add_argument(
-        '--job', dest='job', type=data_type, required='-dadi' in sys.argv is True,
-        help="Inference with dadi for a given tau/m12 & kappa - to sumit job-array with migale"
-        " cluster, if param empty from 1 to 4225 else from 1 to 65"
-    )
-
-    inf.add_argument(
         '--param', dest="param", choices=['tau', 'kappa', 'migr'], default=None,
         help="Fixed parameters, either (tau), (kappa) or (m12), m12 is the migration rate from"
         " population 2 to 1."
@@ -98,11 +92,18 @@ def arguments():
     tool.add_argument('-stairway', action='store_true',
                       help="Inference of demographic history with Stairway plot 2")
 
+    # Required argument for booth Dadi & stairway
     inf.add_argument(
         '--model', dest="model", choices=['decline', 'migration'], required=True,
         help="Simulation model used for the inference, in the case of dadi also indicate the "
         "population model for the inference"
     )
+    inf.add_argument(
+        '--job', dest='job', type=data_type, required=True,
+        help="Inference with dadi for a given tau/m12 & kappa - to sumit job-array with migale"
+        " cluster, if param empty from 1 to 4225 else from 1 to 65"
+    )
+
 
     #############################################
     # Plot error rate                           #

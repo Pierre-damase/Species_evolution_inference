@@ -248,7 +248,7 @@ def compute_dadi_inference(sfs_observed, models, sample, path_data, job, dof, fi
         # Dadi inference for M1
         m1_inferences, m1_execution = [], []
 
-        for _ in range(1):  # Run 1000 inferences with dadi from the observed sfs
+        for _ in range(1000):  # Run 1000 inferences with dadi from the observed sfs
             start_inference = time.time()
 
             # Pairs (Log-likelihood, Inferred SFS, Params)
@@ -357,7 +357,7 @@ def inference_stairway_plot(simulation, model):
     Inference with stairway plot.
     """
     for _, row in simulation.iterrows():
-        path_data = "/home/damase/All/Cours/M2BI-Diderot/Species_evolution_inference/sei/" \
+        path_data = "/home/pimbert/work/Species_evolution_inference/sei/" \
             "inference/stairway_plot_v2.1.1/"
 
         if model == 'decline':
@@ -484,3 +484,8 @@ if __name__ == "__main__":
 
             save_dadi_inference(simulation, models, path_data, args.job, fixed=args.param,
                                 value=args.value)
+
+        # Inference with stairway plot v2
+        elif args.stairway:
+            inference_stairway_plot(simulation, model=args.model)
+

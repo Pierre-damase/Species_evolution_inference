@@ -553,6 +553,46 @@ def inference_stairway_plot(simulation, model):
     """
     Inference with stairway plot.
     """
+    # Set up path data
+    path_stairway = "/home/damase/All/Cours/M2BI-Diderot/Species_evolution_inference/sei/" \
+        "inference/stairway_plot_v2.1.1/"
+    if model == 'decline':
+        path_data = path_stairway + "stairway_{}-tau={}_kappa={}/" \
+            .format(model, simulation['Parameters']['Tau'], simulation['Parameters']['Kappa'])
+    else:
+        path_data = path_stairway + "stairway_{}-m12={}_kappa={}/" \
+            .format(model, simulation['Parameters']['m12'], simulation['Parameters']['Kappa'])
+
+    if not os.path.isdir(path_data):
+        os.mkdir(path_data)
+
+    # Inference
+    for i, sfs in enumerate(simulation['SFS observed']):
+        name = "stairway_inference-{}".format(i)
+
+        # Generate the SFS file compatible with stairway plot v2
+        data = {
+            k: v for k, v in simulation['Parameters'].items() if k in ['sample_size', 'length',
+                                                                       'mu']
+        }
+        data['sfs'], data['year'], data['ninput'] = sfs, 1, 200
+
+        f.stairway_data(name, data, path_data)
+
+        # Create the batch file
+        os.system("java -cp {0}stairway_plot_es Stairbuilder {1}{2}.blueprint"
+                  .format(path_stairway, path_data, name))
+
+        # Run the batch file
+        os.system("bash {}{}.blueprint.sh".format(path_data, name))
+
+        # Remove all blueprint file
+        os.system("rm -rf {}{}.blueprint*".format(path_data, name))
+
+        if i == 1:
+            break
+
+    sys.exit()
     for _, row in simulation.iterrows():
         path_data = "/home/damase/All/Cours/M2BI-Diderot/Species_evolution_inference/sei/" \
             "inference/stairway_plot_v2.1.1/"
@@ -576,10 +616,10 @@ def inference_stairway_plot(simulation, model):
                       .format(path_data, name))
 
             # Run the batch file
-            os.system("bash {}{}.blueprint.sh".format(path_data, name))
+            # os.system("bash {}{}.blueprint.sh".format(path_data, name))
 
             # Remove all blueprint file
-            os.system("rm -rf {}{}.blueprint*".format(path_data, name))
+            # os.system("rm -rf {}{}.blueprint*".format(path_data, name))
             break
         break
 
@@ -709,7 +749,7 @@ def main():
 
             # Select observed data for the inference
             if args.param is None:
-                simulation = simulation.iloc[args.job-1]
+                simulation = simulation.iloc[args.job - 1]
                 path_data = "./Data/Dadi/{}/all/".format(args.model)
 
             else:
@@ -728,6 +768,7 @@ def main():
 
         # Inference with stairway plot 2
         elif args.stairway:
+            simulation = simulation.iloc[args.job - 1]
             inference_stairway_plot(simulation, model=args.model)
 
 
