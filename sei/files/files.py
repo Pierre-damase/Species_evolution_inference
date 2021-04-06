@@ -214,7 +214,7 @@ def export_inference_files(model, param, value=None):
     # Path data and filin
     path_data = "./Data/Dadi/{}/{}/".format(model, param)
     if param == 'all':
-        filin = "dadi_{}-all".format(model)
+        filin = "dadi_{}_all".format(model)
         if '{}.zip'.format(filin) in os.listdir(path_data):
             os.system('unzip {0}{1}.zip -d {0}'.format(path_data, filin))
         filin += ".json"
