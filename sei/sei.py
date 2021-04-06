@@ -432,13 +432,18 @@ def compute_dadi_inference(sfs_observed, models, sample, path_data, job, dof, fi
 
     for i, sfs in enumerate(sfs_observed):
         # Generate the SFS file compatible with dadi
+        if not value:
+            dadi_file = "SFS-{}".format(job)
+        else:
+            dadi_file = "SFS_{}-{}".format(value, job)
+
         f.dadi_data(sfs, models['Inference'].__name__, path=path_data,
-                    name="SFS-{}".format(job))
+                    name=dadi_file)
 
         # Dadi inference for M0
         # Pairs (Log-likelihood, Inferred SFS)
         m0_inference = dadi.inference(pts_list, models['Control'], path=path_data,
-                                      name="SFS-{}".format(job))
+                                      name=dadi_file)
         data['M0']['LL'].append(m0_inference[0])
         data['M0']['SFS'].append(m0_inference[1])
 
@@ -450,7 +455,7 @@ def compute_dadi_inference(sfs_observed, models, sample, path_data, job, dof, fi
 
             # Pairs (Log-likelihood, Inferred SFS, Params)
             tmp = dadi.inference(pts_list, models['Inference'], fixed=fixed, value=value,
-                                 path=path_data, name="SFS-{}".format(job))
+                                 path=path_data, name=dadi_file)
 
             m1_inferences.append(tmp)
             m1_execution.append(time.time() - start_inference)
@@ -511,17 +516,22 @@ def save_dadi_inference(simulation, models, path_data, job, fixed, value):
     fixed
         fixed parameter for the inference, either (tau), (kappa) or (migration)
     value
-        Value of the fixed parameters for the inference
+        Value of the fixed parameters for the inference - log scale
     """
     # Inference
     sfs_observed, sample = simulation['SFS observed'], simulation['Parameters']['sample_size']
 
-    inf = compute_dadi_inference(sfs_observed, models, sample, path_data, job, dof=2,
-                                 fixed=fixed, value=value)
+    if not value:
+        inf = compute_dadi_inference(sfs_observed, models, sample, path_data, job, dof=2,
+                                     fixed=fixed, value=value)
+    else:
+        inf = compute_dadi_inference(sfs_observed, models, sample, path_data, job, dof=2,
+                                     fixed=fixed, value=np.power(10, value))
 
     # Save data
     params = {
-        k: v for k, v in simulation['Parameters'].items() if k in ['Tau', 'Kappa', 'm12', 'm21']
+        k: v for k, v in simulation['Parameters'].items() if k in ['Tau', 'Kappa', 'm12',
+                                                                   'm21']
     }
 
     # Create DataFrame from dictionary
@@ -543,7 +553,10 @@ def save_dadi_inference(simulation, models, path_data, job, fixed, value):
     data.to_json("{}{}".format(path_data, name))
 
     # Remove SFS file
-    os.remove("{}SFS-{}.fs".format(path_data, job))
+    if not value:
+        os.remove("{}SFS-{}.fs".format(path_data, job))
+    else:
+        os.remove("{}SFS_{}-{}.fs".format(path_data, np.power(10, value), job))
 
 
 ######################################################################
@@ -733,11 +746,10 @@ def main():
                 ][args.job-1]
                 path_data = "./Data/Dadi/{}/{}/".format(args.model, args.param)
 
-                args.value = np.power(10, args.value)
+                # args.value = np.power(10, args.value)
 
             save_dadi_inference(simulation, models, path_data, args.job, fixed=args.param,
-                                value=args.value)
-            print(simulation)
+                                value=round(args.value, 2))
 
         # Inference with stairway plot 2
         elif args.stairway:
