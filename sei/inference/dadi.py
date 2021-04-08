@@ -282,6 +282,7 @@ def inference(pts_list, model_func, fixed=None, value=None, verbose=0, path="./D
     # Return
     if model_func.__name__ == 'constant_model':
         return ll_model, inferred_sfs
+    params_estimated['Theta'] = theta
     return ll_model, inferred_sfs, params_estimated
 
 

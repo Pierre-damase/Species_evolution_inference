@@ -35,7 +35,7 @@ def constant_model(params, debug):
     history: None
         constant model so no history
     """
-    sample, pop = params['sample_size'], params['size_population']
+    sample, pop = params['sample_size'], params['Ne']
 
     configuration_pop = [
         msprime.PopulationConfiguration(sample_size=sample, initial_size=pop, growth_rate=0)
@@ -66,7 +66,7 @@ def sudden_decline_model(params, debug):
         the observed demographic change in the population at tau time - decline of force kappa
     """
     sample, pop, tau, kappa = \
-        params['sample_size'], params['size_population'], params['Tau'], params['Kappa']
+        params['sample_size'], params['Ne'], params['Tau'], params['Kappa']
 
     configuration_pop = [
         msprime.PopulationConfiguration(sample_size=sample, initial_size=pop, growth_rate=0)
@@ -102,7 +102,7 @@ def sudden_growth_model(params, debug):
         the observed demographic change in the population at tau time - growth of force kappa
     """
     sample, pop, tau, kappa = \
-        params['sample_size'], params['size_population'], params['Tau'], params['Kappa']
+        params['sample_size'], params['Ne'], params['Tau'], params['Kappa']
 
     configuration_pop = [
         msprime.PopulationConfiguration(sample_size=sample, initial_size=pop, growth_rate=0)
@@ -138,7 +138,7 @@ def twopops_migration_model(params, debug):
       - m21: migration rate into population 2 from 1 - by default it's 0
     """
     sample, pop, kappa, m12, m21 = \
-        params['sample_size'], params['size_population'], params['Kappa'], params['m12'], \
+        params['sample_size'], params['Ne'], params['Kappa'], params['m12'], \
         params['m21']
 
     # The list of PopulationConfiguration instances describing the sampling configuration, the
@@ -174,7 +174,7 @@ def msprime_simulation(model, params, debug=False):
         (constant, sudden declin, sudden growth, etc.)
     params: dictionary
         - sample_size: the number of sampled monoploid genomes
-        - size_population: the effective (diploid) population size
+        - Ne: the effective (diploid) population size
         - rcb_rate: the rate of recombinaison per base per generation
         - mu: the rate of infinite sites mutations per unit of sequence length per generation
         - length: the length of the simulated region in bases

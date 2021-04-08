@@ -2,7 +2,6 @@
 This module allows you to create graphics.
 """
 
-import os
 import sys
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -78,8 +77,7 @@ def plot_sfs(data, save=False):
 
     # Title + show
     title = "Unfold SFS for various scenario with Ne={}, mu={}, rcb={}, L={:.1E}" \
-        .format(data[2]['size_population'], data[2]['mu'], data[2]['rcb_rate'],
-                round(data[2]['length']))
+        .format(data[2]['Ne'], data[2]['mu'], data[2]['rcb_rate'], round(data[2]['length']))
     plt.title(title, fontsize="xx-large")
 
     if save:

@@ -114,7 +114,7 @@ def stairway_data(name, data, path):
         filout.write("nseq: {} # number of sequences\n".format(nseq))
         filout.write(
             "L: {} # total number of observed nucleic sites, including poly-/mono-morphic\n"
-            .format(sum(sfs) * int(length)))  # int(length)
+            .format(int(length) / 2))  # sum(sfs) * int(length)
         filout.write("whether_folded: false # unfolded SFS\n")
 
         # SFS
@@ -225,11 +225,13 @@ def export_inference_files(model, param, value=None):
     if filin not in os.listdir(path_data):
 
         fichiers = os.listdir(path_data)
+
+        # Select estimation for the specific value of param that is either tau, kappa or m12
         if param != 'all':
             fichiers = [
                 fichier for fichier in fichiers
-                if not fichier.endswith('.json')
-                and round(float(fichier.split('=')[1].split('-')[0]), 2) == value
+                if not fichier.endswith('all')
+                and float(fichier.rsplit('-', maxsplit=1)[0].split('=')[1]) == value
             ]
 
         for fichier in fichiers:
@@ -255,6 +257,7 @@ def export_inference_files(model, param, value=None):
         os.remove("{}{}".format(path_data, filin))
 
     return inference
+
 
 if __name__ == "__main__":
     sys.exit()  # No actions desired
