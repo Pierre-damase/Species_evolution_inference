@@ -486,7 +486,11 @@ if __name__ == "__main__":
                     .format(args.model)
 
             else:
-                param = args.param.capitalize()
+                if args.param != 'm12':
+                    param = args.param.capitalize()
+                else:
+                    param = args.param
+
                 simulation = [
                     ele for _, ele in simulation.iterrows()
                     if round(np.log10(ele['Parameters'][param]), 2) == args.value
