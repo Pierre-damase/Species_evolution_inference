@@ -54,11 +54,11 @@ def params_model(params):
     inference.
     """
     global FIXED, VALUE
-    if FIXED == "tau":  # Fixed param: (Tau), the length of time ago at which the event occured
+    if FIXED == 'tau':  # Fixed param: (Tau), the length of time ago at which the event occured
         return params, VALUE
-    elif FIXED == "kappa":  # Fixed param: (Kappa), the decline force
+    elif FIXED == 'kappa':  # Fixed param: (Kappa), the decline force
         return VALUE, params
-    elif FIXED == "migration":  # Fixed param: (m12), the migration rate into 1 from 2
+    elif FIXED == 'm12':  # Fixed param: (m12), the migration rate into 1 from 2
         return params, VALUE
     else:
         return params
@@ -120,8 +120,12 @@ def twopops_migration_model(params, ns, pts):
         the number of grid points to use in integration
     """
     # Params: (kappa, m12) - with m21 = 0.0
-    kappa, m12, m21 = params_model(params), 0.0
+    kappa, m12 = params_model(params)
+    m21 = 0.0
     tau = 10.0  # time in the past of split
+
+    if FIXED == 'kappa':
+        m12 = m12[0]
 
     # Define the grid we'll use
     grid = dadi.Numerics.default_grid(pts)
@@ -130,11 +134,10 @@ def twopops_migration_model(params, ns, pts):
     phi_ancestral = dadi.PhiManip.phi_1D(grid)
 
     # Split the ancestral population into two population
-    phi = dadi.phi_1D_to_2D(grid, phi_ancestral)
+    phi = dadi.PhiManip.phi_1D_to_2D(grid, phi_ancestral)
 
     # Define the sudden decline event at a time tau in past
-    phi = dadi.Integration.two_pops(phi, grid, tau, nu1=1.0, nu2=1.0*kappa, m12=m12,
-                                    m21=m21)
+    phi = dadi.Integration.two_pops(phi, grid, tau, nu1=1.0, nu2=1.0*kappa, m12=m12, m21=m21)
 
     # Calculate the spectrum from phi
     sfs = dadi.Spectrum.from_phi(phi, ns, (grid, grid))
@@ -142,7 +145,8 @@ def twopops_migration_model(params, ns, pts):
     return sfs
 
 
-def parameters_optimization(p0, sfs, model_func, pts_list, lower_bound, upper_bound, verbose=0):
+def parameters_optimization(p0, sfs, model_func, pts_list, lower_bound, upper_bound,
+                            verbose=0):
     """
     Parameters optimization.
 
@@ -249,9 +253,10 @@ def inference(pts_list, model_func, fixed=None, value=None, verbose=0, path="./D
             # Param: (Tau)
             p0, lower_bound, upper_bound = [0.9], [1e-4], [1e4]
 
-        elif FIXED == 'migration':  # Fixed param: (m12), the migration rate into 1 from 2
+        elif FIXED == 'm12':  # Fixed param: (m12), the migration rate into 1 from 2
             # Pram: (m12)
             p0, lower_bound, upper_bound = [1.0], [1e-4], [1e3]
+
         else:  # Params evaluate: (Kappa, Tau) or (Kappa, m12)
             p0, lower_bound, upper_bound = [1.0, 0.9], [1e-4, 1e-4], [1e3, 1e4]
 
@@ -263,12 +268,15 @@ def inference(pts_list, model_func, fixed=None, value=None, verbose=0, path="./D
 
         # Keep track of parameters after optimization
         if FIXED == 'tau':
-            params_estimated = {'Tau': 1.0, 'Kappa': popt[0]}
+            params_estimated = {'Tau': VALUE, 'Kappa': popt[0]}
         elif FIXED == 'kappa':
-            params_estimated = {'Tau': popt[0], 'Kappa': 10}
-        else:
+            params_estimated = {'Tau': popt[0], 'Kappa': VALUE}
+        elif FIXED == 'm12':
+            params_estimated = {'m12': popt[0], 'Kappa': VALUE}
+        elif model_func.__name__ == 'sudden_decline_model':
             params_estimated = {'Tau': popt[1], 'Kappa': popt[0]}
-
+        else:
+            params_estimated = {'m12': popt[1], 'Kappa': popt[0]}
 
     # Log-likelihood of the data (sfs) given the model
     ll_model = dadi.Inference.ll_multinom(inferred_sfs, observed_sfs)

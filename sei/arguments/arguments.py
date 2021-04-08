@@ -78,7 +78,7 @@ def arguments():
     tool.add_argument('-dadi', action='store_true',
                       help="Inference of demographic history with Dadi")
     inf.add_argument(
-        '--param', dest="param", choices=['tau', 'kappa', 'migr'], default=None,
+        '--param', dest="param", choices=['tau', 'kappa', 'm12'], default=None,
         help="Fixed parameters, either (tau), (kappa) or (m12), m12 is the migration rate from"
         " population 2 to 1."
     )
