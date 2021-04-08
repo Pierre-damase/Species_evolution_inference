@@ -168,8 +168,8 @@ def weighted_square_distance(sfs):
     """
     # Normalization of the SFS
     normalized_sfs = {}
-    for key in sfs.keys():
-        normalized_sfs[key] = [ele / sum(sfs[key]) for ele in sfs[key]]
+    for key, spectrum in sfs.items():
+        normalized_sfs[key] = [ele / sum(spectrum) for ele in spectrum]
 
     # Weighted square distance
     if "Observed" in sfs.keys():
@@ -336,6 +336,7 @@ def save_dadi_inference(simulation, models, path_data, job, fixed, value):
         k: v for k, v in simulation['Parameters'].items() if k in ['Tau', 'Kappa', 'm12',
                                                                    'm21']
     }
+    params['Theta'] = 4 * 1 * 8e-2 * simulation['Parameters']['length']  # 4 * Ne * mu * L
 
     # Create DataFrame form dictionary
     dico = {

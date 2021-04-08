@@ -37,8 +37,7 @@ def simulation_parameters(sample, ne, rcb_rate, mu, length):
     Set up the parametres for the simulation with msprime.
     """
     parameters = {
-        "sample_size": sample, "size_population": ne, "rcb_rate": rcb_rate, "mu": mu,
-        "length": length
+        "sample_size": sample, "Ne": ne, "rcb_rate": rcb_rate, "mu": mu, "length": length
     }
     return parameters
 
@@ -81,7 +80,7 @@ def  compute_theoritical_sfs(length):
 
 def generate_set_sfs():
     """
-    Generate a set of sfs for various scenario:
+    Generate a set of sfs for various scenario with msprime:
 
       - Constant population
       - Theoritical SFS for any constant population
@@ -127,7 +126,7 @@ def generate_set_sfs():
     params.update({"Kappa": 10.0, "m12": 1.0, "m21": 0})
 
     sfs['Migration model'] = \
-        ms.msprime_simulation(model=ms.two_pops_migration_model, params=params, debug=True)
+        ms.msprime_simulation(model=ms.twopops_migration_model, params=params, debug=True)
     parameters['Migration model'] = {
         k: v for k, v in params.items() if k in ['m12', 'm21', 'Kappa']
     }
@@ -365,8 +364,8 @@ def weighted_square_distance(sfs):
     """
     # Normalization of the SFS
     normalized_sfs = {}
-    for key in sfs.keys():
-        normalized_sfs[key] = [ele / sum(sfs[key]) for ele in sfs[key]]
+    for key, spectrum in sfs.items():
+        normalized_sfs[key] = [ele / sum(spectrum) for ele in spectrum]
 
     # Weighted square distance
     if "Observed" in sfs.keys():
@@ -533,6 +532,7 @@ def save_dadi_inference(simulation, models, path_data, job, fixed, value):
         k: v for k, v in simulation['Parameters'].items() if k in ['Tau', 'Kappa', 'm12',
                                                                    'm21']
     }
+    params['Theta'] = 4 * 1 * 8e-2 * simulation['Parameters']['length']  # 4 * Ne * mu * L
 
     # Create DataFrame from dictionary
     dico = {
@@ -563,24 +563,7 @@ def save_dadi_inference(simulation, models, path_data, job, fixed, value):
 # Inference with stairway plot 2                                     #
 ######################################################################
 
-def inference_stairway_plot(simulation, model):
-    """
-    Inference with stairway plot.
-    """
-    # Set up path data
-    path_stairway = "/home/damase/All/Cours/M2BI-Diderot/Species_evolution_inference/sei/" \
-        "inference/stairway_plot_v2.1.1/"
-    if model == 'decline':
-        path_data = path_stairway + "stairway_{}-tau={}_kappa={}/" \
-            .format(model, simulation['Parameters']['Tau'], simulation['Parameters']['Kappa'])
-    else:
-        path_data = path_stairway + "stairway_{}-m12={}_kappa={}/" \
-            .format(model, simulation['Parameters']['m12'], simulation['Parameters']['Kappa'])
-
-    if not os.path.isdir(path_data):
-        os.mkdir(path_data)
-        os.system("cp -r {} {}".format(path_stairway + "stairway_plot_es", path_data))
-
+def compute_stairway_inference(simulation, path_stairway, path_data):
     # Inference
     for i, sfs in enumerate(simulation['SFS observed']):  # Iterate through each observed SFS
         name = "stairway_inference-{}".format(i)
@@ -607,7 +590,49 @@ def inference_stairway_plot(simulation, model):
         if i == 1:
             break
 
-        # os.system("rm -rf {}stairway_plot_es".format(path_data))
+
+def save_stairway_inference(simulation, model):
+    """
+    Inference with stairway plot 2.
+
+    Parameter
+    ---------
+    simulation: dictionary
+      - Parameters
+        Parameters for the simulation with msprime - mutation rate mu, recombination rate, Ne,
+        length L of the sequence, sample size.
+      - SNPs
+        List of SNPs for each observed SFS
+      - SFS observed
+        List of the observed SFS generated with msprime for the same set of parameters
+      - Time
+        Mean execution time to generate the observed SFS
+
+    model: str
+        either decline, migration or cst
+    """
+    # Set up path data
+    path_stairway = "/home/damase/All/Cours/M2BI-Diderot/Species_evolution_inference/sei/" \
+        "inference/stairway_plot_v2.1.1/"
+
+    if model == 'decline':
+        path_data = path_stairway + "stairway_{}-tau={}_kappa={}/" \
+            .format(model, simulation['Parameters']['Tau'], simulation['Parameters']['Kappa'])
+    elif model == 'migration':
+        path_data = path_stairway + "stairway_{}-m12={}_kappa={}/" \
+            .format(model, simulation['Parameters']['m12'], simulation['Parameters']['Kappa'])
+    else:
+        path_data = path_stairway + "stairway_{}-ne={}/" \
+            .format(model, simulation['Parameters']['Ne'])
+
+    if not os.path.isdir(path_data):
+        os.mkdir(path_data)
+        os.system("cp -r {} {}".format(path_stairway + "stairway_plot_es", path_data))
+
+    # Compute the inference with stairway plot 2
+    compute_stairway_inference(simulation, path_stairway, path_data)
+
+    # os.system("rm -rf {}stairway_plot_es".format(path_data))
 
 
 ######################################################################
@@ -749,13 +774,13 @@ def main():
                 # args.value = np.power(10, args.value)
 
             save_dadi_inference(simulation, models, path_data, args.job, fixed=args.param,
-                                value=round(args.value, 2))
+                                value=args.value)
 
         # Inference with stairway plot 2
         elif args.stairway:
             simulation = simulation.iloc[args.job - 1]
-            inference_stairway_plot(simulation, model=args.model)
-
+            save_stairway_inference(simulation, model=args.model)
+            simul
 
 if __name__ == "__main__":
     warnings.filterwarnings('ignore')
