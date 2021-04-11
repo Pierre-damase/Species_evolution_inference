@@ -124,8 +124,8 @@ def twopops_migration_model(params, ns, pts):
     m21 = 0.0
     tau = 10.0  # time in the past of split
 
-    if FIXED == 'kappa':
-        m12 = m12[0]
+    if FIXED == 'kappa': m12 = m12[0]
+    if FIXED == 'm12': kappa = kappa[0]
 
     # Define the grid we'll use
     grid = dadi.Numerics.default_grid(pts)
@@ -140,7 +140,7 @@ def twopops_migration_model(params, ns, pts):
     phi = dadi.Integration.two_pops(phi, grid, tau, nu1=1.0, nu2=1.0*kappa, m12=m12, m21=m21)
 
     # Calculate the spectrum from phi
-    sfs = dadi.Spectrum.from_phi(phi, ns, (grid, grid))
+    sfs = dadi.Spectrum.from_phi(phi, (ns[0], ns[0]), (grid, grid))
 
     return sfs
 

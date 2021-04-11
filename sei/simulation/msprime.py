@@ -196,6 +196,9 @@ def msprime_simulation(model, params, debug=False):
         demographic_events=demography[1], migration_matrix=demography[2]
     )
 
+    if debug:
+        print(tree_seq.first().draw(format="unicode"))
+
     sfs = [0] * (params["sample_size"] - 1)
     for variant in tree_seq.variants():
         _, counts = np.unique(variant.genotypes, return_counts=True)

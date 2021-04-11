@@ -13,7 +13,7 @@ from matplotlib.lines import Line2D
 
 def normalization(data):
     """
-    Data normalization to (0;1).
+    Data normalization to (0,1).
     """
     somme = sum(data)
     normalized_data = [ele / somme for ele in data]
@@ -207,145 +207,267 @@ def plot_error_rate(sample):
 
 
 ######################################################################
-# Plot likelihood-ratio test                                         #
+# Common method for all heatmap                                      #
 ######################################################################
 
-def plot_lrt(data, path="./Figures/"):
+def heatmap_axis(ax, xaxis, yaxis, cbar):
     """
-    Plot the likelihood-ratio test.
-    """
-    # Compute log 10 of tau
-    data['Tau'] = data['Parameters'].apply(lambda ele: np.log10(ele['Tau']))
-    data['Positive hit'] = data['Positive hit'].astype(int)
-
-    # Plot
-    sns.set_theme(style="whitegrid")
-    ax = sns.lineplot(x="Tau", y="Positive hit", data=data)
-
-    # Set yaxis range
-    ax.set(ylim=(0, max(data["Positive hit"]) + 5))
-
-    # Title + save plot to folder ./Figures
-    plt.title("Likelihood-ratio test - mu = 8e-2")
-    plt.savefig("{}lrt".format(path), bbox_inches="tight")
-    plt.clf()
-
-
-######################################################################
-# Plot weighted square distance d2                                  #
-######################################################################
-
-def compute_weighted_square_distance(sfs_a, sfs_b, case):
-    """
-    Compute the weighted square distance d2
-
-    a) Between the observed SFS and the predicted SFS by model M1
-
-    In this case d2 is:
-
-      d2(eta_model, eta_observed) = Sum{(eta_model_i - eta_observed_i)^2 / eta_model_i}
-
-    With
-      - eta_observed the normalized observed SFS
-      - eta_model the normalized inferred SFS of M1
-
-
-    or b) Between the inferred SFS of two models (M0 & M1)
-
-    In this case d2 is:
-
-      d2(eta_m0, eta_m1) = Sum{(eta_m0_i - eta_m1_i)^2 / mean(eta_m0_i, eta_m1_i)}
-
-    With
-      - eta_m0 the normalized inferred SFS of M0
-      - eta_m1 the normalized inferred SFS of M1
-      - mean(eta_m0, eta_m1) = (eta_m0_i + eta_m1_i) / 2
-
-
-    In both case, the sum is from i=1 to n (i=2 if singleton ignored)
+    Heatmap customization.
 
     Parameter
     ---------
-    case: either a or b
+    ax: matplotlib.axes.Axes
+        ax to modify
+    xaxis: str
+        x-axis label
+    yaxis: str
+        y-axis label
+    cbar: str
+        colormap label
     """
-    if case == 'a':
-        d2_i = [
-            np.power(eta_a - eta_b, 2) / eta_a for eta_a, eta_b in zip(sfs_a, sfs_b)
-        ]
-    else:
-        d2_i = [
-            np.power(eta_a - eta_b, 2) / np.mean([eta_a, eta_b]) for eta_a, eta_b
-            in zip(sfs_a, sfs_b)
-        ]
-    return sum(d2_i)
+    # Name
+    names = ["Log10({})".format(xaxis), "Log10({})".format(yaxis)]  # (xaxis, yaxis)
+
+    # x-axis
+    plt.xticks(
+        np.arange(64, step=7) + 0.5,
+        labels=[round(ele, 2) for ele in np.arange(-4, 2.5, 0.7)],
+        rotation='horizontal'
+    )
+    plt.xlabel(names[0], fontsize="large")
+
+    # y-axis
+    ax.set_ylim(ax.get_ylim()[::-1])  # reverse y-axis
+    plt.yticks(
+        np.arange(64, step=7) + 0.5,
+        labels=[round(ele, 2) for ele in np.arange(-3.5, 3, 0.7)]
+    )
+    plt.ylabel(names[1], fontsize="large")
+
+    # Set colorbar label & font size
+    ax.figure.axes[-1].set_ylabel(cbar, fontsize="large")
 
 
-def data_weighted_square_distance(data):
+######################################################################
+# SNPs distribution                                                  #
+######################################################################
+
+def data_preprocessing(observed):
     """
-    Retrieve and pre-process data that are needed for plot the weighted square distance d2.
+    Parameter
+    ---------
+    observed: pandas DataFrame
+        observed data (SFS, parameters) for a given scenario
+
+    Return
+    ------
+    data: pandas DataFrame
+        reshaped DataFrame organized by given index (Kappa) / column (Tau) values
     """
-    # Normalized all SFS
-    data['SFS obs'] = data['SFS obs'].apply(lambda x: [normalization(ele) for ele in x])
-    data['SFS M0'] = data['SFS M0'].apply(lambda x: [normalization(ele) for ele in x])
-    data['SFS M1'] = data['SFS M1'].apply(lambda x: [normalization(ele) for ele in x])
+    # New pandas DataFrame
+    data = pd.DataFrame()
 
-    # Compute weighted square distance for all SFS
-    d2_model_inferred = {}  # d2 between the observed SFS and inferred SFS of M1
-    d2_models = {}  # d2 between the inferred SFS of two models (M0 & M1)
+    # Compute log10 of parameters - either (tau, kappa) or (m12, kappa)
+    keys = observed['Parameters'][0].keys()
+    names = []
+    for key in keys:
+        if key in ['Tau', 'Kappa', 'm12']:
+            names.append(key)
+            data[key] = observed['Parameters'].apply(lambda param: param[key])
 
-    # Iterate over DataFrame row as (index, Series) pairs
-    for i, row in data.iterrows():
+    # Compute mean(SNPs)
+    data['SNPs'] = observed['SNPs'].apply(lambda snp: np.log10(np.mean(snp)))
 
-        # Iterate over all the normalized observed SFS & normalized inferred SFS with M1
-        tmp = []
-        for sfs_a, sfs_b in zip(row['SFS M1'], row['SFS obs']):
-            tmp.append(compute_weighted_square_distance(sfs_a, sfs_b, case='a'))
-        d2_model_inferred[i] = tmp
-
-        # Iterate over all the normalized observed SFS & normalized inferred SFS with M1
-        tmp = []
-        for sfs_a, sfs_b in zip(row['SFS M1'], row['SFS M0']):
-            tmp.append(compute_weighted_square_distance(sfs_a, sfs_b, case='b'))
-        d2_models[i] = tmp
-
-    # Add new column to the DataFrame from dictionary - the dict keys need to be in the
-    # DataFrame index
-    data['d2 model inferred'] = pd.Series(d2_model_inferred)
-    data['d2 models'] = pd.Series(d2_models)
-
-    # Compute log 10 of tau
-    data['Tau'] = data['Parameters'].apply(lambda ele: np.log10(ele['Tau']))
-
-    return data
+    return data.pivot(names[1], names[0], 'SNPs')
 
 
-def plot_weighted_square_distance(data):
+def plot_snp_distribution(model, filin, path_data):
     """
-    Plot the weighted square distance d2.
+    Parameter
+    ---------
+    data:
+        data to plot
+    model:
+        either decline or migration
     """
-    data = data_weighted_square_distance(data)
+    observed = pd.read_json("{}{}".format(path_data, filin), typ='frame')
+    data = data_preprocessing(observed)
 
-    # Plot the weighted square distance - median
-    _, axs = plt.subplots(1, 2, figsize=(15, 7))
-    sns.set_theme(style="whitegrid")
+    # Set-up plot
+    plt.figure(figsize=(12,9), constrained_layout=True)
+    sns.set_theme(style='whitegrid')
 
-    percentiles, color, style = [2.5, 50, 97.5], ['tab:blue', 'tab:red'], ['dashed', 'solid', 'dashed']
+    # Plot
+    ax = sns.heatmap(data, cmap="coolwarm")
 
-    for i, centile in enumerate(percentiles):
-        _ = sns.lineplot(
-            x=data['Tau'], y=[np.percentile(ele, centile) for ele in data['d2 model inferred']],
-            ax=axs[0], color=color[0], linestyle=style[i]
-        )
+    # Heatmap x and y-axis personnalization
+    heatmap_axis(ax=ax, xaxis=data.columns.name, yaxis=data.index.name,
+                 cbar="SNPs - log scale")
 
-        _ = sns.lineplot(
-            x=data['Tau'], y=[np.percentile(ele, centile) for ele in data['d2 models']],
-            ax=axs[1], color=color[1], linestyle=style[i]
-        )
+    # Title
+    title = "SNPs distribution in terms of {} & {} - {} model" \
+        .format(data.columns.name, data.index.name, model)
+    plt.title(title, fontsize="x-large", color="#8b1538")
 
-    # Title + save plot to folder ./Figures
-    plt.savefig("./Figures/test", bbox_inches="tight")
-    plt.clf()
+    plt.show()
 
+
+######################################################################
+# Dadi inference                                                     #
+######################################################################
+
+# Weighted square distance #
+
+def plot_weighted_square_distance_heatmap(data, d2, models):
+    """
+    Heatmap of weighted square distance for various (tau, kappa) or (m12, kappa)
+
+    Parameter
+    ---------
+    data: pandas DataFrame of inference with Dadi
+    d2: either d2 observed inferred if plotting weighted square distance between observed and
+        inferred model or d2 models if plotting weighted square distance between m0 and m1
+    models: either (observed, inferred) or (m0, m1)
+    """
+    # Set-up plot
+    plt.figure(figsize=(12,9), constrained_layout=True)
+    sns.set_theme(style='whitegrid')
+
+    # Data
+    df = pd.DataFrame()
+    for key in data['Parameters'][0].keys():  # compute log of parameters
+        df[key] = data['Parameters'].apply(lambda param: round(np.log10(param[key]), 2))
+    df[d2] = data[d2].apply(np.log10)  # Compute log of weighted square distance
+
+    df = df.pivot(index=df.columns[1], columns=df.columns[0], values=d2)
+
+    # Plot
+    ax = sns.heatmap(df, cmap="coolwarm")
+
+    # Heatmap x and y-axis personnalization
+    heatmap_axis(ax=ax, xaxis=df.columns.name, yaxis=df.index.name,
+                 cbar='Weighted square distance - log scale')
+
+    # Title
+    title = "Weighted square d2 of {} & {} models".format(models[0], models[1])
+    plt.title(title, fontsize="x-large", color="#8b1538")
+
+    plt.plot()
+
+
+def plot_weighted_square_distance(data, fixed, labels, suptitle):
+    """
+    Lineplot of weighted square distance for a fixed parameter.
+
+    Parameter
+    ---------
+    data: pandas DataFrame of inference with Dadi
+    fixed: fixed parameter - eitehr tau, kappa or m12
+    labels: list of label for the plot
+    suptitle: suptitle of the plot
+    """
+    d2 = ['d2 observed inferred', 'd2 models']
+    title = [
+        'd2 between the observed SFS and inferred one with M1',
+        'd2 between the inferred SFS of two models (M0 & M1)'
+    ]
+
+    # Set-up plot
+    sns.set_theme(style='whitegrid')
+
+    # Sub-plots
+    fig, axs = plt.subplots(1, 2, figsize=(20, 10))  # Figsize: (width, height)
+
+    # Plot
+    for i, ax in enumerate(axs):  # Iterate through subplot
+
+        for j, dataframe in enumerate(data):  # Iterate through DataFrame in data
+            # Data
+            df = pd.DataFrame()
+            df[fixed] = \
+                dataframe['Parameters'].apply(lambda param: round(np.log10(param[fixed]), 2))
+            df[d2[i]] = dataframe[d2[i]].apply(np.log10)
+
+            # Plot
+            _ = sns.lineplot(x=fixed, y=d2[i], data=df, label=labels[j], ax=ax)
+
+        ax.legend(fontsize="large")
+        ax.set_title(title[i], fontsize="large")
+
+    plt.suptitle(suptitle, fontsize="x-large")
+
+    plt.plot()
+
+
+# Log-likelihood ratio test #
+
+def plot_likelihood_heatmap(data):
+    """
+    Heatmap of log-likelihood ratio test for various (tau, kappa) or (m12, kappa)
+
+    Parameter
+    ---------
+    data: pandas DataFrame of inference with Dadi
+    """
+    # Set-up plot
+    plt.figure(figsize=(12,9), constrained_layout=True)
+    sns.set_theme(style='whitegrid')
+
+    # Pre-processing data
+    df = pd.DataFrame()
+    for key in data['Parameters'][0].keys():  # Log10 of parameters
+        df[key] = data['Parameters'].apply(lambda param: np.log10(param[key]))
+    df['Positive hit'] = data['Positive hit']  # Add positive hit columns to df
+
+    df = df.pivot(index=df.columns[1], columns=df.columns[0], values='Positive hit')
+
+    # Plot
+    ax = sns.heatmap(df, cmap="coolwarm")
+
+    # Heatmap x and y-axis personnalization
+    heatmap_axis(ax=ax, xaxis=df.columns.name, yaxis=df.index.name,
+                 cbar='Significant log-likelihood ratio test out of 100 tests')
+
+    # Title
+    title = "Log likelihood ratio test for various tau & kappa with p.value = 0.05"
+    plt.title(title, fontsize="x-large", color="#8b1538")
+
+    plt.plot()
+
+
+def plot_likelihood(data, fixed, labels, suptitle):
+    """
+    Lineplot of log-likelihood ratio test for a fixed parameter.
+
+    Parameter
+    ---------
+    data: pandas DataFrame of inference with Dadi
+    fixed: fixed parameter - eitehr tau, kappa or m12
+    labels: list of label for the plot
+    suptitle: suptitle of the plot
+    """
+    # Set-up plot
+    plt.figure(figsize=(10,8), constrained_layout=True)
+    sns.set_theme(style='whitegrid')
+
+    # Plot
+    for i, dataframe in enumerate(data):
+        # Data
+        df = pd.DataFrame()
+        df[fixed] = dataframe['Parameters'].apply(lambda param: np.log10(param[fixed]))
+        df['Positive hit'] = dataframe['Positive hit']
+
+        # Plot
+        ax = sns.lineplot(x=fixed, y='Positive hit', data=df, label=labels[i])
+
+    ax.legend(fontsize="large")
+
+    plt.suptitle(suptitle, fontsize="x-large")
+
+    plt.plot()
+
+
+# Evaluation estimated parameters #
 
 if __name__ == "__main__":
     sys.exit()  # No actions desired
