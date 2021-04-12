@@ -111,19 +111,22 @@ def generate_set_sfs():
     sfs['Theoretical model'] = \
         compute_theoritical_sfs(length=params["sample_size"] - 1)
 
-    # Define tau & kappa for decline/growth scenario
-    params.update({"Tau": 1.0, "Kappa": 10.0})
+    # Define tau & kappa for decline scenario
+    params.update({"Tau": 1., "Kappa": 10.})
 
     sfs['Decline model'] = \
         ms.msprime_simulation(model=ms.sudden_decline_model, params=params, debug=True)
     parameters['Decline model'] = {k: v for k, v in params.items() if k in ['Tau', 'Kappa']}
 
+    # Define tau & kappa for growth scenario
+    params.update({"Tau": 1., "Kappa": 0.1})
+
     sfs['Growth model'] = \
-        ms.msprime_simulation(model=ms.sudden_growth_model, params=params, debug=True)
+        ms.msprime_simulation(model=ms.sudden_decline_model, params=params, debug=True)
     parameters['Growth model'] = {k: v for k, v in params.items() if k in ['Tau', 'Kappa']}
 
     # Migration scenario
-    params.update({"Kappa": 10.0, "m12": 1.0, "m21": 0})
+    params.update({"Kappa": 10., "m12": 1., "m21": 0})
 
     sfs['Migration model'] = \
         ms.msprime_simulation(model=ms.twopops_migration_model, params=params, debug=True)

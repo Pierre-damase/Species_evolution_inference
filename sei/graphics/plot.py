@@ -11,19 +11,19 @@ import numpy as np
 from matplotlib.lines import Line2D
 
 
-def normalization(data):
+def normalization(sfs):
     """
     Data normalization to (0,1).
     """
-    somme = sum(data)
-    normalized_data = [ele / somme for ele in data]
-
-    return normalized_data
+    somme = sum(sfs)
+    return [ele / somme for ele in sfs]
 
 
 ######################################################################
 # SFS shape verification                                             #
 ######################################################################
+
+# For obsrved SFS generated with msprime
 
 def plot_sfs(data, save=False):
     """
@@ -35,7 +35,7 @@ def plot_sfs(data, save=False):
         - 0: dictionary of {model: sfs}
         - 1: dictionary of {model: model_parameter}, with  model_parameter either (tau, kappa)
           or (m12, kappa)
-        - 2: dictionary of msprime simulation
+        - 2: dictionary of msprime simulation parameters
 
     save: boolean
         If set to True save the plot in ./Figures/SFS-shape
@@ -43,7 +43,7 @@ def plot_sfs(data, save=False):
     color = ["tab:blue", "tab:orange", "tab:red", "tab:green", "tab:gray"]
 
     # Set up plot
-    plt.figure(figsize=(12,9), constrained_layout=True)
+    plt.figure(figsize=(12, 9), constrained_layout=True)
 
     cpt = 0
     for key, sfs in data[0].items():
@@ -54,10 +54,12 @@ def plot_sfs(data, save=False):
         if key in ['Constant model', 'Theoretical model']:
             label = key
         else:
+            data[1][key] = {k: "{:.1e}".format(v) for k, v in data[1][key].items()}
             label = "{} - {}".format(key, data[1][key])
 
         # Plot
-        plt.plot(normalized_sfs, color=color[cpt], label=label)
+        with plt.style.context('seaborn-whitegrid'):  # use seaborn style for plot
+            plt.plot(normalized_sfs, color=color[cpt], label=label)
 
         cpt += 1
 
@@ -83,6 +85,74 @@ def plot_sfs(data, save=False):
     if save:
         plt.savefig('./Figures/SFS-shape')
     plt.show()
+    plt.clf()
+
+
+# For estimated SFS generated with Dadi
+
+def compute_theoritical_sfs(length):
+    """
+    compute the theoritical sfs of any constant population.
+    """
+    theoritical_sfs = [0] * (length)
+    for i in range(length):
+        theoritical_sfs[i] = 1 / (i+1)
+    return theoritical_sfs
+
+
+def plot_sfs_inference(data, parameters, colors):
+    """
+    Parameter
+    ---------
+    data: pandas DataFrame of dadi inferences
+    parameters: list of pairs (tau, kappa) or (m12, kappa)
+    """
+    # Set up plot
+    plt.figure(figsize=(12, 8), constrained_layout=True)  # (width, height)
+
+    cpt = 0
+    for _, row in data.iterrows():
+
+        param = {
+            k: round(np.log10(v), 2) for k, v in row['Parameters'].items() if k != 'Theta'
+        }
+        if param in parameters:
+            # Label
+            label = "SFS - {}" \
+                .format({k: "{:.1e}".format(v) for k, v in row['Parameters'].items()
+                         if k != 'Theta'})
+
+            # Plot
+            with plt.style.context('seaborn-whitegrid'):  # use seaborn style for plot
+                plt.plot(normalization(row['M1']['SFS'][0]), label=label, color=colors[cpt])
+
+            cpt += 1
+
+    # Plot theoritical SFS of any constant population - control SFS
+    theoritical_sfs = compute_theoritical_sfs(len(row['SFS observed'][0]))
+    with plt.style.context('seaborn-whitegrid'):  # use seaborn style fot plot
+        plt.plot(normalization(theoritical_sfs), color="tab:orange", marker="o",
+                 label="Theoritical SFS")
+
+    # Caption
+    plt.legend(loc="upper right", fontsize="x-large")
+
+    # Label axis
+    plt.xlabel("Allele frequency")
+    plt.ylabel("Percent of SNPs")
+
+    # X axis value
+    x_ax, x_values = [], []
+    for i in range(10):
+        x_ax.append(i+i)
+        x_values.append("{}/{}".format(i*2+1, len(theoritical_sfs)+1))
+    plt.xticks(x_ax, x_values)
+
+    # Title
+    plt.title("Unfold SFS", fontsize="xx-large")
+
+    plt.show()
+    plt.clf()
 
 
 ######################################################################

@@ -121,11 +121,11 @@ def twopops_migration_model(params, ns, pts):
     """
     # Params: (kappa, m12) - with m21 = 0.0
     kappa, m12 = params_model(params)
-    m21 = 0.0
+    m21 = 0
     tau = 10.0  # time in the past of split
 
-    if FIXED == 'kappa': m12 = m12[0]
-    if FIXED == 'm12': kappa = kappa[0]
+    if FIXED == 'kappa':
+        m12 = m12[0]
 
     # Define the grid we'll use
     grid = dadi.Numerics.default_grid(pts)
@@ -139,8 +139,11 @@ def twopops_migration_model(params, ns, pts):
     # Define the sudden decline event at a time tau in past
     phi = dadi.Integration.two_pops(phi, grid, tau, nu1=1.0, nu2=1.0*kappa, m12=m12, m21=m21)
 
+    # Remove population 2 from phi
+    phi = dadi.PhiManip.remove_pop(phi, grid, 2)
+
     # Calculate the spectrum from phi
-    sfs = dadi.Spectrum.from_phi(phi, (ns[0], ns[0]), (grid, grid))
+    sfs = dadi.Spectrum.from_phi(phi, ns, (grid,))
 
     return sfs
 

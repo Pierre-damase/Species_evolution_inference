@@ -259,5 +259,37 @@ def export_inference_files(model, param, value=None):
     return inference
 
 
+def export_specific_dadi_inference(model, fixed_param, values):
+    """
+    Export specific dadi inference file for a given fixed parameter.
+
+    Parameter
+    ---------
+    model: str
+        either decline or migration
+    fixed_param: str
+        fixed parameter to consider - either kappa, tau or m12
+    values: list of float
+        fixed parameter value to consider - log scale
+        - Tau/m12: between -4 included and 2.5 excluded
+        - Kappa: between -3.5 included and 3 excluded
+
+    Return
+    ------
+    data: list of pandas DataFrame of dadi inference
+    labels: list of label for each DataFrame
+    """
+    data, labels = [], []
+
+    for val in values:
+        data.append(export_inference_files(model, fixed_param, val))
+        labels.append("{} = {:.1e}".format(
+            fixed_param if fixed_param == "m12" else fixed_param.capitalize(),
+            np.power(10, val))
+        )
+
+    return data, labels
+
+
 if __name__ == "__main__":
     sys.exit()  # No actions desired
