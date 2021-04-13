@@ -787,7 +787,7 @@ def main():
         elif args.stairway:
             simulation = simulation.iloc[args.job - 1]
             save_stairway_inference(simulation, model=args.model)
-            simul
+
 
 if __name__ == "__main__":
     warnings.filterwarnings('ignore')

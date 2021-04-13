@@ -100,15 +100,20 @@ def compute_theoritical_sfs(length):
     return theoritical_sfs
 
 
-def plot_sfs_inference(data, parameters, colors):
+def plot_sfs_inference(data, parameters, colors, suptitle):
     """
+    Plot SFS from inferences with Dadi - file are in ./Data/Dadi/
+
     Parameter
     ---------
     data: pandas DataFrame of dadi inferences
     parameters: list of pairs (tau, kappa) or (m12, kappa)
     """
+    # Set up title
+    title = ["Observed SFS generated with  msprime", "Estimated SFS with Dadi"]
+
     # Set up plot
-    plt.figure(figsize=(12, 8), constrained_layout=True)  # (width, height)
+    _, axs = plt.subplots(1, 2, figsize=(20, 8))  # (width, height)
 
     cpt = 0
     for _, row in data.iterrows():
@@ -124,32 +129,45 @@ def plot_sfs_inference(data, parameters, colors):
 
             # Plot
             with plt.style.context('seaborn-whitegrid'):  # use seaborn style for plot
-                plt.plot(normalization(row['M1']['SFS'][0]), label=label, color=colors[cpt])
+                axs[0].plot(normalization(row['SFS observed'][0]), label=label,
+                            color=colors[cpt])
+                axs[1].plot(normalization(row['M1']['SFS'][0]), label=label,
+                            color=colors[cpt])
 
             cpt += 1
 
-    # Plot theoritical SFS of any constant population - control SFS
+    # Compute theoritical SFS of any constant population
     theoritical_sfs = compute_theoritical_sfs(len(row['SFS observed'][0]))
-    with plt.style.context('seaborn-whitegrid'):  # use seaborn style fot plot
-        plt.plot(normalization(theoritical_sfs), color="tab:orange", marker="o",
-                 label="Theoritical SFS")
 
-    # Caption
-    plt.legend(loc="upper right", fontsize="x-large")
-
-    # Label axis
-    plt.xlabel("Allele frequency")
-    plt.ylabel("Percent of SNPs")
-
-    # X axis value
+    # Compute X axis ticks & values
     x_ax, x_values = [], []
     for i in range(10):
         x_ax.append(i+i)
         x_values.append("{}/{}".format(i*2+1, len(theoritical_sfs)+1))
-    plt.xticks(x_ax, x_values)
 
-    # Title
-    plt.title("Unfold SFS", fontsize="xx-large")
+    # Plot
+    for i, ax in enumerate(axs):
+        # Plot theoritical SFS of any constant population - control SFS
+        with plt.style.context('seaborn-whitegrid'):  # use seaborn style fot plot
+            ax.plot(normalization(theoritical_sfs), color="tab:orange", marker="o",
+                    label="Theoritical SFS")
+
+        # Label axis
+        ax.set_xlabel("Allele frequency", fontsize="large")
+        ax.set_ylabel("Percent of SNPs", fontsize="large")
+
+        # X axis ticks & labels
+        ax.set_xticks(x_ax)
+        ax.set_xticklabels(x_values)
+
+        # Title
+        ax.set_title(title[i], fontsize="large")
+
+        # Caption
+        ax.legend(loc="upper right", fontsize="medium")
+
+    # Suptitle
+    plt.suptitle(suptitle, fontsize="xx-large")
 
     plt.show()
     plt.clf()
@@ -525,7 +543,7 @@ def plot_likelihood(data, fixed, labels, suptitle):
         # Data
         df = pd.DataFrame()
         df[fixed] = dataframe['Parameters'].apply(lambda param: np.log10(param[fixed]))
-        df['Positive hit'] = dataframe['Positive hit']
+        df['Positive hit'] = dataframe['Positive hit'].apply(np.float64)
 
         # Plot
         ax = sns.lineplot(x=fixed, y='Positive hit', data=df, label=labels[i])
