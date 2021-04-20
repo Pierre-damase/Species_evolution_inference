@@ -235,7 +235,7 @@ def compute_dadi_inference(sfs_observed, models, sample, path_data, job, dof, fi
 
     for i, sfs in enumerate(sfs_observed):
         # Generate the SFS file compatible with dadi
-        if not value:
+        if value is None:
             dadi_file = "SFS-{}".format(job)
         else:
             dadi_file = "SFS_{}-{}".format(value, job)
@@ -324,7 +324,7 @@ def save_dadi_inference(simulation, models, path_data, job, fixed, value):
     # Inference
     sfs_observed, sample = simulation['SFS observed'], simulation['Parameters']['sample_size']
 
-    if not value:
+    if value is None:
         inf = compute_dadi_inference(sfs_observed, models, sample, path_data, job, dof=2,
                                      fixed=fixed, value=value)
     else:
@@ -357,7 +357,7 @@ def save_dadi_inference(simulation, models, path_data, job, fixed, value):
     data.to_json("{}{}".format(path_data, name))
 
     # Remove SFS file
-    if not value:
+    if value is None:
         os.remove("{}SFS-{}.fs".format(path_data, job))
     else:
         os.remove("{}SFS_{}-{}.fs".format(path_data, np.power(10, value), job))
