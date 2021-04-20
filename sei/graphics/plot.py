@@ -51,15 +51,18 @@ def plot_sfs(data, save=False):
         normalized_sfs = [ele / sum(sfs) for ele in sfs]
 
         # Label
-        if key in ['Constant model', 'Theoretical model']:
+        if key == 'Constant model':
             label = key
+        elif key == 'Theoretical model':
+            label = "{} - Fu, 1995".format(key)
         else:
             data[1][key] = {k: "{:.1e}".format(v) for k, v in data[1][key].items()}
             label = "{} - {}".format(key, data[1][key])
 
         # Plot
         with plt.style.context('seaborn-whitegrid'):  # use seaborn style for plot
-            plt.plot(normalized_sfs, color=color[cpt], label=label)
+            plt.plot(normalized_sfs, color=color[cpt], label=label,
+                     marker='o' if key == 'Theoretical model' else '')
 
         cpt += 1
 
@@ -90,14 +93,14 @@ def plot_sfs(data, save=False):
 
 # For estimated SFS generated with Dadi
 
-def compute_theoritical_sfs(length):
+def compute_theoretical_sfs(length):
     """
-    compute the theoritical sfs of any constant population.
+    compute the theoretical sfs of any constant population.
     """
-    theoritical_sfs = [0] * (length)
+    theoretical_sfs = [0] * (length)
     for i in range(length):
-        theoritical_sfs[i] = 1 / (i+1)
-    return theoritical_sfs
+        theoretical_sfs[i] = 1 / (i+1)
+    return theoretical_sfs
 
 
 def plot_sfs_inference(data, parameters, colors, suptitle):
@@ -136,21 +139,21 @@ def plot_sfs_inference(data, parameters, colors, suptitle):
 
             cpt += 1
 
-    # Compute theoritical SFS of any constant population
-    theoritical_sfs = compute_theoritical_sfs(len(row['SFS observed'][0]))
+    # Compute theoretical SFS of any constant population
+    theoretical_sfs = compute_theoretical_sfs(len(row['SFS observed'][0]))
 
     # Compute X axis ticks & values
     x_ax, x_values = [], []
     for i in range(10):
         x_ax.append(i+i)
-        x_values.append("{}/{}".format(i*2+1, len(theoritical_sfs)+1))
+        x_values.append("{}/{}".format(i*2+1, len(theoretical_sfs)+1))
 
     # Plot
     for i, ax in enumerate(axs):
-        # Plot theoritical SFS of any constant population - control SFS
+        # Plot theoretical SFS of any constant population - control SFS
         with plt.style.context('seaborn-whitegrid'):  # use seaborn style fot plot
-            ax.plot(normalization(theoritical_sfs), color="tab:orange", marker="o",
-                    label="Theoritical SFS")
+            ax.plot(normalization(theoretical_sfs), color="tab:orange", marker="o",
+                    label="Theoretical SFS")
 
         # Label axis
         ax.set_xlabel("Allele frequency", fontsize="large")
@@ -187,7 +190,7 @@ def plot_optimisation_grid(data, log_scale):
       - mu the rate of mutation
         - Likelihood
         - Estimated theta 
-        - Theoritical theta
+        - Theoretical theta
 
     log_scale:
     """
@@ -216,7 +219,7 @@ def plot_optimisation_grid(data, log_scale):
             # Theta plot
             ax2 = axs[i, j].twinx()  # instantiate a second axes that shares the same x-axis
             ax2.plot(data[mu[cpt]]["Estimated theta"], color=color[1])
-            ax2.plot(data[mu[cpt]]["Theoritical theta"], color=color[2], linestyle='dashed')
+            ax2.plot(data[mu[cpt]]["Theoretical theta"], color=color[2], linestyle='dashed')
             ax2.tick_params(axis='y', labelcolor=color[1])
 
             # Optimal value for grid size
@@ -231,7 +234,7 @@ def plot_optimisation_grid(data, log_scale):
     lg_ele = [
         Line2D([0], [0], linestyle='', marker='.', color=color[0], label='Likelihood'),
         Line2D([0], [0], linestyle='', marker='.', color=color[1], label='Estimated theta'),
-        Line2D([0], [0], linestyle='', marker='.', color=color[2], label='Theoritical theta')
+        Line2D([0], [0], linestyle='', marker='.', color=color[2], label='Theoretical theta')
     ]
     legend = fig.legend(handles=lg_ele, loc='upper center', ncol=3, fontsize='medium',
                         bbox_to_anchor=(0., 1.05, 1., .102), borderaxespad=0.)
