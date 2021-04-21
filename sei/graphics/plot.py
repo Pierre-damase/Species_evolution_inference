@@ -56,8 +56,12 @@ def plot_sfs(data, save=False):
         elif key == 'Theoretical model':
             label = "{} - Fu, 1995".format(key)
         else:
-            data[1][key] = {k: "{:.1e}".format(v) for k, v in data[1][key].items()}
-            label = "{} - {}".format(key, data[1][key])
+            #data[1][key] = {k: "{:.1e}".format(v) for k, v in data[1][key].items()}
+            label = "{} - ".format(key)
+            for param, value in data[1][key].items():
+                label += "{}={}".format(param, value)
+                if param != list(data[1][key].keys())[-1]:
+                    label += ", "
 
         # Plot
         with plt.style.context('seaborn-whitegrid'):  # use seaborn style for plot

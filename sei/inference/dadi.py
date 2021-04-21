@@ -2,9 +2,10 @@
 This module allows the inference of demographic history of population with dadi.
 """
 
-import dadi
 import sys
 
+import numpy as np
+import dadi
 
 FIXED = None
 VALUE = None
@@ -254,14 +255,14 @@ def inference(pts_list, model_func, fixed=None, value=None, verbose=0, path="./D
 
         elif FIXED == 'kappa':  # Fixed param: (Kappa) & Param evaluates: (Tau)
             # Param: (Tau)
-            p0, lower_bound, upper_bound = [0.9], [1e-4], [1e4]
+            p0, lower_bound, upper_bound = [0.], [1e-4], [1e4]
 
         elif FIXED == 'm12':  # Fixed param: (m12), the migration rate into 1 from 2
             # Pram: (m12)
             p0, lower_bound, upper_bound = [1.0], [1e-4], [1e3]
 
         else:  # Params evaluate: (Kappa, Tau) or (Kappa, m12)
-            p0, lower_bound, upper_bound = [1.0, 0.9], [1e-4, 1e-4], [1e3, 1e4]
+            p0, lower_bound, upper_bound = [1.0, 0.], [1e-4, 1e-4], [1e3, 1e4]
 
         popt = parameters_optimization(p0, observed_sfs, model_func_extrapolated, pts_list,
                                        lower_bound, upper_bound, verbose=verbose)
@@ -275,7 +276,7 @@ def inference(pts_list, model_func, fixed=None, value=None, verbose=0, path="./D
         elif FIXED == 'kappa':
             params_estimated = {'Tau': popt[0], 'Kappa': VALUE}
         elif FIXED == 'm12':
-            params_estimated = {'m12': popt[0], 'Kappa': VALUE}
+            params_estimated = {'Tau': popt[0], 'Kappa': VALUE}
         elif model_func.__name__ == 'sudden_decline_model':
             params_estimated = {'Tau': popt[1], 'Kappa': popt[0]}
         else:

@@ -253,7 +253,7 @@ def compute_dadi_inference(sfs_observed, models, sample, path_data, job, dof, fi
         # Dadi inference for M1
         m1_inferences, m1_execution = [], []
 
-        for _ in range(1):  # Run 1000 inferences with dadi from the observed sfs
+        for _ in range(100):  # Run 100 inferences with dadi from the observed sfs
             start_inference = time.time()
 
             # Pairs (Log-likelihood, Inferred SFS, Params)
