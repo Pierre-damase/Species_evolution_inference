@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Nom du job
-#$ -N test
+#$ -N stairway
 
 # Number of separate submissions to the cluster
 #$ -t 1-2
@@ -22,5 +22,5 @@
 #$ -e $HOME/work/Err
 
 conda activate sei-3.8.5
-python /home/pimbert/work/Species_evolution_inference/sei/sei_migale.py inf -dadi --model decline --job $SGE_TASK_ID
+python /home/pimbert/work/Species_evolution_inference/sei/sei_migale.py inf -stairway --model decline --job $SGE_TASK_ID
 conda deactivate
