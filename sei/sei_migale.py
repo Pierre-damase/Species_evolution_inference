@@ -3,6 +3,7 @@ Migale version.
 """
 
 import os
+import random
 import time
 import warnings
 import pandas as pd
