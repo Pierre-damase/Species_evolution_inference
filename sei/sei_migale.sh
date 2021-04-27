@@ -4,10 +4,10 @@
 #$ -N stairway
 
 # Number of separate submissions to the cluster
-#$ -t 1-2
+#$ -t 1-4225
 
 # Short pour un job < 12h
-#$ -q short.q
+#$ -q long.q
 
 # Adresse à envoyer
 # -M pierre.imbert@college-de-france.fr
