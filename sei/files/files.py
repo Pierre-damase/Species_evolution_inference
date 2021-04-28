@@ -104,9 +104,8 @@ def stairway_data(name, data, path):
 
     (Xiaoming Liu & Yun-Xin Fu 2020, stairway-plot-v2, see readme file for details)
     """
-    sfs, nseq, length, mu, year, ninput = \
-        data['sfs'], data['sample_size'], data['length'], data['mu'], data['year'], \
-        data['ninput']
+    sfs, nseq, mu, year, ninput = \
+        data['sfs'], data['sample_size'], data['mu'], data['year'], data['ninput']
 
     with open("{}{}.blueprint".format(path, name), "w") as filout:
         filout.write("# Blueprint {} file\n".format(name))
@@ -114,7 +113,7 @@ def stairway_data(name, data, path):
         filout.write("nseq: {} # number of sequences\n".format(nseq))
         filout.write(
             "L: {} # total number of observed nucleic sites, including poly-/mono-morphic\n"
-            .format(sum(sfs) * int(length) / 2))  # int(length)
+            .format(sum(sfs)*10))
         filout.write("whether_folded: false # unfolded SFS\n")
 
         # SFS
