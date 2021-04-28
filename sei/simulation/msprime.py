@@ -201,6 +201,8 @@ def msprime_simulation(model, params, debug=False):
 
     sfs = [0] * (params["sample_size"] - 1)
     for variant in tree_seq.variants():
+        print(variants)
+        sys.exit()
         _, counts = np.unique(variant.genotypes, return_counts=True)
         freq_mutation = counts[1]-1
         sfs[freq_mutation] += 1

@@ -391,14 +391,14 @@ def compute_stairway_inference(simulation, path_stairway, path_data):
 
     # Inference - the inference is only done with one of the observed SFS among the 100 for a
     # matter of efficiency
-    sfs = simulation['SFS observed'][random.randint(0, 99)]
+    all_sfs = simulation['SFS observed']
+    sfs = np.array([sum(spectrum) for spectrum in zip(*all_sfs)]) / len(all_sfs)
 
     blueprint = "stairway_inference"
 
     # Generate the SFS file compatible with stairway plot v2
     data = {
-        k: v for k, v in simulation['Parameters'].items() if k in ['sample_size', 'length',
-                                                                   'mu']
+        k: v for k, v in simulation['Parameters'].items() if k in ['sample_size', 'mu']
     }
     data['sfs'], data['year'], data['ninput'] = sfs, 1, 200
 

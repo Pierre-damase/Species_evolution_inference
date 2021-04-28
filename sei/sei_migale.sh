@@ -7,7 +7,7 @@
 #$ -t 1-4225
 
 # Short pour un job < 12h
-#$ -q long.q
+#$ -q short.q
 
 # Adresse à envoyer
 # -M pierre.imbert@college-de-france.fr
