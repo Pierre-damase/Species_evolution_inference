@@ -104,6 +104,11 @@ def arguments():
         " cluster, if param empty from 1 to 4225 else from 1 to 65"
     )
 
+    # Optional argument
+    inf.add_argument(
+        '--fold', dest='fold', action="store_true", help="To work with folded SFS"
+    )
+
 
     #############################################
     # Plot error rate                           #

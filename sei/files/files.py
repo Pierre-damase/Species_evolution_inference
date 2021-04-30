@@ -4,6 +4,7 @@ This module allows you to read or write files.
 
 import ast
 import copy
+import csv
 import json
 import os
 import sys
@@ -49,10 +50,55 @@ def load_sfs(function, generate=False):
 
 
 ######################################################################
+# SFS - species (real data)                                          #
+######################################################################
+
+def load_species_sfs(species):
+    """
+    Load the SFS of a given species (real data).
+
+    Parameter
+    ---------
+    species: str
+        A given species
+
+    Return
+    ------
+    SFS: list
+        The SFS for a gicen species
+    """
+    sfs = []
+    with open("./Data/Real_data/SFS/{}".format(species.replace(' ', '_')), 'r') as filin:
+        lines = filin.readlines()
+        for line in lines:
+            sfs.append(int(line.strip().split('\t')[1]))
+    return sfs
+
+
+def load_species_data():
+    """
+    Load for each species (real data) the SFS.
+
+    Return
+    ------
+    data: dictionary
+        Dictionary of species (key) and SFS (value)
+    """
+    data = {}
+    with open("./Data/Real_data/Species.csv", "r") as filin:
+        reader = csv.DictReader(filin)
+        for row in reader:
+            data[row['Species']] = {
+                'SFS': load_species_sfs(row['Species']), 'Status': row['Conservation status']
+            }
+    return data
+
+
+######################################################################
 # SFS - Dadi                                                         #
 ######################################################################
 
-def dadi_data(sfs_observed, fichier, path="./Data/", name="SFS"):
+def dadi_data(sfs_observed, fichier, fold, path="./Data/", name="SFS"):
     """
     Create SFS of a scenario in the format compatible with the dadi software.
 
@@ -68,28 +114,34 @@ def dadi_data(sfs_observed, fichier, path="./Data/", name="SFS"):
 
     Parameter
     ---------
-    sfs: list
+    sfs_observed: list
         the original SFS - without corners 0/n & n/n
     fichier: str
         file in which the SFS will be written in the format compatible with dadi
+    fold: bool
+        if the SFS must be fold (True) or not (False)
     """
-    sfs = copy.deepcopy(sfs_observed)
+    # Pre-processing of the SFS
+    # sfs = copy.deepcopy(sfs_observed)
+    sfs = [0] + sfs_observed + [0]  # Add 0/n & n/n to the sfs (lower and upper bound)
+    if fold:
+        sfs = sfs[:round(len(sfs)/2) + 1] + [0] * int(np.floor(len(sfs)/2))  # SFS folded
 
     with open("{}{}.fs".format(path, name), "w") as filout:
-        filout.write("{} unfolded \"{}\"\n".format(len(sfs)+2, fichier))
+        if fold:
+            filout.write("{} folded \"{}\"\n".format(len(sfs), fichier))
+        else:
+            filout.write("{} unfolded \"{}\"\n".format(len(sfs), fichier))
 
-        # Write SFS
-        sfs.insert(0, 0)         # Add 0/n to the sfs
-        sfs.insert(len(sfs), 0)  # Add n/n to the sfs
+
+        # Write the SFS
         for freq in sfs:
             filout.write("{} ".format(freq))
 
+        # Write 1 to mask value & 0 to unmask value
         filout.write("\n")
         for freq in sfs:
-            if freq == 0:
-                filout.write("1 ")
-            else:
-                filout.write("0 ")
+            filout.write("1 ") if freq == 0 else filout.write("0 ")
 
     del sfs
 
@@ -286,7 +338,7 @@ def export_simulation_files(filin, path_data):
     return simulation
 
 
-def export_inference_files(model, param, value=None):
+def export_inference_files(model, fold, param, value=None):
     """
     Export each json file generated with dadi into a single DataFrame.
     Then export this DataFrame to a json file.
@@ -305,6 +357,7 @@ def export_inference_files(model, param, value=None):
 
     # Path data and filin
     path_data = "./Data/Dadi/{}/{}/".format(model, param)
+    path_data += "Folded/" if fold else "Unfolded/"
     if param == 'all':
         filin = "dadi_{}-all".format(model)
         if '{}.zip'.format(filin) in os.listdir(path_data):
@@ -339,7 +392,7 @@ def export_inference_files(model, param, value=None):
     else:
         inference = pd.read_json(path_or_buf="{}{}".format(path_data, filin), typ='frame')
 
-        # File > 100 Mb
+    # File > 100 Mb
     if os.stat("{}{}".format(path_data, filin)).st_size > 1e8:
         # Zip
         if "{}.zip".format(filin.split('.')[0]) not in os.listdir(path_data):
@@ -351,9 +404,11 @@ def export_inference_files(model, param, value=None):
     return inference
 
 
-def export_specific_dadi_inference(model, fixed_param, values):
+def export_specific_dadi_inference(model, fixed_param, values, fold):
     """
     Export specific dadi inference file for a given fixed parameter.
+
+    A detailed application of this method can be found in the notebook analyse.ipynb.
 
     Parameter
     ---------
@@ -365,6 +420,9 @@ def export_specific_dadi_inference(model, fixed_param, values):
         fixed parameter value to consider - log scale
         - Tau/m12: between -4 included and 2.5 excluded
         - Kappa: between -3.5 included and 3 excluded
+    fold: bool
+        True : inference is done with folded SFS
+        False: inference is done with unfolded SFS
 
     Return
     ------
@@ -374,7 +432,7 @@ def export_specific_dadi_inference(model, fixed_param, values):
     data, labels = [], []
 
     for val in values:
-        data.append(export_inference_files(model, fixed_param, val))
+        data.append(export_inference_files(model, fold, fixed_param, val))
         labels.append("{} = {:.1e}".format(
             fixed_param if fixed_param == "m12" else fixed_param.capitalize(),
             np.power(10, val))
