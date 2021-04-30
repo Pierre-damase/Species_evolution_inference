@@ -189,7 +189,7 @@ def weighted_square_distance(sfs):
     return sum(d2)
 
 
-def compute_dadi_inference(sfs_observed, models, sample, path_data, job, dof, fixed, value):
+def compute_dadi_inference(sfs_observed, models, sample, fold, path_data, job, dof, fixed, value):
     """
     Parameter
     ---------
@@ -236,13 +236,8 @@ def compute_dadi_inference(sfs_observed, models, sample, path_data, job, dof, fi
 
     for i, sfs in enumerate(sfs_observed):
         # Generate the SFS file compatible with dadi
-        if value is None:
-            dadi_file = "SFS-{}".format(job)
-        else:
-            dadi_file = "SFS_{}-{}".format(value, job)
-
-        f.dadi_data(sfs, models['Inference'].__name__, path=path_data,
-                    name=dadi_file)
+        dadi_file = "SFS-{}".format(job) if value is None else "SFS_{}-{}".format(value, job)
+        f.dadi_data(sfs, models['Inference'].__name__, fold, path=path_data, name=dadi_file)
 
         # Dadi inference for M0
         # Pairs (Log-likelihood, Inferred SFS)
@@ -295,7 +290,7 @@ def compute_dadi_inference(sfs_observed, models, sample, path_data, job, dof, fi
     return data
 
 
-def save_dadi_inference(simulation, models, path_data, job, fixed, value):
+def save_dadi_inference(simulation, models, fold, path_data, job, fixed, value):
     """
     Inference with dadi.
 
@@ -326,10 +321,10 @@ def save_dadi_inference(simulation, models, path_data, job, fixed, value):
     sfs_observed, sample = simulation['SFS observed'], simulation['Parameters']['sample_size']
 
     if value is None:
-        inf = compute_dadi_inference(sfs_observed, models, sample, path_data, job, dof=2,
+        inf = compute_dadi_inference(sfs_observed, models, sample, fold, path_data, job, dof=2,
                                      fixed=fixed, value=value)
     else:
-        inf = compute_dadi_inference(sfs_observed, models, sample, path_data, job, dof=2,
+        inf = compute_dadi_inference(sfs_observed, models, sample, fold, path_data, job, dof=2,
                                      fixed=fixed, value=np.power(10, value))
 
     # Save data
@@ -588,8 +583,10 @@ if __name__ == "__main__":
                 path_data = "/home/pimbert/work/Species_evolution_inference/Data/Dadi/{}/{}/" \
                     .format(args.model, args.param)
 
-            save_dadi_inference(simulation, models, path_data, args.job, fixed=args.param,
-                                value=round(args.value, 2))
+            path_data += "Folded" if args.fold else "Unfolded/"
+
+            save_dadi_inference(simulation, models, args.fold, path_data, args.job,
+                                fixed=args.param, value=args.value)
 
         # Inference with stairway plot v2
         elif args.stairway:

@@ -23,7 +23,7 @@ def normalization(sfs):
 # SFS shape verification                                             #
 ######################################################################
 
-# For obsrved SFS generated with msprime
+# For observed SFS generated with msprime
 
 def plot_sfs(data, save=False):
     """
@@ -175,6 +175,42 @@ def plot_sfs_inference(data, parameters, colors, suptitle):
 
     # Suptitle
     plt.suptitle(suptitle, fontsize="xx-large")
+
+    plt.show()
+    plt.clf()
+
+
+# For SFS of real data
+
+def plot_species_sfs(data):
+    """
+    Plot the SFS of some real data.
+    """
+    # Set up plot
+    _, axs = plt.subplots(5, 3, figsize=(22, 25))  # (width, height)
+
+    # Color
+    color = {"Increasing": 'tab:green', "Decreasing": 'tab:red', "Stable": 'tab:blue',
+             "ras": 'tab:gray'}
+
+    cpt, cpt2, flag = 0, 0, 1
+    for species, values in data.items():
+        # Plot SFS
+        axs[cpt, cpt2].plot(normalization(values['SFS']), label=species,
+                            color=color[values['Status']])
+
+        # Plot theoritical SFS of any constant population
+        theoretical_sfs = compute_theoretical_sfs(len(values['SFS']))
+        axs[cpt, cpt2].plot(normalization(theoretical_sfs),
+                            label="Theoretical model - Fu, 1995")
+
+        # Label
+        axs[cpt, cpt2].legend()
+
+        cpt2 += 1
+        if cpt2 == 3:
+            cpt, cpt2 = flag, 0
+            flag += 1
 
     plt.show()
     plt.clf()

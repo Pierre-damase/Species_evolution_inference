@@ -19,9 +19,9 @@ import sei.inference.dadi as dadi
 import sei.simulation.msprime as ms
 
 
-def computation_theoritical_theta(ne, mu, length):
+def computation_theoretical_theta(ne, mu, length):
     """
-    Compute the theoritical theta - theta = 4.Ne.mu.L with
+    Compute the theoretical theta - theta = 4.Ne.mu.L with
 
       - 4: diploid population
       - Ne: the effective population size
@@ -67,14 +67,11 @@ def define_parameters(model):
 # SFS shape verification                                             #
 ######################################################################
 
-def compute_theoritical_sfs(length):
+def compute_theoretical_sfs(length):
     """
-    Compute the theoritical SFS of any constant population.
+    Compute the theoretical SFS of any constant population.
     """
-    theoritical_sfs = [0] * (length)
-    for i in range(length):
-        theoritical_sfs[i] = 1 / (i+1)
-    return theoritical_sfs
+    return [1 / (i+1) for i in range(length)]
 
 
 def generate_set_sfs():
@@ -82,7 +79,7 @@ def generate_set_sfs():
     Generate a set of sfs for various scenario with msprime:
 
       - Constant population
-      - Theoritical SFS for any constant population
+      - Theoretical SFS for any constant population
       - Sudden growth model - growth of force kappa at a time tau in the past
       - Sudden decline model - decline of force kappa at a time tau in the past
       - Migration model - migration into population 1 from 2 and no migration into 2 from 1
@@ -108,7 +105,7 @@ def generate_set_sfs():
 
     # Theoretical SFS for any constant population
     sfs['Theoretical model'] = \
-        compute_theoritical_sfs(length=params["sample_size"] - 1)
+        compute_theoretical_sfs(length=params["sample_size"] - 1)
 
     # Define tau & kappa for decline scenario
     params.update({"Tau": 1., "Kappa": 10.})
@@ -218,9 +215,9 @@ def grid_optimisation():
         f.dadi_data(sfs, dadi.constant_model.__name__)
 
         # Data
-        theoritical_theta = computation_theoritical_theta(ne=1, mu=mu, length=1e5)
+        theoretical_theta = computation_theoretical_theta(ne=1, mu=mu, length=1e5)
         dico[mu] = {
-            "Likelihood": [], "Estimated theta": [], "Theoritical theta": [theoritical_theta]*9
+            "Likelihood": [], "Estimated theta": [], "Theoretical theta": [theoretical_theta]*9
         }
 
         # Optimisation grid point for the extrapolation
@@ -262,7 +259,7 @@ def dadi_params_optimisation(sample):
     pts_list = [sample*10, sample*10 + 10, sample*10 + 20]
 
     # Set up the Pandas DataFrame
-    col = ["Theoritical theta", "Error rate", "mu"]
+    col = ["Theoretical theta", "Error rate", "mu"]
     data = pd.DataFrame(columns=col)
 
     # List of execution time of each simulation
@@ -292,11 +289,11 @@ def dadi_params_optimisation(sample):
                 name="SFS-{}".format(sample)
             )
 
-            theoritical_theta = computation_theoritical_theta(ne=1, mu=mu, length=1e5)
-            error_rate = estimated_theta / theoritical_theta
+            theoretical_theta = computation_theoretical_theta(ne=1, mu=mu, length=1e5)
+            error_rate = estimated_theta / theoretical_theta
 
             row = {
-                "Theoritical theta": theoritical_theta, "Error rate": error_rate, "mu": mu
+                "Theoretical theta": theoretical_theta, "Error rate": error_rate, "mu": mu
             }
             data = data.append(row, ignore_index=True)
 
@@ -386,7 +383,8 @@ def weighted_square_distance(sfs):
     return sum(d2)
 
 
-def compute_dadi_inference(sfs_observed, models, sample, path_data, job, dof, fixed, value):
+def compute_dadi_inference(sfs_observed, models, sample, fold, path_data, job, dof, fixed,
+                           value):
     """
     Parameter
     ---------
@@ -433,13 +431,8 @@ def compute_dadi_inference(sfs_observed, models, sample, path_data, job, dof, fi
 
     for i, sfs in enumerate(sfs_observed):
         # Generate the SFS file compatible with dadi
-        if value is None:
-            dadi_file = "SFS-{}".format(job)
-        else:
-            dadi_file = "SFS_{}-{}".format(value, job)
-
-        f.dadi_data(sfs, models['Inference'].__name__, path=path_data,
-                    name=dadi_file)
+        dadi_file = "SFS-{}".format(job) if value is None else "SFS_{}-{}".format(value, job)
+        f.dadi_data(sfs, models['Inference'].__name__, fold, path=path_data, name=dadi_file)
 
         # Dadi inference for M0
         # Pairs (Log-likelihood, Inferred SFS)
@@ -492,7 +485,7 @@ def compute_dadi_inference(sfs_observed, models, sample, path_data, job, dof, fi
     return data
 
 
-def save_dadi_inference(simulation, models, path_data, job, fixed, value):
+def save_dadi_inference(simulation, models, fold, path_data, job, fixed, value):
     """
     Inference with dadi.
 
@@ -523,10 +516,10 @@ def save_dadi_inference(simulation, models, path_data, job, fixed, value):
     sfs_observed, sample = simulation['SFS observed'], simulation['Parameters']['sample_size']
 
     if value is None:
-        inf = compute_dadi_inference(sfs_observed, models, sample, path_data, job, dof=2,
+        inf = compute_dadi_inference(sfs_observed, models, sample, fold, path_data, job, dof=2,
                                      fixed=fixed, value=value)
     else:
-        inf = compute_dadi_inference(sfs_observed, models, sample, path_data, job, dof=2,
+        inf = compute_dadi_inference(sfs_observed, models, sample, fold, path_data, job, dof=2,
                                      fixed=fixed, value=np.power(10, value))
 
     # Save data
@@ -827,10 +820,10 @@ def main():
                 ][args.job-1]
                 path_data = "./Data/Dadi/{}/{}/".format(args.model, args.param)
 
-                # args.value = np.power(10, args.value)
+            path_data += "Folded/" if args.fold else "Unfolded/"
 
-            save_dadi_inference(simulation, models, path_data, args.job, fixed=args.param,
-                                value=args.value)
+            save_dadi_inference(simulation, models, args.fold, path_data, args.job,
+                                fixed=args.param, value=args.value)
 
         # Inference with stairway plot 2
         elif args.stairway:
