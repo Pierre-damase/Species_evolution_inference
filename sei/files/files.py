@@ -354,6 +354,7 @@ def export_inference_files(model, fold, param, value=None):
     col = ['Parameters', 'Positive hit', 'SNPs', 'SFS observed', 'M0', 'M1', 'Time',
            'd2 observed inferred', 'd2 models']
     inference = pd.DataFrame(columns=col)
+    inference['Positive hit'] = inference['Positive hit'].astype(int)
 
     # Path data and filin
     path_data = "./Data/Dadi/{}/{}/".format(model, param)
