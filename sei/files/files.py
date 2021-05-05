@@ -237,7 +237,7 @@ def read_stairway_final(path):
 
             for line in lines[:-2]:
                 # Save M0
-                if line.startswith('dim:\t1'):
+                if line.startswith('dim:\t1\t'):
                     _, _, _, ll, _, _, _, theta = line.strip().split('\t')
                     data['M0']['LL'].append(-float(ll))
                     data['M0']['Theta'].append(float(theta))
