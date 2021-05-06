@@ -466,8 +466,8 @@ def plot_weighted_square_distance_heatmap(data, d2, models):
 
     # Data
     df = pd.DataFrame()
-    for key in data['Parameters'][0].keys():  # compute log of parameters
-        df[key] = data['Parameters'].apply(lambda param: round(np.log10(param[key]), 2))
+    for param in [key for key in data.ilco[0]['Parameters'] if key != 'Theta']:  # compute log10
+        df[param] = data['Parameters'].apply(lambda ele: round(np.log10(ele[param]), 2))
     df[d2] = data[d2].apply(np.log10)  # Compute log of weighted square distance
 
     df = df.pivot(index=df.columns[1], columns=df.columns[0], values=d2)
@@ -540,7 +540,7 @@ def plot_likelihood_heatmap(data):
     ---------
     data: pandas DataFrame of inference with Dadi
     """
-    # Set-up plot
+    # Set up plot
     plt.figure(figsize=(12,9), constrained_layout=True)
     sns.set_theme(style='whitegrid')
 
@@ -598,7 +598,115 @@ def plot_likelihood(data, fixed, labels, suptitle):
     plt.plot()
 
 
-# Evaluation estimated parameters #
+# Evaluation of estimated parameters #
+
+def extract_parameters(data, key):
+    """
+    Extract from the pandas DataFrame data, the observed parameters key for each simulation and
+    the estimated one of each inferrence (the mean of inferred key for the 100 inferrence).
+
+    Return the parameters estimated and observed in log10 scale.
+
+    Return
+    ------
+    parameters: dict
+      - Observed: the observed parameters key of each simulation
+      - Estimated: the estimated parameters key of each inferrence (the mean)
+    """
+    parameters = {'Observed': [], 'Estimated': []}
+
+    for _, row in data.iterrows():
+        parameters['Observed'].append(row['Parameters'][key])
+        parameters['Estimated'].append(
+            np.mean([estimated[key] for estimated in row['M1']['Estimated']])
+        )
+
+    return parameters
+
+
+def plot_parameters_evaluation_heatmap(data, key):
+    """
+    Heatmap of weighted square distance for various (tau, kappa) or (m12, kappa)
+
+    Parameter
+    ---------
+    data: pandas DataFrame of inference with Dadi
+    key: the parameters to check - either Tau, Kappa, m12 or Theta
+    """
+    # Extract the parameter key (observed and estimated) from data
+    parameters = extract_parameters(data, key)
+
+    # Pre-porocessinf of the data for the heatmap
+    df = pd.DataFrame()
+
+    # Compute log10 of parameters
+    for parameter in [key for key in data.iloc[0]['Parameters'] if key != 'Theta']:
+        df[parameter] = data['Parameters'].apply(lambda ele: round(np.log10(ele[parameter]), 2))
+
+    # Compute the distance between the observed and estimated parameter key
+    df['Distance'] = [
+        np.log10(np.power(estimated - observed, 2) / estimated) for observed, estimated in
+        zip(parameters['Observed'], parameters['Estimated'])
+    ]
+
+    df = df.pivot(index=df.columns[1], columns=df.columns[0], values="Distance")
+
+    # Set-up plot
+    plt.figure(figsize=(12,9), constrained_layout=True)
+    sns.set_theme(style='whitegrid')
+
+    # Plot
+    ax = sns.heatmap(df, cmap="coolwarm")
+
+    # Heatmap x and y-axis personnalization
+    heatmap_axis(ax=ax, xaxis=df.columns.name, yaxis=df.index.name,
+                 cbar='Distance between observed and estimated {} - log scale'.format(key))
+
+    # Title
+    title = "Estimated {0} en fonction de observed {0}".format(key)
+    plt.title(title, fontsize="x-large", color="#8b1538")
+
+    plt.plot()
+
+
+def plot_parameters_evaluation(data, key, fixed):
+    """
+    Plot le paramètre estimée en fonction du paramètre estimée.
+
+    Parameters
+    ----------
+    data: pandas DataFrame of inference with Dadi
+    key: the parameters to check - either Tau, Kappa, m12 or Theta
+    fixed: pair of (param, value) - for the title of the plot
+    """
+    # Extract the parameter key (observed and estimated) from data
+    parameters = extract_parameters(data, key)
+
+    # Set up plot
+    sns.set_theme(style='whitegrid')
+    plt.figure(figsize=(10, 7))
+
+    # Plot
+    with plt.style.context('seaborn-whitegrid'):  # use seaborn style for plot
+        plt.plot(np.log10(parameters['Observed']), np.log10(parameters['Estimated']),
+                 marker='.', linestyle="")
+        plt.plot(np.log10(parameters['Observed']), np.log10(parameters['Observed']))
+
+    # Label
+    plt.xlabel("{} observés (log10)".format(key), fontsize="x-large")
+    plt.ylabel("{} estimés (log10)".format(key), fontsize="x-large")
+
+    # Title
+    title = "{} observés en fonction de {} estimés pour log({}) = {}" \
+        .format(key, key[0].lower() + key[1:], fixed[0], fixed[1])
+    plt.title(title, fontsize="xx-large")
+
+    # Plot vertical line for log(kappa) = 0
+    if key == 'Kappa':
+        plt.axvline(0, color="#8b1538")
+
+    plt.plot()
+
 
 if __name__ == "__main__":
     sys.exit()  # No actions desired

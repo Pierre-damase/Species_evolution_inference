@@ -442,5 +442,59 @@ def export_specific_dadi_inference(model, fixed_param, values, fold):
     return data, labels
 
 
+# Stairway files
+
+def export_stairway_files(model, fold):
+    """
+    Export each file generated from the inference with stairway into a single DataFraùe.
+    Then export this DataFrame to a json file.
+
+    Parameter
+    ---------
+    model: either decline or migration
+    fold: boolean
+      - True: inference with folded SFS
+      - False: inference with unfolded SFS
+    """
+    # Path data and filin
+    path_data = "./Data/Stairway/"
+
+    filin = "stairway_inference_{}".format(model)
+    filin += "-Folded" if fold else "-Unfolded"
+
+    # Data
+    inference = pd.DataFrame(columns=['M0', 'M1', 'Ne', 'Year', 'Parameters'])
+
+    os.system('zip -j {0}{1}.zip {0}{1}'.format(path_data, filin))
+
+    # Read file
+    if "{}.zip".format(filin) not in os.listdir(path_data):
+        subpath = "./sei/inference/stairway_plot_v2.1.1/"
+        fichiers = [
+            fichier for fichier in os.listdir(subpath)
+            if fichier.endswith('-all') and fichier.split('-')[0] == 'stairway_{}'.format(model)
+        ]
+
+        for fichier in fichiers:
+            res = pd.read_json("{}{}".format(subpath, fichier), typ='frame')
+            inference = inference.append(res, ignore_index=True)
+
+            # Delete the json file
+            os.remove("{}{}".format(subpath, fichier))
+
+        # Export pandas DataFrame inference to json file
+        inference.to_json("{}{}".format(path_data, filin))
+
+        # Zip
+        os.system('zip -j {0}{1}.zip {0}{1}'.format(path_data, filin))
+
+    else:
+        os.system("unzip {0}{1}.zip -d {0}".format(path_data, filin))  # Unzip
+        inference = pd.read_json("{}{}".format(path_data, filin), typ='frame')  # Load
+        os.remove("{}{}".format(path_data, filin))  # Remove
+
+    return inference
+
+
 if __name__ == "__main__":
     sys.exit()  # No actions desired
