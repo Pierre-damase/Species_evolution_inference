@@ -150,7 +150,7 @@ def dadi_data(sfs_observed, fichier, fold, path="./Data/", name="SFS"):
 # SFS - Stairway plot 2                                              #
 ######################################################################
 
-def stairway_data(name, data, path):
+def stairway_data(name, data, path, fold):
     """
     Create SFS of a scenario in the format compatible with the stairway plot v2 software.
 
@@ -159,6 +159,8 @@ def stairway_data(name, data, path):
     sfs, nseq, mu, year, ninput = \
         data['sfs'], data['sample_size'], data['mu'], data['year'], data['ninput']
 
+    sfs = sfs[:round(len(sfs)/2)] if fold else sfs
+
     with open("{}{}.blueprint".format(path, name), "w") as filout:
         filout.write("# Blueprint {} file\n".format(name))
         filout.write("popid: {} # id of the population (no white space)\n".format(name))
@@ -166,7 +168,8 @@ def stairway_data(name, data, path):
         filout.write(
             "L: {} # total number of observed nucleic sites, including poly-/mono-morphic\n"
             .format(sum(sfs)*10))
-        filout.write("whether_folded: false # unfolded SFS\n")
+        filout.write("whether_folded: {} # folded (true) or unfolded (false) SFS\n"
+                     .format(fold))
 
         # SFS
         filout.write("SFS: ")
@@ -175,7 +178,8 @@ def stairway_data(name, data, path):
         filout.write("# snp frequency spectrum: number of singleton, doubleton, etc.\n")
 
         filout.write("#smallest_size_of_SFS_bin_used_for_estimation: 1\n")
-        filout.write("#largest_size_of_SFS_bin_used_for_estimation: {}\n".format(nseq-1))
+        filout.write("#largest_size_of_SFS_bin_used_for_estimation: {}\n"
+                     .format(round(nseq/2) if fold else nseq-1))
         filout.write("pct_training: 0.67 # percentage of sites for training\n")
 
         # Break points
@@ -279,8 +283,8 @@ def read_stairway_summary(fichier):
     Return
     ------
     data: dictionary
-     - Ne: pair (Ne min, Ne max)
-     - Year: pair (Year of Ne min, Year of Ne max)
+      - Ne: pair (Ne min, Ne max)
+      - Year: pair (Year of Ne min, Year of Ne max)
     """
     with open(fichier, "r") as filin:
         lines = filin.readlines()
