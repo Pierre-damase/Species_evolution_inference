@@ -189,7 +189,8 @@ def weighted_square_distance(sfs):
     return sum(d2)
 
 
-def compute_dadi_inference(sfs_observed, models, sample, fold, path_data, job, dof, fixed, value):
+def compute_dadi_inference(sfs_observed, models, sample, fold, path_data, job, dof, fixed,
+                           value):
     """
     Parameter
     ---------
@@ -364,7 +365,7 @@ def save_dadi_inference(simulation, models, fold, path_data, job, fixed, value):
 ######################################################################
 
 
-def compute_stairway_inference(simulation, path_stairway, path_data):
+def compute_stairway_inference(simulation, path_stairway, path_data, fold):
     """
     Parameter
     ---------
@@ -397,7 +398,7 @@ def compute_stairway_inference(simulation, path_stairway, path_data):
     }
     data['sfs'], data['year'], data['ninput'] = sfs, 1, 200
 
-    f.stairway_data(blueprint, data, path_data)
+    f.stairway_data(blueprint, data, path_data, fold)
 
     # Create the batch file
     os.system("java -cp {0}stairway_plot_es Stairbuilder {1}{2}.blueprint"
@@ -434,7 +435,7 @@ def compute_stairway_inference(simulation, path_stairway, path_data):
     return stairway
 
 
-def save_stairway_inference(simulation, model):
+def save_stairway_inference(simulation, model, fold):
     """
     Inference with stairway plot 2.
 
@@ -453,6 +454,9 @@ def save_stairway_inference(simulation, model):
 
     model: str
         either decline, migration or cst
+    fold: boolean
+      -  True: folded SFS
+      - False: unfodled SFS
     """
     # Set up path data
     path_stairway = "/home/pimbert/work/Species_evolution_inference/sei/" \
@@ -480,7 +484,7 @@ def save_stairway_inference(simulation, model):
         os.system("cp -r {} {}".format(path_stairway + "stairway_plot_es", path_data))
 
     # Compute the inference with stairway plot 2
-    data = compute_stairway_inference(simulation, path_stairway, path_data)
+    data = compute_stairway_inference(simulation, path_stairway, path_data, fold)
 
     # Convert pandas DataFrame data to json file
     data.to_json("{}{}-all".format(path_stairway, file_data))
@@ -583,7 +587,7 @@ if __name__ == "__main__":
                 path_data = "/home/pimbert/work/Species_evolution_inference/Data/Dadi/{}/{}/" \
                     .format(args.model, args.param)
 
-            path_data += "Folded" if args.fold else "Unfolded/"
+            path_data += "Folded/" if args.fold else "Unfolded/"
 
             save_dadi_inference(simulation, models, args.fold, path_data, args.job,
                                 fixed=args.param, value=args.value)
@@ -591,5 +595,5 @@ if __name__ == "__main__":
         # Inference with stairway plot v2
         elif args.stairway:
             simulation = simulation.iloc[args.job - 1]
-            save_stairway_inference(simulation, model=args.model)
+            save_stairway_inference(simulation, model=args.model, fold=args.fold)
 

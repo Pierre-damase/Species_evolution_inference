@@ -187,6 +187,9 @@ def msprime_simulation(model, params, debug=False):
     ------
     sfs: list
         Site frequency Spectrum (sfs) - allele mutation frequency
+    variants: list
+        List of position and genotypes for each variant with 0 the ancestral state and 1 the
+        alternative one.
     """
     demography = model(params, debug)
 
@@ -199,15 +202,19 @@ def msprime_simulation(model, params, debug=False):
     if debug:
         print(tree_seq.first().draw(format="unicode"))
 
+    variants = []
+
     sfs = [0] * (params["sample_size"] - 1)
     for variant in tree_seq.variants():
-        print(variants)
-        sys.exit()
+        # Generate SFS
         _, counts = np.unique(variant.genotypes, return_counts=True)
         freq_mutation = counts[1]-1
         sfs[freq_mutation] += 1
 
-    return sfs
+        # Store for each variant, the position and the genotypes
+        variants.append({'Position': round(variant.position), 'Genotypes': variant.genotypes})
+
+    return sfs, variants
 
 
 if __name__ == "__main__":

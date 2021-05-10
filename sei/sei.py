@@ -100,35 +100,35 @@ def generate_set_sfs():
     params = simulation_parameters(sample=10, ne=1, rcb_rate=2e-2, mu=2e-2, length=1e5)
 
     # Constant scenario
-    sfs['Constant model'] = \
+    sfs['Constant model'], _ = \
         ms.msprime_simulation(model=ms.constant_model, params=params, debug=True)
 
     # Theoretical SFS for any constant population
-    sfs['Theoretical model'] = \
+    sfs['Theoretical model'], _ = \
         compute_theoretical_sfs(length=params["sample_size"] - 1)
 
     # Define tau & kappa for decline scenario
     params.update({"Tau": 1., "Kappa": 10.})
 
-    sfs['Decline model'] = \
+    sfs['Decline model'], _ = \
         ms.msprime_simulation(model=ms.sudden_decline_model, params=params, debug=True)
     parameters['Decline model'] = {k: v for k, v in params.items() if k in ['Tau', 'Kappa']}
 
-    # Define tau & kappa for growth scenario
+    # Define tau & kappa fo, _r growth scenario
     params.update({"Tau": 1., "Kappa": 0.1})
 
-    sfs['Growth model'] = \
+    sfs['Growth model'], _ = \
         ms.msprime_simulation(model=ms.sudden_decline_model, params=params, debug=True)
     parameters['Growth model'] = {k: v for k, v in params.items() if k in ['Tau', 'Kappa']}
 
-    # Migration scenario
+    # Migration scenario, _
     # params.update({"Kappa": 10., "m12": 1., "m21": 0})
 
-    # sfs['Migration model'] = \
+    # sfs['Migration model'], _ = \
     #     ms.msprime_simulation(model=ms.twopops_migration_model, params=params, debug=True)
     # parameters['Migration model'] = {
     #     k: v for k, v in params.items() if k in ['m12', 'm21', 'Kappa']
-    # }
+    # }, _
 
     params_simulation = \
         {k: v for k, v in params.items() if k not in ['m12', 'm21', 'Kappa', 'Tau']}
@@ -161,7 +161,7 @@ def generate_sfs(params, model, nb_simu, path_data, path_length):
     Generate a set of unfolded sfs of fixed SNPs size with msprime.
     """
     # Define length
-    length = length_from_file(path_length, params, mu=8e-2, snp=100000)
+    length = length_from_file(path_length, params, mu=8e-2, snp=10000)
 
     # Convert params from log scale
     params.update({k: (np.power(10, v) if k != 'm21' else v) for k, v in params.items()})
@@ -170,22 +170,25 @@ def generate_sfs(params, model, nb_simu, path_data, path_length):
     params.update(
         simulation_parameters(sample=20, ne=1, rcb_rate=8e-2, mu=8e-2, length=length))
 
-    sfs, snp, execution = [], [], []
+    sfs, snp, variants, execution = [], [], [], []
     for _ in range(nb_simu):
         start_time = time.time()
 
-        sfs_observed = ms.msprime_simulation(model=model, params=params)
-        sfs.append(sfs_observed)
+        sfs_observed, variants_observed = ms.msprime_simulation(model=model, params=params)
+        #sfs.append(sfs_observed)
         snp.append(sum(sfs_observed))
+        #variants.append(variants_observed)
 
         execution.append(time.time() - start_time)
 
     # Create DataFrame form dictionary
     dico = {
-        'Parameters': [params], 'SFS observed': [sfs], 'SNPs': [snp],
+        'Parameters': [params], 'SFS observed': [sfs], 'SNPs': [snp], 'Variants': [variants],
         'Time': [round(np.mean(execution), 4)]
     }
     data = pd.DataFrame(dico)
+
+    print(snp)
 
     # Export DataFrame to json file
     data.to_json("{}".format(path_data))
@@ -558,7 +561,7 @@ def save_dadi_inference(simulation, models, fold, path_data, job, fixed, value):
 # Inference with stairway plot 2                                     #
 ######################################################################
 
-def compute_stairway_inference(simulation, path_stairway, path_data):
+def compute_stairway_inference(simulation, path_stairway, path_data, fold):
     """
     Parameter
     ---------
@@ -591,7 +594,7 @@ def compute_stairway_inference(simulation, path_stairway, path_data):
     }
     data['sfs'], data['year'], data['ninput'] = sfs, 1, 200
 
-    f.stairway_data(blueprint, data, path_data)
+    f.stairway_data(blueprint, data, path_data, fold)
 
     # Create the batch file
     os.system("java -cp {0}stairway_plot_es Stairbuilder {1}{2}.blueprint"
@@ -601,7 +604,11 @@ def compute_stairway_inference(simulation, path_stairway, path_data):
     os.system("bash {}{}.blueprint.sh".format(path_data, blueprint))
 
     # Extract data from the inference with stairway
+
+    # M0: default model | M1: the final model
     dico = f.read_stairway_final("{}{}/final/".format(path_data, blueprint))
+
+    # Ne: pair (Ne min, Ne max) | Year: pair (Year of Ne min, Year of Ne max)
     dico.update(f.read_stairway_summary("{0}{1}/{1}.final.summary".format(path_data,
                                                                           blueprint)))
 
@@ -628,7 +635,7 @@ def compute_stairway_inference(simulation, path_stairway, path_data):
     return stairway
 
 
-def save_stairway_inference(simulation, model):
+def save_stairway_inference(simulation, model, fold):
     """
     Inference with stairway plot 2.
 
@@ -674,7 +681,7 @@ def save_stairway_inference(simulation, model):
         os.system("cp -r {} {}".format(path_stairway + "stairway_plot_es", path_data))
 
     # Compute the inference with stairway plot 2
-    data = compute_stairway_inference(simulation, path_stairway, path_data)
+    data = compute_stairway_inference(simulation, path_stairway, path_data, fold)
 
     # Convert pandas DataFrame data to json file
     data.to_json("{}{}-all".format(path_stairway, file_data))
@@ -704,7 +711,7 @@ def main():
                 print("Simulation {}/100".format(i+1), end="\r")
                 start_time = time.time()
 
-                sfs_cst = ms.msprime_simulation(model=ms.constant_model, params=params)
+                sfs_cst, _ = ms.msprime_simulation(model=ms.constant_model, params=params)
                 dico['SFS observed'].append(sfs_cst)
                 dico['SNPs'].append(sum(sfs_cst))
 
@@ -780,7 +787,7 @@ def main():
 
         path_length = "./Data/Msprime/length_factor-{}".format(args.model)
 
-        generate_sfs(params, model, nb_simu=10, path_data=path_data, path_length=path_length)
+        generate_sfs(params, model, nb_simu=2, path_data=path_data, path_length=path_length)
 
     elif args.analyse == 'opt':
         dadi_params_optimisation(args.number)
@@ -828,7 +835,7 @@ def main():
         # Inference with stairway plot 2
         elif args.stairway:
             simulation = simulation.iloc[args.job - 1]
-            save_stairway_inference(simulation, model=args.model)
+            save_stairway_inference(simulation, model=args.model, fold=args.fold)
 
 
 if __name__ == "__main__":
