@@ -322,7 +322,8 @@ def export_simulation_files(filin, path_data):
     """
     if filin not in os.listdir(path_data):
         # Pandas DataFrame
-        simulation = pd.DataFrame(columns=['Parameters', 'SNPs', 'SFS observed', 'Time'])
+        columns = ['Parameters', 'SNPs', 'SFS observed', 'Variants', 'Time']
+        simulation = pd.DataFrame(columns=columns)
 
         for fichier in os.listdir(path_data):
             # Export the json file to pandas DataFrame and store it in simulation
@@ -498,6 +499,54 @@ def export_stairway_files(model, fold):
         os.remove("{}{}".format(path_data, filin))  # Remove
 
     return inference
+
+
+######################################################################
+# Export json files                                                  #
+######################################################################
+
+def variants_to_vcf(variants, param, fichier, path_data, ploidy=2):
+    """
+    Writes a VCF formatted file from variants generated with msprime.
+
+    Parameter
+    ---------
+    variants: list
+        List of position and genotype for each variant with 0 the ancestral state and 1 the
+        alternative one.
+    sample: int
+        Sample size
+    length: int
+        The length L of the sequence
+    ploidy: int
+        The ploidy of the individual samples
+        By default it's set to 2, so for a sample of size 20 we will have 10 diploid samples in
+        the output, consisting of the combined allele of [0, 1], [2, 3], ..., [18, 19].
+    """
+    if param['sample_size'] % ploidy != 0:
+        sys.exit("Sample size must be divisible by ploidy")
+
+    with open("{}{}".format(path_data, fichier), 'w') as filout:
+        # Write the header
+        filout.write("##fileformat=VCFv4.2\n")
+        filout.write("##source=tskit 0.3.4\n")
+        filout.write("##FILTER=<ID=PASS,Description=\"All filters passed\">\n")
+        filout.write("##contig=<ID=1,length={}>\n".format(round(param['length'])))
+        filout.write("##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">\n")
+
+        # Write the genotype
+        header = ['#CHROM', 'POS', 'ID', 'REF', 'ALT', 'QUAL', 'FILTER', 'INFO', 'FORMAT']
+        header += ['tsk_{}'.format(i) for i in range(round(param['sample_size'] / ploidy))]
+        filout.write("\t".join(header) + "\n")
+
+        for variant in variants:
+            value = ['1', str(variant['Position']), '.', '0', '1', '.', 'PASS', '.', 'GT']
+            if ploidy == 1:
+                value += [genotype for genotype in variant['Genotypes']]
+            else:
+                value += ["{}|{}".format(variant['Genotypes'][i], variant['Genotypes'][i+1]) for
+                          i in range(round(param['sample_size'] / ploidy))]
+            filout.write("\t".join(value) + "\n")
 
 
 if __name__ == "__main__":
