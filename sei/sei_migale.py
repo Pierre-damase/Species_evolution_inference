@@ -589,11 +589,15 @@ if __name__ == "__main__":
 
             path_data += "Folded/" if args.fold else "Unfolded/"
 
+            simulation = simulation[['Parameters', 'SNPs', 'SFS observed']]
             save_dadi_inference(simulation, models, args.fold, path_data, args.job,
                                 fixed=args.param, value=args.value)
 
         # Inference with stairway plot v2
         elif args.stairway:
-            simulation = simulation.iloc[args.job - 1]
+            simulation = simulation.iloc[args.job - 1][['Parameters', 'SFS observed']]
             save_stairway_inference(simulation, model=args.model, fold=args.fold)
 
+        # Inference with SMC++
+        elif args.smc:
+            pass

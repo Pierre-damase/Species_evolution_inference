@@ -92,6 +92,10 @@ def arguments():
     tool.add_argument('-stairway', action='store_true',
                       help="Inference of demographic history with Stairway plot 2")
 
+    # SMC++
+    tool.add_argument('-smc', action='store_true',
+                      help="Inference of demographic history with SMC++")
+
     # Required argument for booth Dadi & stairway
     inf.add_argument(
         '--model', dest="model", choices=['decline', 'migration'], required=True,

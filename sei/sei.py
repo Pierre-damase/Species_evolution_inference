@@ -175,20 +175,20 @@ def generate_sfs(params, model, nb_simu, path_data, path_length):
         start_time = time.time()
 
         sfs_observed, variants_observed = ms.msprime_simulation(model=model, params=params)
-        #sfs.append(sfs_observed)
-        snp.append(sum(sfs_observed))
-        #variants.append(variants_observed)
 
+        sfs.append(sfs_observed)
+        snp.append(sum(sfs_observed))
+        variants.append(variants_observed)
         execution.append(time.time() - start_time)
 
-    # Create DataFrame form dictionary
+    # Create DataFrame from dictionary
     dico = {
-        'Parameters': [params], 'SFS observed': [sfs], 'SNPs': [snp], 'Variants': [variants],
+        'Parameters': [params], 'SNPs': [snp], 'SFS observed': [sfs], 'Variants': [variants],
         'Time': [round(np.mean(execution), 4)]
     }
     data = pd.DataFrame(dico)
 
-    print(snp)
+    print("SNPs: {}".format(round(np.mean(snp))))
 
     # Export DataFrame to json file
     data.to_json("{}".format(path_data))
@@ -502,8 +502,6 @@ def save_dadi_inference(simulation, models, fold, path_data, job, fixed, value):
         List of SNPs for each observed SFS
       - SFS observed
         List of the observed SFS generated with msprime for the same set of parameters
-      - Time
-        Mean execution time to generate the observed SFS
 
     models: dictionary
       - Inference: the custom model to infer demography history, i.e. the model m1 with more
@@ -645,12 +643,8 @@ def save_stairway_inference(simulation, model, fold):
       - Parameters
         Parameters for the simulation with msprime - mutation rate mu, recombination rate, Ne,
         length L of the sequence, sample size.
-      - SNPs
-        List of SNPs for each observed SFS
       - SFS observed
         List of the observed SFS generated with msprime for the same set of parameters
-      - Time
-        Mean execution time to generate the observed SFS
 
     model: str
         either decline, migration or cst
@@ -685,6 +679,52 @@ def save_stairway_inference(simulation, model, fold):
 
     # Convert pandas DataFrame data to json file
     data.to_json("{}{}-all".format(path_stairway, file_data))
+
+
+######################################################################
+# Inference with stairway plot 2                                     #
+######################################################################
+
+def save_smc_inference(simulation, model):
+    """
+    Inference with SMC++.
+
+    Parameter
+    ---------
+    simulation: dictionary
+      - Parameters
+        Parameters for the simulation with msprime - mutation rate mu, recombination rate, Ne,
+        length L of the sequence, sample size.
+      - Variants
+        List of position and genotype for each variant with 0 the ancestral state and 1 the
+        alternative one.
+
+    model: str
+        either decline, migration or cst
+    """
+    # Set up path data
+    path_data = "./Data/SMC/{}/".format(model)
+
+    if model == 'decline':
+        param = {k: round(np.log10(v), 2) for k, v in simulation['Parameters'].items()
+                 if k in ['Tau', 'Kappa']}
+        fichier = "vcf-tau={}_kappa={}".format(param['Tau'], param['Kappa'])
+
+    elif model == 'migration':
+        param = {k: round(np.log10(v), 2) for k, v in simulation['parameters'].items()
+                 if k in ['m12', 'kappa']}
+        fichier = "vcf-m12={}_kappa={}".format(param['m12'], param['kappa'])
+
+    # Select sample size and length
+    param = {
+        k: v for k, v in simulation['Parameters'].items() if k in ['sample_size', 'length']
+    }
+
+    # Iterate through each variant
+    for variants in simulation['Variants']:
+        # Generate the VCF file format
+        f.variants_to_vcf(variants, param, fichier, path_data, ploidy=2)
+        break
 
 
 ######################################################################
@@ -829,13 +869,19 @@ def main():
 
             path_data += "Folded/" if args.fold else "Unfolded/"
 
+            simulation = simulation[['Parameters', 'SNPs', 'SFS observed']]
             save_dadi_inference(simulation, models, args.fold, path_data, args.job,
                                 fixed=args.param, value=args.value)
 
         # Inference with stairway plot 2
         elif args.stairway:
-            simulation = simulation.iloc[args.job - 1]
+            simulation = simulation.iloc[args.job - 1][['Parameters', 'SFS observed']]
             save_stairway_inference(simulation, model=args.model, fold=args.fold)
+
+        # Inference with SMC++
+        elif args.smc:
+            simulation = simulation.iloc[args.job - 1][['Parameters', 'Variants']]
+            save_smc_inference(simulation, model=args.model)
 
 
 if __name__ == "__main__":
