@@ -373,7 +373,7 @@ def compute_stairway_inference(simulation, path_stairway, path_data, fold):
     path_data: path to the blueprint file
     """
     # Data
-    stairway = pd.DataFrame(columns=['M0', 'M1', 'Ne', 'Year'])
+    stairway = pd.DataFrame()
 
     tau_list, kappa_list = [-4., 0., 2.4, -3.2], [-3.5, 0., 2.9]
     if 'Tau' in simulation['Parameters']:
@@ -405,7 +405,7 @@ def compute_stairway_inference(simulation, path_stairway, path_data, fold):
               .format(path_stairway, path_data, blueprint))
 
     # Run the batch file
-    os.system("bash {}{}.blueprint.sh".format(path_data, blueprint))
+    os.system("xvfb-run -d bash {}{}.blueprint.sh".format(path_data, blueprint))
 
     # Extract data from the inference with stairway
     dico = f.read_stairway_final("{}{}/final/".format(path_data, blueprint))

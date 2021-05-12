@@ -567,7 +567,7 @@ def compute_stairway_inference(simulation, path_stairway, path_data, fold):
     path_data: path to the blueprint file
     """
     # Data
-    stairway = pd.DataFrame(columns=['M0', 'M1', 'Ne', 'Year'])
+    stairway = pd.DataFrame()
 
     tau_list, kappa_list = [-4., 0., 2.4], [-3.5, 0., 2.9]
     if 'Tau' in simulation['Parameters']:
@@ -599,11 +599,11 @@ def compute_stairway_inference(simulation, path_stairway, path_data, fold):
               .format(path_stairway, path_data, blueprint))
 
     # Run the batch file
-    os.system("xvfb-run bash {}{}.blueprint.sh".format(path_data, blueprint))
+    os.system("xvfb-run -a bash {}{}.blueprint.sh".format(path_data, blueprint))
 
     # Extract data from the inference with stairway
 
-    # M0: default model | M1: the final model
+    # M0: default model | M1: the model with 2 dimension | Final: the final model
     dico = f.read_stairway_final("{}{}/final/".format(path_data, blueprint))
 
     # Ne: pair (Ne min, Ne max) | Year: pair (Year of Ne min, Year of Ne max)
@@ -628,7 +628,7 @@ def compute_stairway_inference(simulation, path_stairway, path_data, fold):
                                                                              kappa))
 
     # Remove all blueprint file & stairway file
-    #os.system("rm -rf {}".format(path_data))
+    os.system("rm -rf {}".format(path_data))
 
     return stairway
 
@@ -682,7 +682,7 @@ def save_stairway_inference(simulation, model, fold):
 
 
 ######################################################################
-# Inference with stairway plot 2                                     #
+# Inference with SMC++                                               #
 ######################################################################
 
 def save_smc_inference(simulation, model):

@@ -233,27 +233,37 @@ def read_stairway_final(path):
              Theta min: minimum theta
              Theta max: maximum theta
     """
-    data = {'M0': {'LL': [], 'Theta': []}, 'M1': {'LL': [], 'Theta min': [], 'Theta max': []}}
+    data = {'M0': {'LL': [], 'Theta': []}, 'M1': {'LL': [], 'Theta': []},
+            'Final': {'LL': [], 'Theta': []}}
 
     for fichier in os.listdir(path):
         with open("{}{}".format(path, fichier), 'r') as filin:
             lines = filin.readlines()
 
-            for line in lines[:-2]:
-                # Save M0
-                if line.startswith('dim:\t1\t'):
-                    _, _, _, ll, _, _, _, theta = line.strip().split('\t')
-                    data['M0']['LL'].append(-float(ll))
-                    data['M0']['Theta'].append(float(theta))
+            # Read lines that start with dim
+            models = [line.strip().split('\t') for line in lines[:-2] if line.startswith('dim')]
 
-                # Save M1
-                if line.startswith('final'):
-                    _, ll, _ = line.strip().split('\t')
-                    data['M1']['LL'].append(-float(ll))
+            # M0: Log likelihood and theta for 1 dimensional model, i.e. the constant model
+            _, _, _, ll, _, _, _, theta = models[0]
+            data['M0']['LL'].append(-float(ll))
+            data['M0']['Theta'].append(float(theta))
+
+            # M1: Log likelihood and theta for 2 dimensionals model, i.e. the various pop model
+            if len(models) == 1:
+                for value in data['M1'].values():
+                    value.append(np.nan)
+            else:
+                _, _, _, ll, _, _, _, _, theta1, theta2 = models[1]
+                theta = [float(theta1), float(theta2)]
+                data['M1']['LL'].append(-float(ll))
+                data['M1']['Theta'].append((min(theta), max(theta)))  # pair Theta min & max
+
+            # Final: Log likelihood and theta for the final model - x dimension
+            _, ll, _ = lines[-3].strip().split('\t')  # line that start with final
+            data['Final']['LL'].append(-float(ll))
 
             line = [float(ele) for ele in lines[-1].strip().split(' ')]
-            data['M1']['Theta min'].append(min(line))
-            data['M1']['Theta max'].append(max(line))
+            data['Final']['Theta'].append((min(line), max(line)))  # pair Theta min & max
 
     return data
 
@@ -284,6 +294,9 @@ def read_stairway_summary(fichier):
     ------
     data: dictionary
       - Ne: pair (Ne min, Ne max)
+      - Ne initial: Ne of the initial population, i.e. at time 0
+      - Ne ancestral: the oldest Ne
+      - Ne mean: mean of Ne
       - Year: pair (Year of Ne min, Year of Ne max)
     """
     with open(fichier, "r") as filin:
@@ -299,8 +312,10 @@ def read_stairway_summary(fichier):
         minimum, maximum = min_max(ne_list)
 
     data = {
-        'Ne': (minimum[0], maximum[0]), 'Year': (np.mean([year_list[i] for i in minimum[1]]),
-                                                 np.mean([year_list[i] for i in maximum[1]]))
+        'Ne': (minimum[0], maximum[0]),
+        'Ne initial': ne_list[0], 'Ne ancestral': ne_list[-1], 'Ne mean': np.mean(ne_list),
+        'Year': (np.mean([year_list[i] for i in minimum[1]]),
+                 np.mean([year_list[i] for i in maximum[1]]))
     }
 
     return data
