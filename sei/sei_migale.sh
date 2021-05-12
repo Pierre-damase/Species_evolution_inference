@@ -1,10 +1,10 @@
 #!/bin/bash
 
 # Nom du job
-#$ -N stairway
+#$ -N test
 
 # Number of separate submissions to the cluster
-#$ -t 1-4225
+#$ -t 1-5
 
 # Short pour un job < 12h
 #$ -q short.q
