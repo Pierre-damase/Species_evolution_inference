@@ -26,7 +26,27 @@ conda env create --file sei-3.8.5.yml
 conda activate sei-3.8.5
 ```
 
-4. Utilisation
+4. Installation de SMC++
+
+Librairie nécessaire.
+
+```
+sudo apt install -y python3-dev libgmp-dev libmpfr-dev libgsl0-dev
+```
+
+Installation préalable de Cython nécessaire.
+
+```
+pip install Cython
+```
+
+Installation de SMC++
+
+```
+pip install git+https://github.com/popgenmethods/smcpp
+```
+
+5. Utilisation
 
 ## Auteur
 
