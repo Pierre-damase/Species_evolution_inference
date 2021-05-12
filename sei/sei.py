@@ -599,7 +599,7 @@ def compute_stairway_inference(simulation, path_stairway, path_data, fold):
               .format(path_stairway, path_data, blueprint))
 
     # Run the batch file
-    os.system("bash {}{}.blueprint.sh".format(path_data, blueprint))
+    os.system("xvfb-run bash {}{}.blueprint.sh".format(path_data, blueprint))
 
     # Extract data from the inference with stairway
 
@@ -628,7 +628,7 @@ def compute_stairway_inference(simulation, path_stairway, path_data, fold):
                                                                              kappa))
 
     # Remove all blueprint file & stairway file
-    os.system("rm -rf {}".format(path_data))
+    #os.system("rm -rf {}".format(path_data))
 
     return stairway
 
