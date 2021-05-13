@@ -161,7 +161,7 @@ def generate_sfs(params, model, nb_simu, path_data, path_length):
     Generate a set of unfolded sfs of fixed SNPs size with msprime.
     """
     # Define length
-    length = length_from_file(path_length, params, mu=8e-2, snp=10000)
+    length = length_from_file(path_length, params, mu=8e-2, snp=100000)
 
     # Convert params from log scale
     params.update({k: (np.power(10, v) if k != 'm21' else v) for k, v in params.items()})
@@ -171,15 +171,17 @@ def generate_sfs(params, model, nb_simu, path_data, path_length):
         simulation_parameters(sample=20, ne=1, rcb_rate=8e-2, mu=8e-2, length=length))
 
     sfs, snp, variants, execution = [], [], [], []
-    for _ in range(nb_simu):
+    for i in range(nb_simu):
         start_time = time.time()
 
         sfs_observed, variants_observed = ms.msprime_simulation(model=model, params=params)
 
         sfs.append(sfs_observed)
         snp.append(sum(sfs_observed))
-        variants.append(variants_observed)
         execution.append(time.time() - start_time)
+
+        if i == 0:
+            variants.append(variants_observed)
 
     # Create DataFrame from dictionary
     dico = {
