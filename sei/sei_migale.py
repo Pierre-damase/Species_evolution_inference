@@ -97,19 +97,22 @@ def generate_sfs(params, model, nb_simu, path_data, path_length):
     params.update(
         simulation_parameters(sample=20, ne=1, rcb_rate=8e-2, mu=8e-2, length=length))
 
-    sfs, snp, execution = [], [], []
-    for _ in range(nb_simu):
+    sfs, snp, variants, execution = [], [], [], []
+    for i in range(nb_simu):
         start_time = time.time()
 
-        sfs_observed = ms.msprime_simulation(model=model, params=params)
+        sfs_observed, variants_observed = ms.msprime_simulation(model=model, params=params)
+
         sfs.append(sfs_observed)
         snp.append(sum(sfs_observed))
-
         execution.append(time.time() - start_time)
+
+        if i == 0:
+            variants.append(variants_observed)
 
     # Create DataFrame form dictionary
     dico = {
-        'Parameters': [params], 'SFS observed': [sfs], 'SNPs': [snp],
+        'Parameters': [params], 'SFS observed': [sfs], 'SNPs': [snp], 'Variants': [variants],
         'Time': [round(np.mean(execution), 4)]
     }
     data = pd.DataFrame(dico)

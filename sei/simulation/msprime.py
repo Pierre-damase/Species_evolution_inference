@@ -212,7 +212,7 @@ def msprime_simulation(model, params, debug=False):
         sfs[freq_mutation] += 1
 
         # Store for each variant, the position and the genotypes
-        variants.append({'Position': round(variant.position), 'Genotypes': variant.genotypes})
+        variants.append((variant.position, variant.genotypes))
 
     return sfs, variants
 
