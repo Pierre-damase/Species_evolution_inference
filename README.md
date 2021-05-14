@@ -46,7 +46,13 @@ Installation de SMC++
 pip install git+https://github.com/popgenmethods/smcpp
 ```
 
-5. Utilisation
+5. xvfb-run
+
+Problème avec la génération des graphes, notamment sur un cluster tel que migale. Son utilisation est recommandée.
+
+```
+sudo apt install xvfb-run
+```
 
 ## Auteur
 
