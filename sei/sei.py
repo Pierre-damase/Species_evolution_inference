@@ -161,7 +161,7 @@ def generate_sfs(params, model, nb_simu, path_data, path_length):
     Generate a set of unfolded sfs of fixed SNPs size with msprime.
     """
     # Define length
-    length = length_from_file(path_length, params, mu=8e-2, snp=100000)
+    length = length_from_file(path_length, params, mu=8e-2, snp=10000)
 
     # Convert params from log scale
     params.update({k: (np.power(10, v) if k != 'm21' else v) for k, v in params.items()})

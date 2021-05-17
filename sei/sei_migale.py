@@ -35,8 +35,7 @@ def simulation_parameters(sample, ne, rcb_rate, mu, length):
     Set up the parametres for the simulation
     """
     params = {
-        "sample_size": sample, "size_population": ne, "rcb_rate": rcb_rate, "mu": mu,
-        "length": length
+        "sample_size": sample, "Ne": ne, "rcb_rate": rcb_rate, "mu": mu, "length": length
     }
     return params
 
@@ -509,7 +508,6 @@ if __name__ == "__main__":
         if args.model == 'decline':
             params = define_parameters(args.model)
             params, model = params[args.job-1], ms.sudden_decline_model
-
             path_data = "/home/pimbert/work/Species_evolution_inference/Data/Msprime/{0}/" \
                 "SFS_{0}-tau={1}_kappa={2}" \
                 .format(args.model, params['Tau'], params['Kappa'])
@@ -518,30 +516,8 @@ if __name__ == "__main__":
         # 2 (with m12 the migration rate) and no migration into 2 from 1
         # Population 1 size is pop1 and population 2 size is pop2 = kappa*pop1
         elif args.model == 'migration':
-            # params = define_parameters(args.model)
-
-            # SUPR #
-            tmp = define_parameters(args.model)
-            data = pd.read_json("/home/pimbert/work/Species_evolution_inference/Data/Msprime/migration/SFS_migration-all")
-
-            # Mean SNPs
-            data['SNPs'] = data['SNPs'].apply(np.mean)
-
-            params, present = [], []
-            for _, row in data.iterrows():
-                p = {'m12': round(np.log10(row['Parameters']['m12']), 2), 'm21': 0.0,
-                     'Kappa': round(np.log10(row['Parameters']['Kappa']), 2)}
-                present.append(p)
-                if not 80000 < row['SNPs'] < 120000:
-                    params.append(p)
-
-            for p in tmp:
-                if p not in present:
-                    params.append(p)
-            # SUPR #
-
+            params = define_parameters(args.model)
             params, model = params[args.job-1], ms.twopops_migration_model
-
             path_data = "/home/pimbert/work/Species_evolution_inference/Data/Msprime/{0}/" \
                 "SFS_{0}-m12={1}_kappa={2}" \
                 .format(args.model, params['m12'], params['Kappa'])
