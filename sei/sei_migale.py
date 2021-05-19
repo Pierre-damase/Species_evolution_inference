@@ -509,7 +509,7 @@ if __name__ == "__main__":
             params = define_parameters(args.model)
             params, model = params[args.job-1], ms.sudden_decline_model
             path_data = "/home/pimbert/work/Species_evolution_inference/Data/Msprime/{0}/" \
-                "SFS_{0}-tau={1}_kappa={2}" \
+                "SFS_{0}_tau={1}_kappa={2}" \
                 .format(args.model, params['Tau'], params['Kappa'])
 
         # Simulation of two populations migration models for various migration into 1 from
@@ -519,7 +519,7 @@ if __name__ == "__main__":
             params = define_parameters(args.model)
             params, model = params[args.job-1], ms.twopops_migration_model
             path_data = "/home/pimbert/work/Species_evolution_inference/Data/Msprime/{0}/" \
-                "SFS_{0}-m12={1}_kappa={2}" \
+                "SFS_{0}_m12={1}_kappa={2}" \
                 .format(args.model, params['m12'], params['Kappa'])
 
         path_length = "/home/pimbert/work/Species_evolution_inference/Data/Msprime/" \
@@ -528,12 +528,10 @@ if __name__ == "__main__":
         generate_sfs(params, model, nb_simu=100, path_data=path_data, path_length=path_length)
 
     elif args.analyse == 'inf':
-        path_data = "/home/pimbert/work/Species_evolution_inference/Data/Msprime/{}/" \
-            .format(args.model)
-        filin = "SFS_{}-all".format(args.model)
-
         # Export the observed SFS to DataFrame
-        simulation = f.export_simulation_files(filin, path_data)
+        typ = 'VCF' if args.smc else 'SFS'
+        simulation = f.export_simulation_files(typ=typ, model=args.model, job=args.job - 1,
+                                               param=args.param, value=args.value)
 
         # Inference with dadi
         if args.dadi:
@@ -548,33 +546,19 @@ if __name__ == "__main__":
 
             # Select observed data for the inference
             if args.param is None:
-                simulation = simulation.iloc[args.job-1]
                 path_data = "/home/pimbert/work/Species_evolution_inference/Data/Dadi/{}/all/" \
                     .format(args.model)
-
             else:
-                if args.param != 'm12':
-                    param = args.param.capitalize()
-                else:
-                    param = args.param
-
-                simulation = [
-                    ele for _, ele in simulation.iterrows()
-                    if round(np.log10(ele['Parameters'][param]), 2) == args.value
-                ][args.job-1]
-
                 path_data = "/home/pimbert/work/Species_evolution_inference/Data/Dadi/{}/{}/" \
                     .format(args.model, args.param)
 
             path_data += "Folded/" if args.fold else "Unfolded/"
 
-            simulation = simulation[['Parameters', 'SNPs', 'SFS observed']]
             save_dadi_inference(simulation, models, args.fold, path_data, args.job,
                                 fixed=args.param, value=args.value)
 
         # Inference with stairway plot v2
         elif args.stairway:
-            simulation = simulation.iloc[args.job - 1][['Parameters', 'SFS observed']]
             save_stairway_inference(simulation, model=args.model, fold=args.fold)
 
         # Inference with SMC++
