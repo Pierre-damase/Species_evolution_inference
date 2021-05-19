@@ -710,23 +710,23 @@ def save_smc_inference(simulation, model):
     if model == 'decline':
         param = {k: round(np.log10(v), 2) for k, v in simulation['Parameters'].items()
                  if k in ['Tau', 'Kappa']}
-        fichier = "vcf-tau={}_kappa={}".format(param['Tau'], param['Kappa'])
+        fichier = "vcf_tau={}_kappa={}".format(param['Tau'], param['Kappa'])
 
     elif model == 'migration':
         param = {k: round(np.log10(v), 2) for k, v in simulation['parameters'].items()
                  if k in ['m12', 'kappa']}
-        fichier = "vcf-m12={}_kappa={}".format(param['m12'], param['kappa'])
+        fichier = "vcf_m12={}_kappa={}".format(param['m12'], param['kappa'])
 
     # Select sample size and length
     param = {
         k: v for k, v in simulation['Parameters'].items() if k in ['sample_size', 'length']
     }
 
-    # Iterate through each variant
-    for variants in simulation['Variants']:
-        # Generate the VCF file format
-        f.variants_to_vcf(variants, param, fichier, path_data, ploidy=2)
-        break
+    # Generate the VCF file format
+    f.variants_to_vcf(simulation['Variants'][0], param, fichier, path_data, ploidy=2)
+
+    # VCF file to SMC++ format
+    f.vcf_to_smc(fichier, path_data)
 
 
 ######################################################################
@@ -814,7 +814,7 @@ def main():
         if args.model == 'decline':
             params = define_parameters(args.model)
             params, model = params[args.job-1], ms.sudden_decline_model
-            path_data = "./Data/Msprime/{0}/SFS_{0}-tau={1}_kappa={2}"\
+            path_data = "./Data/Msprime/{0}/SFS_{0}_tau={1}_kappa={2}"\
                 .format(args.model, params['Tau'], params['Kappa'])
 
         # Simulation of two populations migration models for various migration into 1 from
@@ -824,7 +824,7 @@ def main():
             params = define_parameters(args.model)
             params, model = params[args.job-1], ms.twopops_migration_model
 
-            path_data = "./Data/Msprime/{0}/SFS_{0}-m12={1}_kappa={2}"\
+            path_data = "./Data/Msprime/{0}/SFS_{0}_m12={1}_kappa={2}"\
                 .format(args.model, params['m12'], params['Kappa'])
 
         path_length = "./Data/Msprime/length_factor-{}".format(args.model)
@@ -835,11 +835,10 @@ def main():
         dadi_params_optimisation(args.number)
 
     elif args.analyse == 'inf':
-        path_data = "./Data/Msprime/{}/".format(args.model)
-        filin = "SFS_{}-all".format(args.model)
-
-        # Export the observed SFS to DataFrame
-        simulation = f.export_simulation_files(filin, path_data)
+        # Export the observed data to DataFrame
+        typ = 'VCF' if args.smc else 'SFS'
+        simulation = f.export_simulation_files(typ=typ, model=args.model, job=args.job - 1,
+                                               param=args.param, value=args.value)
 
         # Inference with dadi
         if args.dadi:
@@ -852,37 +851,22 @@ def main():
                 models = \
                     {'Inference': dadi.twopops_migration_model, 'Control': dadi.constant_model}
 
-            # Select observed data for the inference
             if args.param is None:
-                simulation = simulation.iloc[args.job - 1]
                 path_data = "./Data/Dadi/{}/all/".format(args.model)
-
             else:
-                if args.param != 'm12':
-                    param = args.param.capitalize()
-                else:
-                    param = args.param
-
-                simulation = [
-                    ele for _, ele in simulation.iterrows()
-                    if round(np.log10(ele['Parameters'][param]), 2) == args.value
-                ][args.job-1]
                 path_data = "./Data/Dadi/{}/{}/".format(args.model, args.param)
 
             path_data += "Folded/" if args.fold else "Unfolded/"
 
-            simulation = simulation[['Parameters', 'SNPs', 'SFS observed']]
             save_dadi_inference(simulation, models, args.fold, path_data, args.job,
                                 fixed=args.param, value=args.value)
 
         # Inference with stairway plot 2
         elif args.stairway:
-            simulation = simulation.iloc[args.job - 1][['Parameters', 'SFS observed']]
             save_stairway_inference(simulation, model=args.model, fold=args.fold)
 
         # Inference with SMC++
         elif args.smc:
-            simulation = simulation.iloc[args.job - 1][['Parameters', 'Variants']]
             save_smc_inference(simulation, model=args.model)
 
 

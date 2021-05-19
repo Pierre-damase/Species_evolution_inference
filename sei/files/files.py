@@ -325,37 +325,45 @@ def read_stairway_summary(fichier):
 # Export json files                                                  #
 ######################################################################
 
-def export_simulation_files(filin, path_data):
+def extract_param(fichier):
+    """
+    Extract from a file name the parameters and values.
+    """
+    return {ele.split('=')[0]: float(ele.split('=')[1]) for ele in fichier.rsplit('_', 2)[1:]}
+
+
+def export_simulation_files(typ, model, job, param=None, value=None):
     """
     Export each json file generated with msprime into a single DataFrame.
     Then export this DataFrame to a json file.
 
     Parameters
     ----------
-    path_data:
-        path of each json file
+    typ: either SFS or VCF
+    model: either decline or migration
+    job
+    param
+    value
     """
-    if filin not in os.listdir(path_data):
-        # Pandas DataFrame
-        columns = ['Parameters', 'SNPs', 'SFS observed', 'Variants', 'Time']
-        simulation = pd.DataFrame(columns=columns)
+    path_data = "./Data/Msprime/{}/".format(model)
 
-        for fichier in os.listdir(path_data):
-            # Export the json file to pandas DataFrame and store it in simulation
-            res = pd.read_json(path_or_buf="{}{}".format(path_data, fichier), typ='frame')
-            simulation = simulation.append(res, ignore_index=True)
-
-            # Delete the json file
-            os.remove("{}{}".format(path_data, fichier))
-
-        # Export pandas DataFrame simulation to json file
-        simulation.to_json("{}{}".format(path_data, filin))
+    # Selection of the file
+    if param is None:
+        fichier = os.listdir("{}".format(path_data))[job]
+        simulation = pd.read_json("{}{}".format(path_data, fichier))
 
     else:
-        simulation = \
-            pd.read_json(path_or_buf="{}{}".format(path_data, filin), typ='frame')
+        fichiers = [
+            fil for fil in os.listdir(path_data) if extract_param(fil)[param] == value
+        ]
+        simulation = pd.read_json("{}{}".format(path_data, fichiers[job]))
 
-    return simulation
+    # Return the SFS
+    if typ == 'SFS':
+        return simulation[['Parameters', 'SFS observed', 'SNPs', 'Time']].iloc[0]
+
+    # Return the VCF
+    return simulation[['Parameters', 'Variants', 'Time']].iloc[0]
 
 
 def export_inference_files(model, fold, param, value=None):
@@ -517,7 +525,7 @@ def export_stairway_files(model, fold):
 
 
 ######################################################################
-# Export json files                                                  #
+# SMC++ file                                                        #
 ######################################################################
 
 def variants_to_vcf(variants, param, fichier, path_data, ploidy=2):
@@ -539,7 +547,7 @@ def variants_to_vcf(variants, param, fichier, path_data, ploidy=2):
         the output, consisting of the combined allele of [0, 1], [2, 3], ..., [18, 19].
     """
     if param['sample_size'] % ploidy != 0:
-        sys.exit("Sample size must be divisible by ploidy")
+        sys.exit("Error \"variants_to_vcf\": sample size must be divisible by ploidy")
 
     with open("{}{}".format(path_data, fichier), 'w') as filout:
         # Write the header
@@ -554,14 +562,36 @@ def variants_to_vcf(variants, param, fichier, path_data, ploidy=2):
         header += ['tsk_{}'.format(i) for i in range(round(param['sample_size'] / ploidy))]
         filout.write("\t".join(header) + "\n")
 
+        cpt = 0
         for variant in variants:
-            value = ['1', str(variant['Position']), '.', '0', '1', '.', 'PASS', '.', 'GT']
+            value = ['1', str(variant[0]), '.', '0', '1', '.', 'PASS', '.', 'GT']
             if ploidy == 1:
-                value += [genotype for genotype in variant['Genotypes']]
+                value += [str(genotype) for genotype in variant[1]]
             else:
-                value += ["{}|{}".format(variant['Genotypes'][i], variant['Genotypes'][i+1]) for
-                          i in range(round(param['sample_size'] / ploidy))]
+                value += [
+                    "{}|{}".format(variant[1][i], variant[1][i+1]) for
+                    i in range(round(param['sample_size'] / ploidy))
+                ]
             filout.write("\t".join(value) + "\n")
+
+            cpt += 1
+            if cpt == 10:
+                break
+
+
+def vcf_to_smc(fichier, path_data):
+    """
+    Convert a VCF file to SMC++ file.
+    """
+    # Zip the VCF file with bgzip
+    os.system("bgzip -f {}{}".format(path_data, fichier))
+
+    # Generate index (CSI format) for bgzip compressed VCF files
+    os.system("bcftools index -c {}{}.gz".format(path_data, fichier))
+
+    # VCF file to SMC++ format
+    os.system("smc++ vcf2smc {0}{1}.gz {0}smc_{2}.gz 1 tsk1:tsk_0"
+              .format(path_data, fichier, fichier.split('_', 1)[1]))
 
 
 if __name__ == "__main__":
