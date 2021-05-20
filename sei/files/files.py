@@ -11,6 +11,8 @@ import sys
 import numpy as np
 import pandas as pd
 
+from itertools import islice
+
 
 ######################################################################
 # SFS shape verification                                             #
@@ -554,15 +556,16 @@ def variants_to_vcf(variants, param, fichier, path_data, ploidy=2):
         filout.write("##fileformat=VCFv4.2\n")
         filout.write("##source=tskit 0.3.4\n")
         filout.write("##FILTER=<ID=PASS,Description=\"All filters passed\">\n")
-        filout.write("##contig=<ID=1,length={}>\n".format(round(param['length'])))
+        filout.write("##contig=<ID=1,length={}>\n".format(param['length']))
         filout.write("##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">\n")
 
         # Write the genotype
+        param['sample_size'] = 6
         header = ['#CHROM', 'POS', 'ID', 'REF', 'ALT', 'QUAL', 'FILTER', 'INFO', 'FORMAT']
         header += ['tsk_{}'.format(i) for i in range(round(param['sample_size'] / ploidy))]
         filout.write("\t".join(header) + "\n")
 
-        cpt = 0
+        cpt = 1
         for variant in variants:
             value = ['1', str(variant[0]), '.', '0', '1', '.', 'PASS', '.', 'GT']
             if ploidy == 1:
@@ -583,13 +586,28 @@ def vcf_to_smc(fichier, path_data):
     """
     Convert a VCF file to SMC++ file.
     """
+    # Get the fifth line of the VCF (doesn't read all the file)
+    with open("{}{}".format(path_data, fichier), "r") as filin:
+        line = next(islice(filin, 5, 6)).strip().split('\t')[9:]
+
     # Zip the VCF file with bgzip
     os.system("bgzip -f {}{}".format(path_data, fichier))
 
     # Generate index (CSI format) for bgzip compressed VCF files
-    os.system("bcftools index -c {}{}.gz".format(path_data, fichier))
+    os.system("bcftools index -cf {}{}.gz".format(path_data, fichier))
 
-    # VCF file to SMC++ format
+    # VCF file to SMC++ format - generate the command
+    command = "smc++ vcf2smc {0}{1}.gz {0}smc_{2}.gz {contig} " \
+        .format(path_data, fichier, fichier.split('_', 1)[1], contig=1)
+
+    command += "Pop1:"
+    for member in line:
+        command += "{}".format(member) if member == line[-1] else "{},".format(member)
+
+    # VCF file to SMC++ format - execute the command
+    os.system(command)
+    sys.exit()
+
     os.system("smc++ vcf2smc {0}{1}.gz {0}smc_{2}.gz 1 tsk1:tsk_0"
               .format(path_data, fichier, fichier.split('_', 1)[1]))
 
