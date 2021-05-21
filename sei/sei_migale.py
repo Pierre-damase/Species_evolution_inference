@@ -119,6 +119,11 @@ def generate_sfs(params, model, nb_simu, path_data, path_length):
     # Export DataFrame to json file
     data.to_json("{}".format(path_data))
 
+    # Zip file
+    os.system("zip -j {0}.zip {0}".format(path_data))
+    os.remove("{}".format(path_data))
+
+
 
 ######################################################################
 # Inference with Dadi                                                #

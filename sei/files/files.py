@@ -265,7 +265,8 @@ def read_stairway_final(path):
             data['Final']['LL'].append(-float(ll))
 
             line = [float(ele) for ele in lines[-1].strip().split(' ')]
-            data['Final']['Theta'].append((min(line), max(line)))  # pair Theta min & max
+            data['Final']['Theta'].append((min(line), max(line), len(line)))
+            # pair Theta min, max & dimension
 
     return data
 
