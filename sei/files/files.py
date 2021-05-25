@@ -160,6 +160,7 @@ def stairway_data(name, data, path, fold):
     """
     sfs, nseq, mu, year, ninput = \
         data['sfs'], data['sample_size'], data['mu'], data['year'], data['ninput']
+    length = sum(sfs) * 10
 
     sfs = sfs[:round(len(sfs)/2)] if fold else sfs
 
@@ -169,7 +170,7 @@ def stairway_data(name, data, path, fold):
         filout.write("nseq: {} # number of sequences\n".format(nseq))
         filout.write(
             "L: {} # total number of observed nucleic sites, including poly-/mono-morphic\n"
-            .format(sum(sfs)*10))
+            .format(length))
         filout.write("whether_folded: {} # folded (true) or unfolded (false) SFS\n"
                      .format(fold))
 
@@ -265,8 +266,8 @@ def read_stairway_final(path):
             data['Final']['LL'].append(-float(ll))
 
             line = [float(ele) for ele in lines[-1].strip().split(' ')]
-            data['Final']['Theta'].append((min(line), max(line), len(line)))
-            # pair Theta min, max & dimension
+            #data['Final']['Theta'].append((min(line), max(line), len(line)))
+            data['Final']['Theta'].append(line)
 
     return data
 
@@ -332,10 +333,13 @@ def extract_param(fichier):
     """
     Extract from a file name the parameters and values.
     """
-    return {ele.split('=')[0]: float(ele.split('=')[1]) for ele in fichier.rsplit('_', 2)[1:]}
+    fichier = fichier[:-4]
+    return {
+        ele.split('=')[0]: float(ele.split('=')[1]) for ele in fichier.rsplit('_', 2)[1:]
+    }
 
 
-def export_simulation_files(typ, model, job, param=None, value=None):
+def export_simulation_files(typ, job, path_data, param=None, value=None):
     """
     Export each json file generated with msprime into a single DataFrame.
     Then export this DataFrame to a json file.
@@ -343,13 +347,10 @@ def export_simulation_files(typ, model, job, param=None, value=None):
     Parameters
     ----------
     typ: either SFS or VCF
-    model: either decline or migration
     job
     param
     value
     """
-    path_data = "./Data/Msprime/{}/".format(model)
-
     # Selection of the file
     if param is None:
         fichier = os.listdir("{}".format(path_data))[job]
