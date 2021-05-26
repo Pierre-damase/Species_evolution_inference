@@ -2,12 +2,10 @@
 Decline estimation from genomic data.
 """
 
-import copy
 import os
 import sys
 import time
 import warnings
-from collections import Counter
 import pandas as pd
 import numpy as np
 from scipy.stats import chi2
@@ -17,6 +15,14 @@ import sei.files.files as f
 import sei.graphics.plot as plot
 import sei.inference.dadi as dadi
 import sei.simulation.msprime as ms
+
+
+def zip_file(data):
+    """
+    Zip a file.
+    """
+    os.system("zip -j {0}.zip {0}".format(data))
+    os.remove("{}".format(data))
 
 
 def computation_theoretical_theta(ne, mu, length):
@@ -196,8 +202,7 @@ def generate_sfs(params, model, nb_simu, path_data, path_length):
     data.to_json("{}".format(path_data))
 
     # Zip file
-    os.system("zip -j {0}.zip {0}".format(path_data))
-    os.remove("{}".format(path_data))
+    zip_file(data=path_data)
 
 
 ######################################################################
@@ -489,7 +494,8 @@ def compute_dadi_inference(sfs_observed, models, sample, fold, path_data, job, d
             weighted_square_distance({'M0': data['M0']['SFS'][i], 'M1': data['M1']['SFS'][i]})
         )  # d2 between the inferred SFS of two models - M0 & M1
 
-        break
+        if i == 2:
+            break
 
     # Mean execution time for the inference
     data['Time'] = round(sum(execution) / len(sfs_observed), 4)
@@ -556,6 +562,9 @@ def save_dadi_inference(simulation, models, fold, path_data, job, fixed, value):
         name = "dadi_{}_{}={}-{}" \
             .format(models['Inference'].__name__.split('_')[1], fixed, value, job)
     data.to_json("{}{}".format(path_data, name))
+
+    # Zip file
+    zip_file(data="{}{}".format(path_data, name))
 
     # Remove SFS file
     if value is None:
@@ -686,6 +695,9 @@ def save_stairway_inference(simulation, model, fold):
 
     # Convert pandas DataFrame data to json file
     data.to_json("{}{}-all".format(path_stairway, file_data))
+
+    # Zip file
+    zip_file(data="{}{}-all".format(path_stairway, file_data))
 
 
 ######################################################################

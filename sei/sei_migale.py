@@ -8,7 +8,6 @@ import time
 import warnings
 import pandas as pd
 import numpy as np
-from collections import Counter
 from scipy.stats import chi2
 
 from arguments import arguments as arg
@@ -16,6 +15,14 @@ from files import files as f
 from graphics import plot
 from inference import dadi
 from simulation import msprime as ms
+
+
+def zip_file(data):
+    """
+    Zip a file.
+    """
+    os.system("zip -j {0}.zip {0}".format(data))
+    os.remove("{}".format(data))
 
 
 def computation_theoritical_theta(ne, mu, length):
@@ -120,9 +127,7 @@ def generate_sfs(params, model, nb_simu, path_data, path_length):
     data.to_json("{}".format(path_data))
 
     # Zip file
-    os.system("zip -j {0}.zip {0}".format(path_data))
-    os.remove("{}".format(path_data))
-
+    zip_file(data=path_data)
 
 
 ######################################################################
@@ -363,6 +368,9 @@ def save_dadi_inference(simulation, models, fold, path_data, job, fixed, value):
             .format(models['Inference'].__name__.split('_')[1], fixed, value, job)
     data.to_json("{}{}".format(path_data, name))
 
+    # Zip file
+    zip_file("{}{}".format(path_data, name))
+
     # Remove SFS file
     if value is None:
         os.remove("{}SFS-{}.fs".format(path_data, job))
@@ -478,7 +486,7 @@ def save_stairway_inference(simulation, model, fold):
         file_data = "stairway_{}_tau={}_kappa={}".format(model, param['Tau'], param['Kappa'])
 
     elif model == 'migration':
-        param = {k: round(np.log10(v), 2) for k, v in simulation['parameters'].items()
+        param = {k: round(np.log10(v), 2) for k, v in simulation['Parameters'].items()
                  if k in ['m12', 'kappa']}
         file_data = "stairway_{}_m12={}_kappa={}".format(model, param['m12'], param['kappa'])
 
@@ -497,6 +505,9 @@ def save_stairway_inference(simulation, model, fold):
 
     # Convert pandas DataFrame data to json file
     data.to_json("{}{}-all".format(path_stairway, file_data))
+
+    # Zip file
+    zip_file(data="{}{}-all".foramt(path_stairway, file_data))
 
 
 ######################################################################
@@ -537,7 +548,7 @@ if __name__ == "__main__":
     elif args.analyse == 'inf':
         # Export the observed SFS to DataFrame
         typ = 'VCF' if args.smc else 'SFS'
-        path_sim = "/home/pimbert/work/Msprime/{}/".format(args.model)
+        path_sim = "/home/pimbert/save/Msprime/{}/".format(args.model)
         simulation = f.export_simulation_files(typ=typ, path_data=path_sim, job=args.job - 1,
                                                param=args.param, value=args.value)
 

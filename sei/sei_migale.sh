@@ -20,7 +20,7 @@
 # -N dadi_migration_kappa_fold
 
 # Number of separate submissions to the cluster
-#$ -t 1-3
+#$ -t 1-2
 
 # Short pour un job < 12h
 #$ -q short.q
@@ -53,8 +53,8 @@ python /home/pimbert/work/Species_evolution_inference/sei/sei_migale.py inf -sta
 
 #python /home/pimbert/work/Species_evolution_inference/sei/sei_migale.py inf -dadi --model migration --job $SGE_TASK_ID
 #python /home/pimbert/work/Species_evolution_inference/sei/sei_migale.py inf -dadi --model migration --job $SGE_TASK_ID --fold
-#python /home/pimbert/work/Species_evolution_inference/sei/sei_migale.py inf -dadi --model migration --job $SGE_TASK_ID --param tau --value 2.4
-#python /home/pimbert/work/Species_evolution_inference/sei/sei_migale.py inf -dadi --model migration --job $SGE_TASK_ID --param tau --value 2.4 --fold
+#python /home/pimbert/work/Species_evolution_inference/sei/sei_migale.py inf -dadi --model migration --job $SGE_TASK_ID --param m12 --value 2.4
+#python /home/pimbert/work/Species_evolution_inference/sei/sei_migale.py inf -dadi --model migration --job $SGE_TASK_ID --param m12 --value 2.4 --fold
 #python /home/pimbert/work/Species_evolution_inference/sei/sei_migale.py inf -dadi --model migration --job $SGE_TASK_ID --param kappa --value 2.4
 #python /home/pimbert/work/Species_evolution_inference/sei/sei_migale.py inf -dadi --model migration --job $SGE_TASK_ID --param kappa --value 2.4 --fold
 

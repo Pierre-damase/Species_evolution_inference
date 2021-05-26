@@ -553,12 +553,19 @@ def variants_to_vcf(variants, param, fichier, path_data, ploidy=2):
     if param['sample_size'] % ploidy != 0:
         sys.exit("Error \"variants_to_vcf\": sample size must be divisible by ploidy")
 
+    # vcf2smc skipps all but first if multiple entries in the VCF, i.e. same position (round)
+    # for several genotype
+    # To avoid this, length and position are multiplied by 10 000
+    # This number is a good trade off between a small number of multiple entries and execution
+    # time
+    multiplier = 10000
+
     with open("{}{}".format(path_data, fichier), 'w') as filout:
         # Write the header
         filout.write("##fileformat=VCFv4.2\n")
         filout.write("##source=tskit 0.3.4\n")
         filout.write("##FILTER=<ID=PASS,Description=\"All filters passed\">\n")
-        filout.write("##contig=<ID=1,length={}>\n".format(param['length']))
+        filout.write("##contig=<ID=1,length={}>\n".format(round(param['length'] * multiplier)))
         filout.write("##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">\n")
 
         # Write the genotype
@@ -569,7 +576,9 @@ def variants_to_vcf(variants, param, fichier, path_data, ploidy=2):
 
         cpt = 1
         for variant in variants:
-            value = ['1', str(variant[0]), '.', '0', '1', '.', 'PASS', '.', 'GT']
+            value = [
+                '1', str(round(variant[0] * multiplier)), '.', '0', '1', '.', 'PASS', '.', 'GT'
+            ]
             if ploidy == 1:
                 value += [str(genotype) for genotype in variant[1]]
             else:
