@@ -532,7 +532,7 @@ def export_stairway_files(model, fold):
 # SMC++ file                                                        #
 ######################################################################
 
-def variants_to_vcf(variants, param, fichier, path_data, ploidy=2):
+def variants_to_vcf(variants, param, fichier, path_data, multiplier, ploidy=2):
     """
     Writes a VCF formatted file from variants generated with msprime.
 
@@ -553,13 +553,6 @@ def variants_to_vcf(variants, param, fichier, path_data, ploidy=2):
     if param['sample_size'] % ploidy != 0:
         sys.exit("Error \"variants_to_vcf\": sample size must be divisible by ploidy")
 
-    # vcf2smc skipps all but first if multiple entries in the VCF, i.e. same position (round)
-    # for several genotype
-    # To avoid this, length and position are multiplied by 10 000
-    # This number is a good trade off between a small number of multiple entries and execution
-    # time
-    multiplier = 10000
-
     with open("{}{}".format(path_data, fichier), 'w') as filout:
         # Write the header
         filout.write("##fileformat=VCFv4.2\n")
@@ -569,7 +562,6 @@ def variants_to_vcf(variants, param, fichier, path_data, ploidy=2):
         filout.write("##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">\n")
 
         # Write the genotype
-        param['sample_size'] = 6
         header = ['#CHROM', 'POS', 'ID', 'REF', 'ALT', 'QUAL', 'FILTER', 'INFO', 'FORMAT']
         header += ['tsk_{}'.format(i) for i in range(round(param['sample_size'] / ploidy))]
         filout.write("\t".join(header) + "\n")
@@ -587,10 +579,6 @@ def variants_to_vcf(variants, param, fichier, path_data, ploidy=2):
                     i in range(round(param['sample_size'] / ploidy))
                 ]
             filout.write("\t".join(value) + "\n")
-
-            cpt += 1
-            if cpt == 10:
-                break
 
 
 def vcf_to_smc(fichier, path_data):
@@ -617,10 +605,6 @@ def vcf_to_smc(fichier, path_data):
 
     # VCF file to SMC++ format - execute the command
     os.system(command)
-    sys.exit()
-
-    os.system("smc++ vcf2smc {0}{1}.gz {0}smc_{2}.gz 1 tsk1:tsk_0"
-              .format(path_data, fichier, fichier.split('_', 1)[1]))
 
 
 if __name__ == "__main__":

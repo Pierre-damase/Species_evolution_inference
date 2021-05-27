@@ -488,7 +488,7 @@ def save_stairway_inference(simulation, model, fold):
     elif model == 'migration':
         param = {k: round(np.log10(v), 2) for k, v in simulation['Parameters'].items()
                  if k in ['m12', 'kappa']}
-        file_data = "stairway_{}_m12={}_kappa={}".format(model, param['m12'], param['kappa'])
+        file_data = "stairway_{}_m12={}_kappa={}".format(model, param['m12'], param['Kappa'])
 
     else:
         file_data = "stairway_{}-ne={}/".format(model, simulation['Parameters']['Ne'])
@@ -507,7 +507,7 @@ def save_stairway_inference(simulation, model, fold):
     data.to_json("{}{}-all".format(path_stairway, file_data))
 
     # Zip file
-    zip_file(data="{}{}-all".foramt(path_stairway, file_data))
+    zip_file(data="{}{}-all".format(path_stairway, file_data))
 
 
 ######################################################################
