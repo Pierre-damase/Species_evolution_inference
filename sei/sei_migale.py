@@ -262,7 +262,7 @@ def compute_dadi_inference(sfs_observed, models, sample, fold, path_data, job, d
         # Dadi inference for M1
         m1_inferences, m1_execution = [], []
 
-        for _ in range(1):  # Run 100 inferences with dadi from the observed sfs
+        for _ in range(100):  # Run 100 inferences with dadi from the observed sfs
             start_inference = time.time()
 
             # Pairs (Log-likelihood, Inferred SFS, Params)
@@ -296,9 +296,6 @@ def compute_dadi_inference(sfs_observed, models, sample, fold, path_data, job, d
         data['d2 models'].append(
             weighted_square_distance({'M0': data['M0']['SFS'][i], 'M1': data['M1']['SFS'][i]})
         )  # d2 between the inferred SFS of two models - M0 & M1
-
-        if i == 2:
-            break
 
     # Mean execution time for the inference
     data['Time'] = round(sum(execution) / len(sfs_observed), 4)

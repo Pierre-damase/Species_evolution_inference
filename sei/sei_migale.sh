@@ -3,7 +3,6 @@
 # Nom du job
 #$ -N stair_decline
 # -N stair_migration
-# -N stair_decline
 # -N dadi_decline_all
 # -N dadi_decline_tau
 # -N dadi_decline_kappa
@@ -36,10 +35,22 @@ python /home/pimbert/work/Species_evolution_inference/sei/sei_migale.py inf -sta
 
 #python /home/pimbert/work/Species_evolution_inference/sei/sei_migale.py inf -dadi --model decline --job $SGE_TASK_ID
 #python /home/pimbert/work/Species_evolution_inference/sei/sei_migale.py inf -dadi --model decline --job $SGE_TASK_ID --param tau --value 2.4
-#python /home/pimbert/work/Species_evolution_inference/sei/sei_migale.py inf -dadi --model decline --job $SGE_TASK_ID --param kappa --value 2.4
+#python /home/pimbert/work/Species_evolution_inference/sei/sei_migale.py inf -dadi --model decline --job $SGE_TASK_ID --param tau --value -2.4
+#python /home/pimbert/work/Species_evolution_inference/sei/sei_migale.py inf -dadi --model decline --job $SGE_TASK_ID --param tau --value 0.0
+#python /home/pimbert/work/Species_evolution_inference/sei/sei_migale.py inf -dadi --model decline --job $SGE_TASK_ID --param kappa --value 2.5
+#python /home/pimbert/work/Species_evolution_inference/sei/sei_migale.py inf -dadi --model decline --job $SGE_TASK_ID --param kappa --value -2.5
+#python /home/pimbert/work/Species_evolution_inference/sei/sei_migale.py inf -dadi --model decline --job $SGE_TASK_ID --param kappa --value 0.0
+#python /home/pimbert/work/Species_evolution_inference/sei/sei_migale.py inf -dadi --model decline --job $SGE_TASK_ID --param kappa --value 0.3
+#python /home/pimbert/work/Species_evolution_inference/sei/sei_migale.py inf -dadi --model decline --job $SGE_TASK_ID --param kappa --value 1.0
 
 #python /home/pimbert/work/Species_evolution_inference/sei/sei_migale.py inf -dadi --model migration --job $SGE_TASK_ID
-#python /home/pimbert/work/Species_evolution_inference/sei/sei_migale.py inf -dadi --model migration --job $SGE_TASK_ID --param m12 --value 2.4
-#python /home/pimbert/work/Species_evolution_inference/sei/sei_migale.py inf -dadi --model migration --job $SGE_TASK_ID --param kappa --value 2.4
+#python /home/pimbert/work/Species_evolution_inference/sei/sei_migale.py inf -dadi --model migration --job $SGE_TASK_ID --param tau --value 2.4
+#python /home/pimbert/work/Species_evolution_inference/sei/sei_migale.py inf -dadi --model migration --job $SGE_TASK_ID --param tau --value -2.4
+#python /home/pimbert/work/Species_evolution_inference/sei/sei_migale.py inf -dadi --model migration --job $SGE_TASK_ID --param tau --value 0.0
+#python /home/pimbert/work/Species_evolution_inference/sei/sei_migale.py inf -dadi --model migration --job $SGE_TASK_ID --param kappa --value 2.5
+#python /home/pimbert/work/Species_evolution_inference/sei/sei_migale.py inf -dadi --model migration --job $SGE_TASK_ID --param kappa --value -2.5
+#python /home/pimbert/work/Species_evolution_inference/sei/sei_migale.py inf -dadi --model migration --job $SGE_TASK_ID --param kappa --value 0.0
+#python /home/pimbert/work/Species_evolution_inference/sei/sei_migale.py inf -dadi --model migration --job $SGE_TASK_ID --param kappa --value 0.3
+#python /home/pimbert/work/Species_evolution_inference/sei/sei_migale.py inf -dadi --model migration --job $SGE_TASK_ID --param kappa --value 1.0
 
 conda deactivate
