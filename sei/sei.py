@@ -21,8 +21,9 @@ def zip_file(data):
     """
     Zip a file.
     """
-    os.system("zip -j {0}.zip {0}".format(data))
-    os.remove("{}".format(data))
+    os.system("zip -rj {0}.zip {0}".format(data))
+    os.system("rm -rf {}".format(data))
+    #os.remove("{}".format(data))
 
 
 def computation_theoretical_theta(ne, mu, length):
@@ -730,20 +731,40 @@ def save_smc_inference(simulation, model):
         fichier = "vcf_tau={}_kappa={}".format(param['Tau'], param['Kappa'])
 
     elif model == 'migration':
-        param = {k: round(np.log10(v), 2) for k, v in simulation['parameters'].items()
-                 if k in ['m12', 'kappa']}
-        fichier = "vcf_m12={}_kappa={}".format(param['m12'], param['kappa'])
+        param = {k: round(np.log10(v), 2) for k, v in simulation['Parameters'].items()
+                 if k in ['m12', 'Kappa']}
+        fichier = "vcf_m12={}_kappa={}".format(param['m12'], param['Kappa'])
 
     # Select sample size and length
     param = {
         k: v for k, v in simulation['Parameters'].items() if k in ['sample_size', 'length']
     }
 
+    # vcf2smc skipps all but first if multiple entries in the VCF, i.e. same position (round)
+    # for several genotype
+    # To avoid this, length and position are multiplied by 10 000
+    # This number is a good trade off between a small number of multiple entries and execution
+    # time
+    multiplier = 10000
+
     # Generate the VCF file format
-    f.variants_to_vcf(simulation['Variants'][0], param, fichier, path_data, ploidy=2)
+    f.variants_to_vcf(simulation['Variants'][0], param, fichier, path_data, multiplier,
+                      ploidy=2)
 
     # VCF file to SMC++ format
     f.vcf_to_smc(fichier, path_data)
+
+    # Inference with SMC
+    mu = 8e-2 / multiplier
+    os.system("smc++ estimate -o {0}{2}/ {1} {0}smc_{2}.gz"\
+              .format(path_data, mu, fichier.split('_', 1)[1]))
+
+    # Zip
+    zip_file("{}{}".format(path_data, fichier.split('_', 1)[1]))
+
+    # Remove
+    os.system("rm -rf {}{}*".format(path_data, fichier))  # VCF and index file
+    os.remove("{}smc_{}.gz".format(path_data, fichier.split('_', 1)[1]))  # SMC file
 
 
 ######################################################################
