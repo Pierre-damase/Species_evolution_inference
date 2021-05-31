@@ -8,6 +8,7 @@ import time
 import warnings
 import pandas as pd
 import numpy as np
+from itertools import islice
 from scipy.stats import chi2
 
 from arguments import arguments as arg
@@ -22,7 +23,7 @@ def zip_file(data):
     Zip a file.
     """
     os.system("zip -j {0}.zip {0}".format(data))
-    os.remove("{}".format(data))
+    os.system("rm -rf {}".format(data))
 
 
 def computation_theoritical_theta(ne, mu, length):
@@ -511,6 +512,32 @@ def save_stairway_inference(simulation, model, fold):
 # Inference with SMC++                                               #
 ######################################################################
 
+def vcf_to_smc(fichier, path_data):
+    """
+    Convert a VCF file to SMC++ file.
+    """
+    # Get the fifth line of the VCF (doesn't read all the file)
+    with open("{}{}".format(path_data, fichier), "r") as filin:
+        line = next(islice(filin, 5, 6)).strip().split('\t')[9:]
+
+    # Zip the VCF file with bgzip
+    os.system("/home/pimbert/.bcftools/bin/bgzip -f {}{}".format(path_data, fichier))
+
+    # Generate index (CSI format) for bgzip compressed VCF files
+    os.system("/home/pimbert/.bcftools/bin/tabix -Cf {}{}.gz".format(path_data, fichier))
+
+    # VCF file to SMC++ format - generate the command
+    command = "smc++ vcf2smc {0}{1}.gz {0}smc_{2}.gz {contig} " \
+        .format(path_data, fichier, fichier.split('_', 1)[1], contig=1)
+
+    command += "Pop1:"
+    for member in line:
+        command += "{}".format(member) if member == line[-1] else "{},".format(member)
+
+    # VCF file to SMC++ format - execute the command
+    os.system(command)
+
+
 def save_smc_inference(simulation, model):
     """
     Inference with SMC++.
@@ -558,7 +585,8 @@ def save_smc_inference(simulation, model):
                       ploidy=2)
 
     # VCF file to SMC++ format
-    f.vcf_to_smc(fichier, path_data)
+    vcf_to_smc(fichier, path_data)
+
 
     # Inference with SMC
     mu = 8e-2 / multiplier

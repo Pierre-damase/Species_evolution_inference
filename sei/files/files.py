@@ -367,7 +367,7 @@ def export_simulation_files(typ, job, path_data, param=None, value=None):
         return simulation[['Parameters', 'SFS observed', 'SNPs', 'Time']].iloc[0]
 
     # Return the VCF
-    return simulation[['Parameters', 'Variants', 'Time']].iloc[0]
+    return simulation[['Parameters', 'Variants', 'SNPs', 'Time']].iloc[0]
 
 
 def export_inference_files(model, fold, param, value=None):

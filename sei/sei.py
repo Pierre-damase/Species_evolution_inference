@@ -705,6 +705,27 @@ def save_stairway_inference(simulation, model, fold):
 # Inference with SMC++                                               #
 ######################################################################
 
+def compute_smc_inference(fichier, path_data, mu, knots):
+    """
+    Inference with SMC++
+    """
+    # Inference 
+    cmd = "smc++ estimate --em-iterations 100 -o {0}{1}-KNOTS={3}/ --knots {3} {2} {0}smc_{1}.gz" \
+        .format(path_data, fichier.split('_', 1)[1], mu, knots)
+    os.system(cmd)
+
+    # Plot
+    cmd = "smc++ plot -c {0}{1}-KNOTS{2}/tmp0.png {0}{1}-KNOTS{2}/.model.iter0.json" \
+        .format(path_data, fichier.split('_', 1)[1], knots)
+    os.system(cmd)
+
+    # Plot
+    cmd = "smc++ plot -c {0}{1}-KNOTS={2}/plot.png {0}{1}-KNOTS={2}/model.final.json" \
+        .format(path_data, fichier.split('_', 1)[1], knots)
+    os.system(cmd)
+
+   
+
 def save_smc_inference(simulation, model):
     """
     Inference with SMC++.
@@ -739,7 +760,7 @@ def save_smc_inference(simulation, model):
     param = {
         k: v for k, v in simulation['Parameters'].items() if k in ['sample_size', 'length']
     }
-
+    
     # vcf2smc skipps all but first if multiple entries in the VCF, i.e. same position (round)
     # for several genotype
     # To avoid this, length and position are multiplied by 10 000
@@ -754,13 +775,12 @@ def save_smc_inference(simulation, model):
     # VCF file to SMC++ format
     f.vcf_to_smc(fichier, path_data)
 
-    # Inference with SMC
-    mu = 8e-2 / multiplier
-    os.system("smc++ estimate -o {0}{2}/ {1} {0}smc_{2}.gz"\
-              .format(path_data, mu, fichier.split('_', 1)[1]))
+    # Inference with SMC++
+    for knot in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]:
+        compute_smc_inference(fichier, path_data, mu=8e-2/multiplier, knots=knot)
 
     # Zip
-    zip_file("{}{}".format(path_data, fichier.split('_', 1)[1]))
+    # zip_file("{}{}".format(path_data, fichier.split('_', 1)[1]))
 
     # Remove
     os.system("rm -rf {}{}*".format(path_data, fichier))  # VCF and index file
@@ -906,6 +926,13 @@ def main():
 
         # Inference with SMC++
         elif args.smc:
+
+            # path_data = "./Data/SMC/decline/TMP/"
+            # cmd = "smc++ estimate --em-iterations 1 -o {0}em_knot=1/ --knots 1 1.25e-5 {0}example.smc.gz".format(path_data)
+            # os.system(cmd)
+            # sys.exit()
+
+            print({k: round(np.log10(v), 2) for k, v in simulation['Parameters'].items() if k in ['Tau', 'Kappa']})
             save_smc_inference(simulation, model=args.model)
 
 
