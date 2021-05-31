@@ -777,6 +777,7 @@ def save_smc_inference(simulation, model):
 
     # Inference with SMC++
     for knot in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]:
+        print("\n\n\n\n#####\nKNOTS={}\n#####\n\n\n\n".format(knot))
         compute_smc_inference(fichier, path_data, mu=8e-2/multiplier, knots=knot)
 
     # Zip

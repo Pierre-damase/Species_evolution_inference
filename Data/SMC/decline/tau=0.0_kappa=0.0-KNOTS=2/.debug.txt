@@ -1,0 +1,37 @@
+768 smcpp.commands.command DEBUG ['/home/damase/miniconda3/envs/sei-3.8.5/bin/smc++', 'estimate', '--em-iterations', '100', '-o', './Data/SMC/decline/tau=0.0_kappa=0.0-KNOTS=2/', '--knots', '2', '8e-06', './Data/SMC/decline/smc_tau=0.0_kappa=0.0.gz']
+768 smcpp.commands.command DEBUG Namespace(Nmax=1000.0, Nmin=0.001, algorithm='L-BFGS-B', base='model', command='estimate', cores=None, data=['./Data/SMC/decline/smc_tau=0.0_kappa=0.0.gz'], em_iterations=100, ftol=0.0001, knots=2, lambda_=None, length_cutoff=None, mu=8e-06, multi=False, no_initialize=False, nonseg_cutoff=None, outdir='./Data/SMC/decline/tau=0.0_kappa=0.0-KNOTS=2/', polarization_error=0.5, r=None, regularization_penalty=6, seed=0, spline='piecewise', thinning=None, timepoints=None, unfold=False, verbose=0, w=100, xtol=0.1)
+768 smcpp.analysis.base INFO theta: 0.000100
+768 smcpp.analysis.base INFO rho: 0.000100
+768 smcpp.analysis.base DEBUG Polarization error p=0.500000
+768 smcpp.data_filter DEBUG LoadData()
+769 smcpp.data_filter INFO Loading data...
+801 smcpp.data_filter INFO 0.09 Gb of data
+801 smcpp.data_filter DEBUG Contig(pid=('Pop1',), data=array([[  146,     0,     0,    18],
+       [    1,     0,     2,    18],
+       [32426,     0,     0,    18],
+       ...,
+       [47623,     0,     0,    18],
+       [    1,     2,    14,    18],
+       [  527,     0,     0,    18]], dtype=int32), n=array([18]), a=array([2]), fn='./Data/SMC/decline/smc_tau=0.0_kappa=0.0.gz')
+802 smcpp.data_filter INFO 1 population
+802 smcpp.data_filter DEBUG RecodeNonseg(cutoff=None)
+802 smcpp.estimation_tools WARNING Long runs of homozygosity in contig ./Data/SMC/decline/smc_tau=0.0_kappa=0.0.gz: 
+[ 80565  79516  81438  56662  78039  65900  69165  57691 154482  66481  50927  62873  59992  62081  56960  70421  50164
+  52682  60227  52358  53761  73807  56590  91849  64814  55897  56043  53130  63124  73970  67508  53568  65156  65679
+  82858  69514  60734  50262 102104  64272  77043  71373  59823  66014  52643  66226  50507  77503  88461  94874  84384
+  59640  61849  59307  63460  51136  59640 103351  66368  55641  66986  80729  53126  67852  83209  50800  51907 172091
+  88299  50166  66288  50488  53919  52420  57282  68388  52447  50583  59767  74384  68564  74519  51714  52852  50857
+  54798  53399  53832  70080  69459  63642  55913  64736 103979  70351  61379  89136  53163  81522  88296  64392 111056
+  81263  56834  68274  66888  59400  59246  54483  67604  54079  90010  60084  58233  74932  90900  50482  51375  59850
+  88808  77296  81720  90834  62798  52301  51438  51377  79412  52293  52363  54467  51572  81742  69054  53961 116329
+  69348  72014  65618  60898  76479  66806  60597] (base pairs)
+803 smcpp.data_filter DEBUG Compress()
+2021 smcpp.data_filter DEBUG BreakLongSpans(cutoff=100000)
+2022 smcpp.data_filter DEBUG DropSmallContigs(cutoff=100000)
+2023 smcpp.data_filter DEBUG Watterson()
+2023 smcpp.data_filter DEBUG sites: 8033/313358011	watterson:0.000026
+2023 smcpp.data_filter DEBUG CountMutations(w=125)
+4205 smcpp.data_filter DEBUG mutation counts in 125bp windows: min=0 .05=0 .95=0 max=2
+4207 py.warnings  WARNING /home/damase/miniconda3/envs/sei-3.8.5/lib/python3.8/site-packages/numpy/core/fromnumeric.py:3419: RuntimeWarning: Mean of empty slice.
+  return _methods._mean(a, axis=axis, dtype=dtype,
+
