@@ -108,7 +108,12 @@ def generate_sfs(params, model, nb_simu, path_data, path_length):
     for i in range(nb_simu):
         start_time = time.time()
 
-        sfs_observed, variants_observed = ms.msprime_simulation(model=model, params=params)
+        # Store variants only for one simulation (storage pace efficiency)
+        if i == 0:
+            sfs_observed, variants_observed = ms.msprime_simulation(model=model, params=params)
+            variants = variants_observed
+        else:
+            sfs_observed, _ = ms.msprime_simulation(model=model, params=params)
 
         sfs.append(sfs_observed)
         snp.append(sum(sfs_observed))
@@ -485,7 +490,7 @@ def save_stairway_inference(simulation, model, fold):
 
     elif model == 'migration':
         param = {k: round(np.log10(v), 2) for k, v in simulation['Parameters'].items()
-                 if k in ['m12', 'kappa']}
+                 if k in ['m12', 'Kappa']}
         file_data = "stairway_{}_m12={}_kappa={}".format(model, param['m12'], param['Kappa'])
 
     else:

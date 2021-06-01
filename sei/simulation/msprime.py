@@ -202,7 +202,7 @@ def msprime_simulation(model, params, debug=False):
     if debug:
         print(tree_seq.first().draw(format="unicode"))
 
-    variants = []
+    # variants = []
 
     sfs = [0] * (params["sample_size"] - 1)
     for variant in tree_seq.variants():
@@ -212,9 +212,82 @@ def msprime_simulation(model, params, debug=False):
         sfs[freq_mutation] += 1
 
         # Store for each variant, the position and the genotypes
-        variants.append((variant.position, variant.genotypes))
+        # variants.append((variant.position, variant.genotypes))
 
     return sfs, variants
+
+
+def msprime_simulate_variants(params, debug=False):
+    """
+    Population simulation with msprime for SMC++.
+
+    In this case, mutations are placed at discrete, integer coordinates.
+
+    Parameter
+    ---------
+    model: function
+        (constant, sudden declin, sudden growth, etc.)
+    params: dictionary
+        - sample_size: the number of sampled monoploid genomes
+        - Ne: the effective (diploid) population size
+        - rcb_rate: the rate of recombinaison per base per generation
+        - mu: the rate of infinite sites mutations per unit of sequence length per generation
+        - length: the length of the simulated region in bases
+    tau: the lenght of time ago at which the event (decline, growth) occured
+    kappa: the growth or decline force
+    debug: Boolean
+        1: print msprime debugger, 0: nothing
+
+    Return
+    ------
+    sfs: list
+        Site frequency Spectrum (sfs) - allele mutation frequency
+    variants: list
+        List of position and genotypes for each variant with 0 the ancestral state and 1 the
+        alternative one.
+    """
+    # UPDATE
+    # msprime, tskit
+
+    demography = msprime.Demography()
+
+    # Population actuelle au temps 0
+    demography.add_population(initial_size=params['Ne'], growth_rate=0.)
+
+    # Ancestral population
+    demography.add_population_parameters_change(
+        time=params['Tau'], population=0, initial_size=params['Ne']*params['Kappa'],
+        growth_rate=0.)
+
+    if debug:
+        print(demography.debug())
+    
+    ts = msprime.sim_ancestry(
+        samples=params['sample_size'], demography=demography, ploidy=1,
+        sequence_length=params['length'], discrete_genome=True,
+        recombination_rate=params['rcb_rate']
+    )
+
+    mts = msprime.sim_mutations(tree_sequence=ts, rate=params['mu'],
+                                model=msprime.BinaryMutationModel(state_independent=False))
+
+    variants, snps = [], 0
+    for variant in mts.variants():
+        # SNPs
+        _, counts = np.unique(variant.genotypes, return_counts=True)
+        if len(counts) != 1:
+            snps += counts[1]
+
+            # Genotype
+            variants.append((variant.site.position, variant.genotypes))
+
+        # print(variant.site.position, variant.alleles, variant.genotypes)
+        # break
+
+    print(snps)
+
+    sys.exit()
+    return variants, snps
 
 
 if __name__ == "__main__":

@@ -98,7 +98,7 @@ def arguments():
 
     # Required argument for booth Dadi & stairway
     inf.add_argument(
-        '--model', dest="model", choices=['decline', 'migration'], required=True,
+        '--model', dest="model", choices=['decline', 'migration', 'cst'], required=True,
         help="Simulation model used for the inference, in the case of dadi also indicate the "
         "population model for the inference"
     )

@@ -181,14 +181,16 @@ def generate_sfs(params, model, nb_simu, path_data, path_length):
     for i in range(nb_simu):
         start_time = time.time()
 
-        sfs_observed, variants_observed = ms.msprime_simulation(model=model, params=params)
-
+        # Store variants only for one simulation (storage pace efficiency)
+        if i == 0:
+            sfs_observed, variants_observed = ms.msprime_simulation(model=model, params=params)
+            variants = variants_observed  # variants = variants_observed
+        else:
+            sfs_observed, _ = ms.msprime_simulation(model=model, params=params)
+            
         sfs.append(sfs_observed)
         snp.append(sum(sfs_observed))
         execution.append(time.time() - start_time)
-
-        if i == 0:
-            variants.append(variants_observed)
 
     # Create DataFrame from dictionary
     dico = {
@@ -709,13 +711,14 @@ def compute_smc_inference(fichier, path_data, mu, knots):
     """
     Inference with SMC++
     """
-    # Inference 
-    cmd = "smc++ estimate --em-iterations 100 -o {0}{1}-KNOTS={3}/ --knots {3} {2} {0}smc_{1}.gz" \
-        .format(path_data, fichier.split('_', 1)[1], mu, knots)
+    # Inference
+    em = 1 if knots == 1 else 100
+    cmd = "smc++ estimate --em-iterations {4} -o {0}{1}-KNOTS={3}/ --knots {3} {2} {0}smc_{1}.gz" \
+        .format(path_data, fichier.split('_', 1)[1], mu, knots, em)
     os.system(cmd)
 
     # Plot
-    cmd = "smc++ plot -c {0}{1}-KNOTS{2}/tmp0.png {0}{1}-KNOTS{2}/.model.iter0.json" \
+    cmd = "smc++ plot -c {0}{1}-KNOTS={2}/tmp0.png {0}{1}-KNOTS={2}/.model.iter0.json" \
         .format(path_data, fichier.split('_', 1)[1], knots)
     os.system(cmd)
 
@@ -756,6 +759,9 @@ def save_smc_inference(simulation, model):
                  if k in ['m12', 'Kappa']}
         fichier = "vcf_m12={}_kappa={}".format(param['m12'], param['Kappa'])
 
+    else:
+        fichier = "vcf_ne={}".format(simulation['Parameters']['Ne'])
+
     # Select sample size and length
     param = {
         k: v for k, v in simulation['Parameters'].items() if k in ['sample_size', 'length']
@@ -776,7 +782,7 @@ def save_smc_inference(simulation, model):
     f.vcf_to_smc(fichier, path_data)
 
     # Inference with SMC++
-    for knot in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]:
+    for knot in [2]:
         print("\n\n\n\n#####\nKNOTS={}\n#####\n\n\n\n".format(knot))
         compute_smc_inference(fichier, path_data, mu=8e-2/multiplier, knots=knot)
 
@@ -807,12 +813,21 @@ def main():
             # Parameters for the simulation
             params = simulation_parameters(sample=20, ne=1, rcb_rate=8e-2, mu=8e-2, length=1e5)
 
-            dico = {'Parameters': params, 'SFS observed': [], 'SNPs': [], 'Time': []}
-            for i in range(100):
+            dico = {
+                'Parameters': params, 'SFS observed': [], 'SNPs': [], 'Time': [], 'Variants': []
+            }
+            for i in range(1):
                 print("Simulation {}/100".format(i+1), end="\r")
                 start_time = time.time()
 
-                sfs_cst, _ = ms.msprime_simulation(model=ms.constant_model, params=params)
+                if i == 0:
+                    sfs_cst, variants = \
+                        ms.msprime_simulation(model=ms.constant_model, params=params)
+                    dico['Variants'].append(variants)  # = variants
+                else:
+                    sfs_cst, _ = \
+                        ms.msprime_simulation(model=ms.constant_model, params=params)
+
                 dico['SFS observed'].append(sfs_cst)
                 dico['SNPs'].append(sum(sfs_cst))
 
@@ -826,15 +841,9 @@ def main():
             simulation = simulation.append(dico, ignore_index=True)
 
             # Export to json
-            simulation.to_json("./Data/Msprime/sfs_cst/SFS_{}.json".format(args.model))
-
-            # # Path data
-            # path_data = "./Data/Dadi/{}/".format(args.model)
-
-            # # Inference with Dadi
-            # print("Inference with dadi")
-            # models = {'Inference': dadi.sudden_decline_model, 'Control': dadi.constant_model}
-            # save_dadi_inference(simulation, models, path_data, fixed=None, value=None)
+            data = "./Data/Msprime/cst/SFS_{}_Ne={}".format(args.model, params['Ne'])
+            simulation.to_json(data)
+            zip_file(data)
             print("Over")
             sys.exit()
 
@@ -927,14 +936,29 @@ def main():
 
         # Inference with SMC++
         elif args.smc:
+            # Tau & Kappa
+            #params = {'Tau': 0., 'Kappa': 1.}
+            #params = {'Tau': 0., 'Kappa': -1.}
+            params = {'Tau': 0., 'Kappa': 0.}
 
-            # path_data = "./Data/SMC/decline/TMP/"
-            # cmd = "smc++ estimate --em-iterations 1 -o {0}em_knot=1/ --knots 1 1.25e-5 {0}example.smc.gz".format(path_data)
-            # os.system(cmd)
-            # sys.exit()
+            # Convert params from log scale
+            params.update({k: np.power(10, v) for k, v in params.items()})
 
-            print({k: round(np.log10(v), 2) for k, v in simulation['Parameters'].items() if k in ['Tau', 'Kappa']})
-            save_smc_inference(simulation, model=args.model)
+            # Parameters for the simulation
+            # params.update(
+            #     simulation_parameters(sample=20, ne=1, rcb_rate=8e-2, mu=8e-2, length=1e5)
+            # )
+            params.update(
+                simulation_parameters(sample=20, ne=1, rcb_rate=8e-2, mu=8e-2, length=1e2)
+            )
+
+            variants, snps = ms.msprime_simulate_variants(params, debug=True)
+
+            print(
+                {k: round(np.log10(v), 2) for k, v in simulation['Parameters'].items()
+                 if k in ['Tau', 'Kappa']}
+            )
+            # save_smc_inference(simulation, model=args.model)
 
 
 if __name__ == "__main__":
