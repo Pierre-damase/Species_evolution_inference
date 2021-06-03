@@ -489,41 +489,34 @@ def export_stairway_files(model, fold):
       - False: inference with unfolded SFS
     """
     # Path data and filin
-    path_data = "./Data/Stairway/"
+    path_data = "./Data/Stairway/{}/".format(model)
+    path_data += "Folded/" if fold else "Unfolded/"
 
-    filin = "stairway_inference_{}".format(model)
-    filin += "-Folded" if fold else "-Unfolded"
+    filin = "stairway_inference-all"
 
-    # Data
-    inference = pd.DataFrame(columns=['M0', 'M1', 'Ne', 'Year', 'Parameters'])
-
-    os.system('zip -j {0}{1}.zip {0}{1}'.format(path_data, filin))
-
-    # Read file
     if "{}.zip".format(filin) not in os.listdir(path_data):
-        subpath = "./sei/inference/stairway_plot_v2.1.1/"
-        fichiers = [
-            fichier for fichier in os.listdir(subpath)
-            if fichier.endswith('-all') and fichier.split('-')[0] == 'stairway_{}'.format(model)
-        ]
+        # Data
+        inference = pd.DataFrame()
 
-        for fichier in fichiers:
-            res = pd.read_json("{}{}".format(subpath, fichier), typ='frame')
+        # Read all files
+        fichiers = os.listdir(path_data)
+        for fil in fichiers:
+            # Read the file
+            res = pd.read_json("{}{}".format(path_data, fil), typ='frame')
             inference = inference.append(res, ignore_index=True)
 
-            # Delete the json file
-            os.remove("{}{}".format(subpath, fichier))
+            # Delete the file
+            os.remove("{}{}".format(path_data, fil))
 
-        # Export pandas DataFrame inference to json file
+        # Export pandas DataFrame to json file
         inference.to_json("{}{}".format(path_data, filin))
 
         # Zip
         os.system('zip -j {0}{1}.zip {0}{1}'.format(path_data, filin))
+        os.remove("{}{}".format(path_data, filin))
 
     else:
-        os.system("unzip {0}{1}.zip -d {0}".format(path_data, filin))  # Unzip
-        inference = pd.read_json("{}{}".format(path_data, filin), typ='frame')  # Load
-        os.remove("{}{}".format(path_data, filin))  # Remove
+        inference = pd.read_json("{}{}.zip".format(path_data, filin), typ='frame')
 
     return inference
 
@@ -541,10 +534,9 @@ def variants_to_vcf(variants, param, fichier, path_data, multiplier, ploidy=2):
     variants: list
         List of position and genotype for each variant with 0 the ancestral state and 1 the
         alternative one.
-    sample: int
-        Sample size
-    length: int
-        The length L of the sequence
+    param:
+      - sample: sample size
+      - length: the length L of the sequence
     ploidy: int
         The ploidy of the individual samples
         By default it's set to 2, so for a sample of size 20 we will have 10 diploid samples in
@@ -566,7 +558,6 @@ def variants_to_vcf(variants, param, fichier, path_data, multiplier, ploidy=2):
         header += ['tsk_{}'.format(i) for i in range(round(param['sample_size'] / ploidy))]
         filout.write("\t".join(header) + "\n")
 
-        cpt = 1
         for variant in variants:
             value = [
                 '1', str(round(variant[0] * multiplier)), '.', '0', '1', '.', 'PASS', '.', 'GT'
@@ -576,7 +567,7 @@ def variants_to_vcf(variants, param, fichier, path_data, multiplier, ploidy=2):
             else:
                 value += [
                     "{}|{}".format(variant[1][i], variant[1][i+1]) for
-                    i in range(round(param['sample_size'] / ploidy))
+                    i in range(0, param['sample_size'], ploidy)
                 ]
             filout.write("\t".join(value) + "\n")
 

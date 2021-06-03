@@ -202,7 +202,7 @@ def msprime_simulation(model, params, debug=False):
     if debug:
         print(tree_seq.first().draw(format="unicode"))
 
-    # variants = []
+    variants = []
 
     sfs = [0] * (params["sample_size"] - 1)
     for variant in tree_seq.variants():
@@ -212,8 +212,8 @@ def msprime_simulation(model, params, debug=False):
         sfs[freq_mutation] += 1
 
         # Store for each variant, the position and the genotypes
-        # variants.append((variant.position, variant.genotypes))
-
+        variants.append((variant.position, variant.genotypes))
+        
     return sfs, variants
 
 
@@ -221,7 +221,8 @@ def msprime_simulate_variants(params, debug=False):
     """
     Population simulation with msprime for SMC++.
 
-    In this case, mutations are placed at discrete, integer coordinates.
+    In this case, mutations are placed at discrete, integer coordinates => Msprime 1.01 is
+    therefore needed (update of Msprime and tskit).
 
     Parameter
     ---------
@@ -246,9 +247,7 @@ def msprime_simulate_variants(params, debug=False):
         List of position and genotypes for each variant with 0 the ancestral state and 1 the
         alternative one.
     """
-    # UPDATE
-    # msprime, tskit
-
+    # Set up the population model
     demography = msprime.Demography()
 
     # Population actuelle au temps 0
@@ -261,33 +260,38 @@ def msprime_simulate_variants(params, debug=False):
 
     if debug:
         print(demography.debug())
-    
+
+    # Simulation of the ancestry
     ts = msprime.sim_ancestry(
         samples=params['sample_size'], demography=demography, ploidy=1,
         sequence_length=params['length'], discrete_genome=True,
         recombination_rate=params['rcb_rate']
     )
 
-    mts = msprime.sim_mutations(tree_sequence=ts, rate=params['mu'],
-                                model=msprime.BinaryMutationModel(state_independent=False))
+    # Mutation model to use - binary mutation model
+    #   - Allele ["0", "1"]
+    #   - Root distribution [1., 0.], i.e. all ancestral states will be 0
+    mutation_model = msprime.BinaryMutationModel(state_independent=False)
 
-    variants, snps = [], 0
+    # Genetic variation of the data with mutation
+    mts = msprime.sim_mutations(tree_sequence=ts, rate=params['mu'], model=mutation_model)
+
+    sfs, variants = [0] * (params["sample_size"] - 1), []
     for variant in mts.variants():
-        # SNPs
         _, counts = np.unique(variant.genotypes, return_counts=True)
+
         if len(counts) != 1:
-            snps += counts[1]
+            # SFS
+            freq_mutation = counts[1]
+            sfs[freq_mutation-1] += 1
 
             # Genotype
             variants.append((variant.site.position, variant.genotypes))
-
+            
+        # QUESTION: some variants with [0 0 ... 0 0] or [1 1 ... 1 1], je ne comprends pas ?
         # print(variant.site.position, variant.alleles, variant.genotypes)
-        # break
 
-    print(snps)
-
-    sys.exit()
-    return variants, snps
+    return sfs, variants
 
 
 if __name__ == "__main__":
