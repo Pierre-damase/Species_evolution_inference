@@ -648,7 +648,7 @@ def compute_stairway_inference(simulation, path_stairway, path_data, fold):
         os.system("mv {} ./Figures/Stairway/{}".format(figure, path_data.rsplit('/', 2)[1]))
 
     # Remove all blueprint file & stairway file
-    os.system("rm -rf {}".format(path_data))
+    # os.system("rm -rf {}".format(path_data))
 
     return stairway
 
@@ -703,6 +703,63 @@ def save_stairway_inference(simulation, model, fold):
 
     # Zip file
     zip_file(data="{}{}".format(path_data, file_data))
+
+
+######################################################################
+# Analysis of inference with stairway                                #
+######################################################################
+
+
+def stairway_ll_test(data, model):
+    """
+    Compute the log likelihood ratio between two models.
+
+      - Either M0 & M1
+      -     Or M1 & the final model
+
+    Parameter
+    ---------
+    data: pandas DataFrame
+    model: either m1 or final
+
+    Return
+    ------
+    df: pandas DataFrame
+      - Tau
+      - Kappa
+      - Positive hit
+    """
+    key = [param for param in data.iloc[0]['Parameters'].keys()]
+    df = pd.DataFrame(columns=[key[0], key[1], 'Positive hit'])
+
+    # Pre-processing data
+    for _, row in data.iterrows():
+        # Extract parameters use to generate the observed SFS
+        # Then compute log10 of these parameters
+        dico = {}
+        for param in row['Parameters'].keys():
+            dico[param] = round(np.log10(row['Parameters'][param]), 2)
+        
+        # Compute log-likelihood ratio test
+        # For some inference there are only 1 dimension, in this case the LL of M1 is None
+        if model == 'm1':
+            lrt = [
+                likelihood_ratio_test(ll_m0, ll_m1, dof=2) if ll_m1 is not None else 0
+                for ll_m0, ll_m1 in zip(row['M0']['LL'], row['M1']['LL'])
+            ]
+        else:
+            dimensions = [len(ele) for ele in row['Final']['Theta']]
+            lrt = [
+                likelihood_ratio_test(ll_m1, ll_final, dof=dof) if ll_m1 is not None else 0
+                for ll_m1, ll_final, dof in zip(row['M1']['LL'], row['Final']['LL'], dimensions)
+            ]
+
+        dico['Positive hit'] = sum(lrt)
+        
+        # Add to pandas DataFrame df
+        df = df.append(dico, ignore_index=True)
+        
+    return df
 
 
 ######################################################################
@@ -1067,7 +1124,8 @@ def main():
 
         if args.data:
             data_optimization_smc(args.model)
-        compute_optimization_smc(args.model)
+        else:
+            compute_optimization_smc(args.model)
 
 
 if __name__ == "__main__":
