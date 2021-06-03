@@ -492,7 +492,7 @@ def export_stairway_files(model, fold):
     path_data = "./Data/Stairway/{}/".format(model)
     path_data += "Folded/" if fold else "Unfolded/"
 
-    filin = "stairway_inference-all"
+    filin = "stairway_inference_{}".format(model)
 
     if "{}.zip".format(filin) not in os.listdir(path_data):
         # Data

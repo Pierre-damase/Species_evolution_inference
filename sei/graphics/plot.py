@@ -466,7 +466,7 @@ def plot_weighted_square_distance_heatmap(data, d2, models):
 
     # Data
     df = pd.DataFrame()
-    for param in [key for key in data.ilco[0]['Parameters'] if key != 'Theta']:  # compute log10
+    for param in [key for key in data.iloc[0]['Parameters'] if key != 'Theta']:  # compute log10
         df[param] = data['Parameters'].apply(lambda ele: round(np.log10(ele[param]), 2))
     df[d2] = data[d2].apply(np.log10)  # Compute log of weighted square distance
 
@@ -704,6 +704,35 @@ def plot_parameters_evaluation(data, key, fixed):
     # Plot vertical line for log(kappa) = 0
     if key == 'Kappa':
         plt.axvline(0, color="#8b1538")
+
+    plt.plot()
+
+
+######################################################################
+# Stairway inference                                                 #
+######################################################################
+
+def plot_likelihood_stairway(data, model):
+    # Set up plot
+    plt.figure(figsize=(12,9), constrained_layout=True)
+    sns.set_theme(style='whitegrid')
+
+    # Pre-processing data
+    df = data.pivot(index=data.columns[1], columns=data.columns[0], values='Positive hit')
+
+    # Plot
+    ax = sns.heatmap(df, cmap='coolwarm')
+
+    # Heatmap x and y-axis personnalization
+    heatmap_axis(
+        ax=ax, xaxis=df.columns.name, yaxis=df.index.name,
+        cbar='Significant log-likelihood ratio test out of the 200 input files'
+    )
+
+    # Title
+    title = "Log likelihood ratio test for various tau & kappa with p.value = 0.05"
+    title += " - between M0 & M1" if model == 'm1' else " - between M1 & final model"
+    plt.title(title, fontsize="x-large", color="#8b1538")
 
     plt.plot()
 
