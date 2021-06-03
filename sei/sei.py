@@ -168,7 +168,7 @@ def generate_sfs(params, model, nb_simu, path_data, path_length):
     Generate a set of unfolded sfs of fixed SNPs size with msprime.
     """
     # Define length
-    length = length_from_file(path_length, params, mu=8e-2, snp=10000)
+    length = length_from_file(path_length, params, mu=8e-2, snp=1000)
 
     # Convert params from log scale
     params.update({k: (np.power(10, v) if k != 'm21' else v) for k, v in params.items()})
@@ -697,20 +697,25 @@ def save_stairway_inference(simulation, model, fold):
     data = compute_stairway_inference(simulation, path_stairway, path_data, fold)
 
     # Convert pandas DataFrame data to json file
-    data.to_json("{}{}-all".format(path_stairway, file_data))
+    path_data = "./Data/Stairway/{}/".format(model)
+    path_data += "Folded/" if fold else "Unfolded/"
+    data.to_json("{}{}".format(path_data, file_data))
 
     # Zip file
-    zip_file(data="{}{}-all".format(path_stairway, file_data))
+    zip_file(data="{}{}".format(path_data, file_data))
 
 
 ######################################################################
 # Inference with SMC++                                               #
 ######################################################################
 
-def compute_smc_inference(fichier, path_data, mu, knots):
+def compute_smc_inference(fichier, path_data, mu, knots, folder):
     """
     Inference with SMC++
     """
+    tau = float(fichier.split('_')[1].split('=')[1])
+    kappa = float(fichier.split('_')[2].split('=')[1])
+
     # Inference
     em = 1 if knots == 1 else 100
     cmd = "smc++ estimate --em-iterations {4} -o {0}{1}-KNOTS={3}/ --knots {3} {2} {0}smc_{1}.gz" \
@@ -718,16 +723,18 @@ def compute_smc_inference(fichier, path_data, mu, knots):
     os.system(cmd)
 
     # Plot
-    cmd = "smc++ plot -c {0}{1}-KNOTS={2}/tmp0.png {0}{1}-KNOTS={2}/.model.iter0.json" \
-        .format(path_data, fichier.split('_', 1)[1], knots)
+    cmd = "smc++ plot -c {0}{1}-KNOTS={2}/tmp0_tau={3}_kappa={4}-knots={2}.png {0}{1}-KNOTS={2}/.model.iter0.json" \
+        .format(path_data, fichier.split('_', 1)[1], knots, tau, kappa)
     os.system(cmd)
 
     # Plot
-    cmd = "smc++ plot -c {0}{1}-KNOTS={2}/plot.png {0}{1}-KNOTS={2}/model.final.json" \
-        .format(path_data, fichier.split('_', 1)[1], knots)
+    cmd = "smc++ plot -c {0}{1}-KNOTS={2}/plot_tau={3}_kappa={4}-knots={2}.png {0}{1}-KNOTS={2}/model.final.json" \
+        .format(path_data, fichier.split('_', 1)[1], knots, tau, kappa)
     os.system(cmd)
 
-   
+    # Remove
+    os.system("mv {0}{1}-KNOTS={2}/*.png {3}".format(path_data, fichier.split('_', 1)[1], knots, folder))
+
 
 def save_smc_inference(simulation, model):
     """
@@ -781,10 +788,15 @@ def save_smc_inference(simulation, model):
     # VCF file to SMC++ format
     f.vcf_to_smc(fichier, path_data)
 
+    folder = path_data + fichier.split('_', 1)[1] + "/"
+    if os.path.isdir(folder):
+        os.system("rm -rf {}".format(folder))
+    os.mkdir(folder)
+
     # Inference with SMC++
-    for knot in [2]:
+    for knot in [2, 3, 4, 5, 6, 7, 8]:
         print("\n\n\n\n#####\nKNOTS={}\n#####\n\n\n\n".format(knot))
-        compute_smc_inference(fichier, path_data, mu=8e-2/multiplier, knots=knot)
+        compute_smc_inference(fichier, path_data, mu=8e-2/multiplier, knots=knot, folder=folder)
 
     # Zip
     # zip_file("{}{}".format(path_data, fichier.split('_', 1)[1]))
@@ -794,6 +806,119 @@ def save_smc_inference(simulation, model):
     os.remove("{}smc_{}.gz".format(path_data, fichier.split('_', 1)[1]))  # SMC file
 
 
+######################################################################
+# Optimization of inference with SMC++                               #
+######################################################################
+
+
+def data_optimization_smc(model):
+    """
+    Genertate the data for the optimization.
+    """
+    # Set up (Tau, Kappa) & length
+    if model == 'decline':  # sudden decline
+        params = {'Tau': 0., 'Kappa': 1.}
+        lengths = [2e4, 9e4, 2e5, 3.5e5]  #, 5e5, 7e5, 9e5]
+        lengths = [1e2]
+    elif model == 'growth' == 2:  # sudden growth
+        params = {'Tau': 0., 'Kappa': -1.}
+        lengths = [3e4, 1.5e5, 3e5, 6e5]  #, 9e5, 1.2e5, 1.5e5]
+        lengths = [1e2]
+    else:  # constant
+        params = {'Tau': 0., 'Kappa': 0.}  # Constant
+        lengths = [2.5e4, 1.2e5, 2.5e5, 5e5]  #, 8e5, 1e6, 1.2e6]
+        lengths = [1e2]
+
+    # Convert params from log scale
+    params.update({k: np.power(10, v) for k, v in params.items()})
+
+    data = pd.DataFrame()
+
+    for i, length in enumerate(lengths):
+        print("\n\n\n###\nLength {}/{}\n###\n\n".format(i+1, len(lengths)))
+
+        # Parameters for the simulation
+        params.update(
+            simulation_parameters(sample=20, ne=1, rcb_rate=8e-2, mu=8e-2, length=length)
+        )
+
+        # Generation of data
+        sfs, variants = ms.msprime_simulate_variants(params, debug=False)
+
+        dico = {
+            'Parameters': params, 'SNPs': sum(sfs), 'SFS observed': sfs, 'Variants': variants
+        }
+        data = data.append(dico, ignore_index=True)
+
+    # Save data
+    path_data = "./Data/SMC/optimization_smc/data/vcf_{}".format(model)
+    data.to_json(path_data)
+    zip_file(path_data)
+
+
+def compute_optimization_smc(model):
+    """
+    Optimization of inference with SMC++ with various sequence length and SNPs for simple
+    scenario:
+      - Sudden decline with tau = 0 & kappa = 1 - decline of force 10 at a time 1 in the past
+      - Sudden growth with tau = 0 & kappa = -1 - growth of force 10 at a time 1 in the past
+      - Constant model
+
+    For each test there 7 inference with knots from 2 to 8 (default value).
+    """
+    snps, multiplier = [8, 10, 50, 100, 200, 300, 400, 500], 100
+
+    # Load data
+    data = pd.read_json("./Data/SMC/optimization_smc/data/vcf_{}.zip".format(model))
+
+    path_data = "./Data/SMC/optimization_smc/{}/".format(model)
+    for i, row in data.iterrows():
+        print("\n\n\n###\nFile {}/{}\n###\n\n".format(i+1, len(snps)))
+
+        # File
+        filout = "vcf_snps={}k".format(snps[i])
+        
+        # Folder
+        folder = "{}{}".format(path_data, filout.split('_')[1])
+        if not os.path.isdir(folder):
+            os.mkdir(folder)
+
+        # Variants to VCF format file
+        f.variants_to_vcf(
+            variants=row['Variants'], param=row['Parameters'], fichier=filout,
+            path_data=path_data, multiplier=multiplier  # BUG IF mu > 1e-4
+        )
+
+        # VCF to SMC++ file
+        f.vcf_to_smc(fichier=filout, path_data=path_data)
+        
+        # Inference
+        for knot in [2, 3, 4, 5, 6, 7, 8]:
+            print("\n\n\n###\nKnot {}\n###\n\n".format(knot))
+
+            # Estimation
+            smc_estimate = (
+                "smc++ estimate --em-iterations 100 -o {0}.{1}-KNOTS={2}/ --knots {2} {3} "
+                "{0}smc_{1}.gz"
+            ).format(path_data, filout.split('_')[1], knot, 8e-2/multiplier)
+            os.system(smc_estimate)
+
+            # Plot
+            smc_plot = (
+                "smc++ plot -c {0}.{1}-KNOTS={2}/plot_knot={2}.png "
+                "{0}.{1}-KNOTS={2}/model.final.json"
+            ).format(path_data, filout.split('_')[1], knot)
+            os.system(smc_plot)
+
+            # Move plot
+            cmd = "mv {0}.{1}-KNOTS={2}/*.png {3}" \
+                .format(path_data, filout.split('_')[1], knot, folder)
+            os.system(cmd)
+
+    # Remove vcf, smc and index file
+    os.system("rm -rf {}*gz*".format(path_data))
+
+        
 ######################################################################
 # Main                                                               #
 ######################################################################
@@ -936,29 +1061,13 @@ def main():
 
         # Inference with SMC++
         elif args.smc:
-            # Tau & Kappa
-            #params = {'Tau': 0., 'Kappa': 1.}
-            #params = {'Tau': 0., 'Kappa': -1.}
-            params = {'Tau': 0., 'Kappa': 0.}
+            save_smc_inference(simulation, model=args.model)
 
-            # Convert params from log scale
-            params.update({k: np.power(10, v) for k, v in params.items()})
+    elif args.analyse == 'optsmc':
 
-            # Parameters for the simulation
-            # params.update(
-            #     simulation_parameters(sample=20, ne=1, rcb_rate=8e-2, mu=8e-2, length=1e5)
-            # )
-            params.update(
-                simulation_parameters(sample=20, ne=1, rcb_rate=8e-2, mu=8e-2, length=1e2)
-            )
-
-            variants, snps = ms.msprime_simulate_variants(params, debug=True)
-
-            print(
-                {k: round(np.log10(v), 2) for k, v in simulation['Parameters'].items()
-                 if k in ['Tau', 'Kappa']}
-            )
-            # save_smc_inference(simulation, model=args.model)
+        if args.data:
+            data_optimization_smc(args.model)
+        compute_optimization_smc(args.model)
 
 
 if __name__ == "__main__":

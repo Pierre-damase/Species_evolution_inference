@@ -69,6 +69,18 @@ def arguments():
     )
 
     #############################################
+    # Optimisation SMC                          #
+    #############################################
+    optsmc = subparsers.add_parser('optsmc', help="Compute optimization for smc++")
+    optsmc.add_argument(
+        '--model', dest="model", choices=['decline', 'growth', 'cst'], required=True,
+        help="Perform the optimization for a sudden decline, sudden growth or constant model"
+    )
+    optsmc.add_argument(
+        '--data', dest="data", action='store_true', help="Generate the set of data"
+    )
+    
+    #############################################
     # Inference of demographic history          #
     #############################################
     inf = subparsers.add_parser('inf', help="Compute inference of demographic history")
@@ -96,7 +108,7 @@ def arguments():
     tool.add_argument('-smc', action='store_true',
                       help="Inference of demographic history with SMC++")
 
-    # Required argument for booth Dadi & stairway
+    # Required argument for booth Dadi, stairway & smc
     inf.add_argument(
         '--model', dest="model", choices=['decline', 'migration', 'cst'], required=True,
         help="Simulation model used for the inference, in the case of dadi also indicate the "
