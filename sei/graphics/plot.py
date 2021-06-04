@@ -712,26 +712,33 @@ def plot_parameters_evaluation(data, key, fixed):
 # Stairway inference                                                 #
 ######################################################################
 
-def plot_likelihood_stairway(data, model):
+def plot_stairway_heatmap(data, title, cbar):
+    """
+    Heatmap for stairway data
+
+    Parameter
+    ---------
+    data: pandas DataFrame
+        DataFrame of 4225 rows and 3 columns
+          - 1st column: Either Tau or m12
+          - 2nd column: Kappa
+          - 3rd column: Either Positive hit or Ne
+    """
     # Set up plot
     plt.figure(figsize=(12,9), constrained_layout=True)
     sns.set_theme(style='whitegrid')
 
     # Pre-processing data
-    df = data.pivot(index=data.columns[1], columns=data.columns[0], values='Positive hit')
+    df = data.pivot(index=data.columns[1], columns=data.columns[0], values=data.columns[2])
 
     # Plot
     ax = sns.heatmap(df, cmap='coolwarm')
 
     # Heatmap x and y-axis personnalization
-    heatmap_axis(
-        ax=ax, xaxis=df.columns.name, yaxis=df.index.name,
-        cbar='Significant log-likelihood ratio test out of the 200 input files'
-    )
+    heatmap_axis(ax=ax, xaxis=df.columns.name, yaxis=df.index.name, cbar=cbar)
 
     # Title
-    title = "Log likelihood ratio test for various tau & kappa with p.value = 0.05"
-    title += " - between M0 & M1" if model == 'm1' else " - between M1 & final model"
+    #title = "Distance between min & max Ne"
     plt.title(title, fontsize="x-large", color="#8b1538")
 
     plt.plot()

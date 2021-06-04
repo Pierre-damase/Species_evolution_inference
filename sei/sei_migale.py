@@ -512,6 +512,8 @@ def save_stairway_inference(simulation, model, fold):
 def vcf_to_smc(fichier, path_data):
     """
     Convert a VCF file to SMC++ file.
+
+    Specific method for migale cluster.
     """
     # Get the fifth line of the VCF (doesn't read all the file)
     with open("{}{}".format(path_data, fichier), "r") as filin:
@@ -669,8 +671,6 @@ def compute_optimization_smc(model):
     for i, row in data.iterrows():
         print("\n\n\n###\nFile {}/{}\n###\n\n".format(i+1, len(data)))
 
-        print("\n\n\n###\n\n", row['SNPs'], "\n\n###\n\n\n")
-
         # File
         filout = "vcf_length={:.0e}".format(row['Parameters']['length'])
         
@@ -686,7 +686,7 @@ def compute_optimization_smc(model):
         )
 
         # VCF to SMC++ file
-        f.vcf_to_smc(fichier=filout, path_data=path_data)
+        vcf_to_smc(fichier=filout, path_data=path_data)
         
         # Inference
         for knot in [2, 3, 4, 5, 6, 7, 8]:
@@ -785,3 +785,9 @@ if __name__ == "__main__":
         # Inference with SMC++
         elif args.smc:
             save_smc_inference(simulation, model=args.model)
+
+    elif args.analyse == 'optsmc':
+
+        if args.data:
+            data_optimization_smc(args.model)
+        compute_optimization_smc(args.model)

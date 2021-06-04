@@ -700,7 +700,6 @@ def save_stairway_inference(simulation, model, fold):
 # Analysis of inference with stairway                                #
 ######################################################################
 
-
 def stairway_ll_test(data, model):
     """
     Compute the log likelihood ratio between two models.
@@ -746,6 +745,30 @@ def stairway_ll_test(data, model):
             ]
 
         dico['Positive hit'] = sum(lrt)
+        
+        # Add to pandas DataFrame df
+        df = df.append(dico, ignore_index=True)
+        
+    return df
+
+
+def stairway_distance_ne(data):
+    """
+    Compute the distance between the minimum andmaximum Ne.
+    """
+    key = [param for param in data.iloc[0]['Parameters'].keys()]
+    df = pd.DataFrame(columns=[key[0], key[1], 'Ne'])
+
+    # Pre-processing data
+    for _, row in data.iterrows():
+        # Extract parameters use to generate the observed SFS
+        # Then compute log10 of these parameters
+        dico = {}
+        for param in row['Parameters'].keys():
+            dico[param] = round(np.log10(row['Parameters'][param]), 2)
+        
+        # Compute distance - (max - min)**2 / max
+        dico['Ne'] = np.log10(np.power(row['Ne'][1] - row['Ne'][0], 2) / row['Ne'][1])
         
         # Add to pandas DataFrame df
         df = df.append(dico, ignore_index=True)
@@ -920,8 +943,6 @@ def compute_optimization_smc(model):
 
     for i, row in data.iterrows():
         print("\n\n\n###\nFile {}/{}\n###\n\n".format(i+1, len(data)))
-
-        print("\n\n\n###\n\n", row['SNPs'], "\n\n###\n\n\n")
 
         # File
         filout = "vcf_length={:.0e}".format(row['Parameters']['length'])
