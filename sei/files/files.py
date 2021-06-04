@@ -14,6 +14,14 @@ import pandas as pd
 from itertools import islice
 
 
+def zip_file(data):
+    """
+    Method to zip a file.
+    """
+    os.system("zip -rj {0}.zip {0}".format(data))
+    os.system("rm -rf {}".format(data))
+
+
 ######################################################################
 # SFS shape verification                                             #
 ######################################################################
@@ -392,15 +400,12 @@ def export_inference_files(model, fold, param, value=None):
     path_data = "./Data/Dadi/{}/{}/".format(model, param)
     path_data += "Folded/" if fold else "Unfolded/"
     if param == 'all':
-        filin = "dadi_{}-all".format(model)
-        if '{}.zip'.format(filin) in os.listdir(path_data):
-            os.system('unzip {0}{1}.zip -d {0}'.format(path_data, filin))
-
+        filin = "dadi_{}_all".format(model)
     else:
         filin = "dadi_{}={}_all".format(model, value)
 
     # Read file
-    if filin not in os.listdir(path_data):
+    if "{}.zip".format(filin) not in os.listdir(path_data):
 
         fichiers = os.listdir(path_data)
 
@@ -408,7 +413,7 @@ def export_inference_files(model, fold, param, value=None):
         if param != 'all':
             fichiers = [
                 fichier for fichier in fichiers
-                if not fichier.endswith('all')
+                if not fichier.endswith('all.zip')
                 and float(fichier.rsplit('-', maxsplit=1)[0].split('=')[1]) == value
             ]
 
@@ -423,16 +428,10 @@ def export_inference_files(model, fold, param, value=None):
         inference.to_json("{}{}".format(path_data, filin))
 
     else:
-        inference = pd.read_json(path_or_buf="{}{}".format(path_data, filin), typ='frame')
+        inference = pd.read_json(path_or_buf="{}{}.zip".format(path_data, filin), typ='frame')
 
-    # File > 100 Mb
-    if os.stat("{}{}".format(path_data, filin)).st_size > 1e8:
-        # Zip
-        if "{}.zip".format(filin.split('.')[0]) not in os.listdir(path_data):
-            os.system('zip -j {0}{1}.zip {0}{2}'.format(path_data, filin.split('.')[0], filin))
-
-        # Remove
-        os.remove("{}{}".format(path_data, filin))
+    # Zip file
+    zip_file("{}{}".format(path_data, filin))
 
     return inference
 

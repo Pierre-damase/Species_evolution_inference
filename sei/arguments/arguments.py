@@ -74,7 +74,8 @@ def arguments():
     optsmc = subparsers.add_parser('optsmc', help="Compute optimization for smc++")
     optsmc.add_argument(
         '--model', dest="model", choices=['decline', 'growth', 'cst'], required=True,
-        help="Perform the optimization for a sudden decline, sudden growth or constant model"
+        help="Perform the optimization for a sudden decline (Tau=0., Kappa=1.), sudden growth "
+        "(Tau=0., Kappa=-1.) or constant (Tau=0., Kappa=0.) model"
     )
     optsmc.add_argument(
         '--data', dest="data", action='store_true', help="Generate the set of data"

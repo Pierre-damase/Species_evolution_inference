@@ -18,14 +18,6 @@ from inference import dadi
 from simulation import msprime as ms
 
 
-def zip_file(data):
-    """
-    Zip a file.
-    """
-    os.system("zip -j {0}.zip {0}".format(data))
-    os.system("rm -rf {}".format(data))
-
-
 def computation_theoritical_theta(ne, mu, length):
     """
     Compute the theoritical theta - theta = 4.Ne.mu.L with
@@ -133,7 +125,7 @@ def generate_sfs(params, model, nb_simu, path_data, path_length):
     data.to_json("{}".format(path_data))
 
     # Zip file
-    zip_file(data=path_data)
+    f.zip_file(data=path_data)
 
 
 ######################################################################
@@ -372,7 +364,7 @@ def save_dadi_inference(simulation, models, fold, path_data, job, fixed, value):
     data.to_json("{}{}".format(path_data, name))
 
     # Zip file
-    zip_file("{}{}".format(path_data, name))
+    f.zip_file("{}{}".format(path_data, name))
 
     # Remove SFS file
     if value is None:
@@ -510,7 +502,7 @@ def save_stairway_inference(simulation, model, fold):
     data.to_json("{}{}-all".format(path_stairway, file_data))
 
     # Zip file
-    zip_file(data="{}{}-all".format(path_stairway, file_data))
+    f.zip_file(data="{}{}-all".format(path_stairway, file_data))
 
 
 ######################################################################
@@ -599,11 +591,125 @@ def save_smc_inference(simulation, model):
               .format(path_data, mu, fichier.split('_', 1)[1]))
 
     # Zip
-    zip_file("{}{}".format(path_data, fichier.split('_', 1)[1]))
+    f.zip_file("{}{}".format(path_data, fichier.split('_', 1)[1]))
 
     # Remove
     os.system("rm -rf {}{}*".format(path_data, fichier))  # VCF and index file
     os.remove("{}smc_{}.gz".format(path_data, fichier.split('_', 1)[1]))  # SMC file
+
+
+######################################################################
+# Optimization of inference with SMC++                               #
+######################################################################
+
+
+def data_optimization_smc(model):
+    """
+    Genertate the data for the optimization for various sequence length - from 1e2 to 1e6.
+    """
+    # Set up (Tau, Kappa) & length
+    if model == 'decline':  # sudden decline
+        params = {'Tau': 0., 'Kappa': 1.}
+    elif model == 'growth' == 2:  # sudden growth
+        params = {'Tau': 0., 'Kappa': -1.}
+    else:  # constant
+        params = {'Tau': 0., 'Kappa': 0.}  # Constant
+
+    lengths = [1e3, 1e4, 2.5e4, 5e4, 7.5e4, 1e5, 2.5e5, 5e5, 7.5e5, 1e6]
+
+    # Convert params from log scale
+    params.update({k: np.power(10, v) for k, v in params.items()})
+
+    data = pd.DataFrame()
+
+    for i, length in enumerate(lengths):
+        print("\n\n\n###\nLength {}/{}\n###\n\n".format(i+1, len(lengths)))
+
+        # Parameters for the simulation
+        params.update(
+            simulation_parameters(sample=20, ne=1, rcb_rate=8e-2, mu=8e-2, length=length)
+        )
+
+        # Generation of data
+        sfs, variants = ms.msprime_simulate_variants(params, debug=False)
+
+        dico = {
+            'Parameters': params, 'SNPs': sum(sfs), 'SFS observed': sfs, 'Variants': variants
+        }
+        data = data.append(dico, ignore_index=True)
+
+        break
+
+    # Save data
+    path_data = \
+        "/home/pimbert/work/Species_evolution_inference/Data/SMC/optimization_smc/data/vcf_{}" \
+        .format(model)
+    data.to_json(path_data)
+    f.zip_file(path_data)
+
+
+def compute_optimization_smc(model):
+    """
+    Optimization of inference with SMC++ with various sequence length and SNPs for simple
+    scenario:
+      - Sudden decline with tau = 0 & kappa = 1 - decline of force 10 at a time 1 in the past
+      - Sudden growth with tau = 0 & kappa = -1 - growth of force 10 at a time 1 in the past
+      - Constant model
+
+    For each test there 7 inference with knots from 2 to 8 (default value).
+    """
+    # Path of data
+    path_data = "/home/pimbert/work/Species_evolution_inference/Data/SMC/optimization_smc/{}/" \
+        .format(model)
+
+    # Load data
+    data = pd.read_json("/home/pimbert/work/Species_evolution_inference/Data/SMC/"
+                        "optimization_smc/data/vcf_{}.zip".format(model))
+
+    for i, row in data.iterrows():
+        print("\n\n\n###\nFile {}/{}\n###\n\n".format(i+1, len(data)))
+
+        print("\n\n\n###\n\n", row['SNPs'], "\n\n###\n\n\n")
+
+        # File
+        filout = "vcf_length={:.0e}".format(row['Parameters']['length'])
+        
+        # Folder
+        folder = "{}{}".format(path_data, filout.split('_')[1])
+        if not os.path.isdir(folder):
+            os.mkdir(folder)
+
+        # Variants to VCF format file
+        f.variants_to_vcf(
+            variants=row['Variants'], param=row['Parameters'], fichier=filout,
+            path_data=path_data, multiplier=1
+        )
+
+        # VCF to SMC++ file
+        f.vcf_to_smc(fichier=filout, path_data=path_data)
+        
+        # Inference
+        for knot in [2, 3, 4, 5, 6, 7, 8]:
+            print("\n\n\n###\nKnot {}\n###\n\n".format(knot))
+
+            # Estimation
+            smc_estimate = (
+                "smc++ estimate --em-iterations 1 -o {0}.{1}-KNOTS={2}/ --knots {2} {3} "
+                "{0}smc_{1}.gz"
+            ).format(path_data, filout.split('_')[1], knot, 8e-4)
+            os.system(smc_estimate)
+
+            # Plot
+            smc_plot = (
+                "smc++ plot -c {0}{1}/plot_knot={2}.png "
+                "{0}.{1}-KNOTS={2}/model.final.json"
+            ).format(path_data, filout.split('_')[1], knot)
+            os.system(smc_plot)
+
+            break
+
+    # Remove vcf, smc and index file
+    os.system("rm -rf {}*gz*".format(path_data))
 
 
 ######################################################################
