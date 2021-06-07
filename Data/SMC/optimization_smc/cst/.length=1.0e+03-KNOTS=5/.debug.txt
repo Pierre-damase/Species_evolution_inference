@@ -1,0 +1,1712 @@
+1794 smcpp.commands.command DEBUG ['/home/pimbert/.local/bin/smc++', 'estimate', '--em-iterations', '1', '-o', '/home/pimbert/work/Species_evolution_inference/Data/SMC/optimization_smc/cst/.length=1.0e+03-KNOTS=5/', '--knots', '5', '0.0008', '/home/pimbert/work/Species_evolution_inference/Data/SMC/optimization_smc/cst/smc_length=1.0e+03.gz']
+1794 smcpp.commands.command DEBUG Namespace(Nmax=1000.0, Nmin=0.001, algorithm='L-BFGS-B', base='model', command='estimate', cores=None, data=['/home/pimbert/work/Species_evolution_inference/Data/SMC/optimization_smc/cst/smc_length=1.0e+03.gz'], em_iterations=1, ftol=0.0001, knots=5, lambda_=None, length_cutoff=None, mu=0.0008, multi=False, no_initialize=False, nonseg_cutoff=None, outdir='/home/pimbert/work/Species_evolution_inference/Data/SMC/optimization_smc/cst/.length=1.0e+03-KNOTS=5/', polarization_error=0.5, r=None, regularization_penalty=6, seed=0, spline='piecewise', thinning=None, timepoints=None, unfold=False, verbose=0, w=100, xtol=0.1)
+1794 smcpp.commands.estimate WARNING The per-generation mutation rate is 0.0008. Is this correct?
+1794 smcpp.analysis.base INFO theta: 0.000100
+1795 smcpp.analysis.base INFO rho: 0.000100
+1795 smcpp.analysis.base DEBUG Polarization error p=0.500000
+1795 smcpp.data_filter DEBUG LoadData()
+1795 smcpp.data_filter INFO Loading data...
+1914 smcpp.data_filter INFO 0.00 Gb of data
+1915 smcpp.data_filter DEBUG Contig(pid=('Pop1',), data=array([[ 1,  0,  1, 18],
+       [ 1,  0,  0, 18],
+       [ 1,  0,  2, 18],
+       ...,
+       [ 1,  0,  7, 18],
+       [ 1,  0,  1, 18],
+       [ 5,  0,  0, 18]], dtype=int32), n=array([18]), a=array([2]), fn='/home/pimbert/work/Species_evolution_inference/Data/SMC/optimization_smc/cst/smc_length=1.0e+03.gz')
+1915 smcpp.data_filter INFO 1 population
+1916 smcpp.data_filter DEBUG RecodeNonseg(cutoff=None)
+1916 smcpp.data_filter DEBUG Compress()
+7427 smcpp.data_filter DEBUG BreakLongSpans(cutoff=100000)
+7428 smcpp.data_filter DEBUG DropSmallContigs(cutoff=100000)
+7428 smcpp.data_filter DEBUG Watterson()
+7428 smcpp.data_filter DEBUG sites: 405/3547	watterson:0.114150
+7428 smcpp.data_filter DEBUG CountMutations(w=1)
+7434 smcpp.data_filter DEBUG mutation counts in 1bp windows: min=0 .05=0 .95=1 max=1
+7436 smcpp.analysis.analysis DEBUG Knots are: [ 182.32155679  693.14718056 1791.75946923]
+7437 smcpp.analysis.analysis DEBUG knots in coalescent scaling:
+[ 182.32155679  693.14718056 1791.75946923]
+7437 smcpp.analysis.base DEBUG Creating inference manager...
+7437 smcpp.analysis.base DEBUG Creating inference manager for ('Pop1',)
+7497 smcpp.model  DEBUG model before randomization: [7.04009803 7.04009803 7.04009803]
+7499 smcpp.model  DEBUG model after randomization: [7.04027443 7.04013804 7.0401959 ]
+7546 smcpp._smcpp DEBUG im(('Pop1',)).q1: 0.0
+7546 smcpp._smcpp DEBUG im(('Pop1',)).q2: 0.0
+7546 smcpp._smcpp DEBUG im(('Pop1',)).q3: -2135.5
+7546 smcpp._smcpp DEBUG im(('Pop1',)).q4: 0.0
+7546 smcpp.analysis.base DEBUG reg: 0.0 []
+7546 smcpp.analysis.base DEBUG Q:   -2135.5 []
+7546 smcpp.analysis.analysis DEBUG Regularization penalty: lambda=0.00213548
+7546 smcpp.optimize.plugins.progress_printer INFO Starting EM algorithm...
+7546 smcpp.optimize.plugins.progress_printer INFO EM iteration 1 of 1...
+7546 smcpp.analysis.base INFO Running E-step
+7548 smcpp.analysis.base INFO E-step completed
+7555 smcpp.optimize.plugins.loglikelihood_monitor INFO Loglik: -2135.486499
+7599 smcpp._smcpp DEBUG im(('Pop1',)).q1: 0.0
+7599 smcpp._smcpp DEBUG im(('Pop1',)).q2: 0.0
+7599 smcpp._smcpp DEBUG im(('Pop1',)).q3: -2123.3
+7599 smcpp._smcpp DEBUG im(('Pop1',)).q4: -0.0
+7599 smcpp.analysis.base DEBUG reg: 0.0 []
+7599 smcpp.analysis.base DEBUG Q:   -2123.3 []
+7600 smcpp.optimize.plugins.scale_optimizer DEBUG scale Q(-0.236068)=-2123.335510
+7643 smcpp._smcpp DEBUG im(('Pop1',)).q1: 0.0
+7643 smcpp._smcpp DEBUG im(('Pop1',)).q2: 0.0
+7643 smcpp._smcpp DEBUG im(('Pop1',)).q3: -2135.5
+7643 smcpp._smcpp DEBUG im(('Pop1',)).q4: -0.0
+7643 smcpp.analysis.base DEBUG reg: 0.0 []
+7643 smcpp.analysis.base DEBUG Q:   -2135.5 []
+7643 smcpp.optimize.plugins.scale_optimizer DEBUG scale Q(0.236068)=-2135.486497
+7687 smcpp._smcpp DEBUG im(('Pop1',)).q1: 0.0
+7687 smcpp._smcpp DEBUG im(('Pop1',)).q2: 0.0
+7687 smcpp._smcpp DEBUG im(('Pop1',)).q3: -2115.4
+7687 smcpp._smcpp DEBUG im(('Pop1',)).q4: -0.0
+7687 smcpp.analysis.base DEBUG reg: 0.0 []
+7687 smcpp.analysis.base DEBUG Q:   -2115.4 []
+7687 smcpp.optimize.plugins.scale_optimizer DEBUG scale Q(-0.527864)=-2115.433727
+7731 smcpp._smcpp DEBUG im(('Pop1',)).q1: 0.0
+7731 smcpp._smcpp DEBUG im(('Pop1',)).q2: 0.0
+7731 smcpp._smcpp DEBUG im(('Pop1',)).q3: -2126.7
+7731 smcpp._smcpp DEBUG im(('Pop1',)).q4: -0.0
+7732 smcpp.analysis.base DEBUG reg: 0.0 []
+7732 smcpp.analysis.base DEBUG Q:   -2126.8 []
+7732 smcpp.optimize.plugins.scale_optimizer DEBUG scale Q(-0.708204)=-2126.752349
+7775 smcpp._smcpp DEBUG im(('Pop1',)).q1: 0.0
+7775 smcpp._smcpp DEBUG im(('Pop1',)).q2: 0.0
+7775 smcpp._smcpp DEBUG im(('Pop1',)).q3: -2114.1
+7775 smcpp._smcpp DEBUG im(('Pop1',)).q4: -0.0
+7775 smcpp.analysis.base DEBUG reg: 0.0 []
+7775 smcpp.analysis.base DEBUG Q:   -2114.1 []
+7775 smcpp.optimize.plugins.scale_optimizer DEBUG scale Q(-0.453120)=-2114.117720
+7819 smcpp._smcpp DEBUG im(('Pop1',)).q1: 0.0
+7819 smcpp._smcpp DEBUG im(('Pop1',)).q2: 0.0
+7819 smcpp._smcpp DEBUG im(('Pop1',)).q3: -2114.1
+7819 smcpp._smcpp DEBUG im(('Pop1',)).q4: -0.0
+7819 smcpp.analysis.base DEBUG reg: 0.0 []
+7819 smcpp.analysis.base DEBUG Q:   -2114.1 []
+7819 smcpp.optimize.plugins.scale_optimizer DEBUG scale Q(-0.447732)=-2114.105824
+7862 smcpp._smcpp DEBUG im(('Pop1',)).q1: 0.0
+7862 smcpp._smcpp DEBUG im(('Pop1',)).q2: 0.0
+7862 smcpp._smcpp DEBUG im(('Pop1',)).q3: -2114.1
+7862 smcpp._smcpp DEBUG im(('Pop1',)).q4: -0.0
+7863 smcpp.analysis.base DEBUG reg: 0.0 []
+7863 smcpp.analysis.base DEBUG Q:   -2114.1 []
+7863 smcpp.optimize.plugins.scale_optimizer DEBUG scale Q(-0.444682)=-2114.104168
+7906 smcpp._smcpp DEBUG im(('Pop1',)).q1: 0.0
+7906 smcpp._smcpp DEBUG im(('Pop1',)).q2: 0.0
+7906 smcpp._smcpp DEBUG im(('Pop1',)).q3: -2114.1
+7906 smcpp._smcpp DEBUG im(('Pop1',)).q4: -0.0
+7906 smcpp.analysis.base DEBUG reg: 0.0 []
+7906 smcpp.analysis.base DEBUG Q:   -2114.1 []
+7906 smcpp.optimize.plugins.scale_optimizer DEBUG scale Q(-0.444831)=-2114.104163
+7950 smcpp._smcpp DEBUG im(('Pop1',)).q1: 0.0
+7950 smcpp._smcpp DEBUG im(('Pop1',)).q2: 0.0
+7950 smcpp._smcpp DEBUG im(('Pop1',)).q3: -2114.1
+7950 smcpp._smcpp DEBUG im(('Pop1',)).q4: -0.0
+7950 smcpp.analysis.base DEBUG reg: 0.0 []
+7950 smcpp.analysis.base DEBUG Q:   -2114.1 []
+7950 smcpp.optimize.plugins.scale_optimizer DEBUG scale Q(-0.444835)=-2114.104163
+7993 smcpp._smcpp DEBUG im(('Pop1',)).q1: 0.0
+7993 smcpp._smcpp DEBUG im(('Pop1',)).q2: 0.0
+7993 smcpp._smcpp DEBUG im(('Pop1',)).q3: -2114.1
+7993 smcpp._smcpp DEBUG im(('Pop1',)).q4: -0.0
+7993 smcpp.analysis.base DEBUG reg: 0.0 []
+7994 smcpp.analysis.base DEBUG Q:   -2114.1 []
+7994 smcpp.optimize.plugins.scale_optimizer DEBUG scale Q(-0.444838)=-2114.104163
+8042 smcpp.optimize.plugins.progress_printer DEBUG Optimizing coordinates range(0, 3)
+8042 smcpp.optimize.optimizers DEBUG bounds: [[3.1506013973041105 9.150601397304111]
+ [3.15046500779035 9.15046500779035]
+ [3.1505228658679245 9.150522865867924]]
+8042 smcpp.optimize.optimizers DEBUG x: 6.151, 6.150, 6.151
+8296 smcpp._smcpp DEBUG im(('Pop1',)).q1: 0.0 [0.0, 0.0, 0.0]
+8296 smcpp._smcpp DEBUG im(('Pop1',)).q2: 0.0 [0.0, 0.0, 0.0]
+8296 smcpp._smcpp DEBUG im(('Pop1',)).q3: -2148.3 [111.8, 28.3, 3.2]
+8296 smcpp._smcpp DEBUG im(('Pop1',)).q4: -0.0 [0.0, 0.0, 0.0]
+8297 smcpp.analysis.base DEBUG reg: 0.0 [0.0, -0.0, 0.0]
+8297 smcpp.analysis.base DEBUG Q:   -2148.3 [111.8, 28.3, 3.2]
+8297 smcpp.optimize.optimizers DEBUG x: 6.151, 6.150, 6.151
+8544 smcpp._smcpp DEBUG im(('Pop1',)).q1: 0.0 [0.0, 0.0, 0.0]
+8544 smcpp._smcpp DEBUG im(('Pop1',)).q2: 0.0 [0.0, 0.0, 0.0]
+8544 smcpp._smcpp DEBUG im(('Pop1',)).q3: -2148.3 [111.8, 28.3, 3.2]
+8544 smcpp._smcpp DEBUG im(('Pop1',)).q4: -0.0 [0.0, 0.0, 0.0]
+8544 smcpp.analysis.base DEBUG reg: 0.0 [0.0, -0.0, 0.0]
+8545 smcpp.analysis.base DEBUG Q:   -2148.3 [111.8, 28.3, 3.2]
+8545 smcpp.optimize.optimizers DEBUG x: 9.151, 9.150, 9.151
+8793 smcpp._smcpp DEBUG im(('Pop1',)).q1: 0.0 [0.0, 0.0, 0.0]
+8793 smcpp._smcpp DEBUG im(('Pop1',)).q2: 0.0 [0.0, 0.0, 0.0]
+8793 smcpp._smcpp DEBUG im(('Pop1',)).q3: -2135.5 [0.0, 0.0, 0.0]
+8793 smcpp._smcpp DEBUG im(('Pop1',)).q4: -0.0 [0.0, 0.0, 0.0]
+8794 smcpp.analysis.base DEBUG reg: 0.0 [0.0, -0.0, 0.0]
+8794 smcpp.analysis.base DEBUG Q:   -2135.5 [-0.0, 0.0, -0.0]
+8795 smcpp.optimize.optimizers DEBUG       fun: 2135.486496503877
+ hess_inv: <3x3 LbfgsInvHessProduct with dtype=float64>
+      jac: array([ 0.00000083, -0.00000166,  0.00000083])
+  message: b'CONVERGENCE: NORM_OF_PROJECTED_GRADIENT_<=_PGTOL'
+     nfev: 2
+      nit: 1
+     njev: 2
+   status: 0
+  success: True
+        x: array([9.1506014 , 9.15046501, 9.15052287])
+8796 smcpp.optimize.optimizers DEBUG % improvement in f=0.005945
+8797 smcpp.optimize.plugins.progress_printer DEBUG Results of optimizer:
+      fun: 2135.486496503877
+ hess_inv: <3x3 LbfgsInvHessProduct with dtype=float64>
+      jac: array([ 0.00000083, -0.00000166,  0.00000083])
+  message: b'CONVERGENCE: NORM_OF_PROJECTED_GRADIENT_<=_PGTOL'
+     nfev: 2
+      nit: 1
+     njev: 2
+   status: 0
+  success: True
+        x: array([9.1506014 , 9.15046501, 9.15052287])
+8832 smcpp.optimize.plugins.ascii_plotter DEBUG Plot of current model:
+
+
+  1000 ++------+-------+------+----+----+---+--+--+--------------------+-++
+       +                                          +         Pop. 1 ****** +
+       +                                      B                           B
+       +                                                                  +
+       +                                                                  +
+       +                                                                  +
+       |                                                                  |
+   100 ++                                                                ++
+       ********************************************************************
+       +                                                                  +
+       +                                                                  +
+       +                                                                  +
+       +                                                                  +
+       |                                          +                       |
+    10 ++------+-------+------+----+----+---+--+--+--------------------+-++
+                                                 100
+                                   Generations
+
+
+8833 smcpp.optimize.plugins.progress_printer INFO Current model:
+
+ 9.15  9.15  9.15
+1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00
+8863 smcpp.optimize.plugins.ascii_plotter INFO Plot of current model:
+
+
+  1000 ++------+-------+------+----+----+---+--+--+--------------------+-++
+       +                                          +         Pop. 1 ****** +
+       +                                      B                           B
+       +                                                                  +
+       +                                                                  +
+       +                                                                  +
+       |                                                                  |
+   100 ++                                                                ++
+       ********************************************************************
+       +                                                                  +
+       +                                                                  +
+       +                                                                  +
+       +                                                                  +
+       |                                          +                       |
+    10 ++------+-------+------+----+----+---+--+--+--------------------+-++
+                                                 100
+                                   Generations
+
+
+8897 smcpp.data_filter DEBUG LoadData()
+8898 smcpp.data_filter INFO Loading data...
+9048 smcpp.data_filter INFO 0.00 Gb of data
+9048 smcpp.data_filter DEBUG Contig(pid=('Pop1',), data=array([[ 1,  0,  1, 18],
+       [ 1,  0,  0, 18],
+       [ 1,  0,  2, 18],
+       ...,
+       [ 1,  0,  7, 18],
+       [ 1,  0,  1, 18],
+       [ 5,  0,  0, 18]], dtype=int32), n=array([18]), a=array([2]), fn='/home/pimbert/work/Species_evolution_inference/Data/SMC/optimization_smc/cst/smc_length=1.0e+03.gz')
+9049 smcpp.data_filter INFO 1 population
+9049 smcpp.data_filter DEBUG RecodeNonseg(cutoff=None)
+9049 smcpp.data_filter DEBUG Compress()
+14861 smcpp.data_filter DEBUG BreakLongSpans(cutoff=100000)
+14863 smcpp.data_filter DEBUG DropSmallContigs(cutoff=100000)
+14864 smcpp.data_filter DEBUG Watterson()
+14864 smcpp.data_filter DEBUG sites: 405/3547	watterson:0.114150
+14864 smcpp.data_filter DEBUG CountMutations(w=1)
+14872 smcpp.data_filter DEBUG mutation counts in 1bp windows: min=0 .05=0 .95=1 max=1
+14872 smcpp.data_filter DEBUG Thin(thinning=None)
+14872 smcpp.data_filter DEBUG Thinning interval: 1497
+14874 smcpp.data_filter DEBUG BinObservations(w=100)
+14875 smcpp.data_filter DEBUG RecodeMonomorphic()
+14875 smcpp.data_filter DEBUG Compress()
+20797 smcpp.data_filter DEBUG Validate()
+27452 smcpp.data_filter DEBUG DropUninformativeContigs()
+27452 smcpp.data_filter DEBUG Summarize()
+27452 smcpp.data_filter DEBUG [[1 1 0 0]
+ [1 0 0 0]
+ [8 1 0 0]
+ [1 0 0 0]]
+27453 smcpp.analysis.analysis DEBUG Computing quantiles of TMRCA distribution from M=1000 TMRCA samples
+27453 smcpp.analysis.analysis DEBUG Unresampled quantiles (0/10/25/50/75/100): [0. 0. 0. 0. 0. 1.]
+27462 py.warnings  WARNING /home/pimbert/.local/lib/python3.8/site-packages/sklearn/mixture/_base.py:147: ConvergenceWarning: Number of distinct clusters (2) found smaller than n_clusters (10). Possibly due to duplicate points in X.
+  label = cluster.KMeans(n_clusters=self.n_components, n_init=1,
+
+27498 smcpp.analysis.analysis DEBUG Quantiles: F(0.0769088)=0.01 F(0.132299)=0.0166624 F(0.22998)=0.0277635 F(0.378304)=0.0462607 F(0.614587)=0.0770813 F(1.03018)=0.128436 F(1.7346)=0.214005 F(3.0446)=0.356583 F(5.95477)=0.594153 F(5008.43)=0.99
+27498 smcpp.analysis.analysis DEBUG empirical TMRCA distribution: [   0.07690882    0.13229887    0.22998041    0.37830375    0.61458657    1.03018152    1.73460168    3.04460076
+    5.95476781 5008.43086279]
+27499 smcpp.analysis.analysis DEBUG Knots are: [0.07690882 0.22998041 0.61458657 1.73460168 5.95476781]
+27499 smcpp.analysis.analysis DEBUG knots in coalescent scaling:
+[0.07690882 0.22998041 0.61458657 1.73460168 5.95476781]
+27500 smcpp.analysis.base DEBUG Creating inference manager...
+27502 smcpp.analysis.base DEBUG Creating inference manager for ('Pop1',)
+27640 smcpp._smcpp DEBUG im(('Pop1',)).q1: 0.0
+27640 smcpp._smcpp DEBUG im(('Pop1',)).q2: -40.1
+27640 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0
+27640 smcpp._smcpp DEBUG im(('Pop1',)).q4: 0.0
+27641 smcpp.analysis.base DEBUG reg: 0.0 []
+27641 smcpp.analysis.base DEBUG Q:   -40.1 []
+27641 smcpp.analysis.analysis DEBUG Regularization penalty: lambda=4.00508e-05
+27641 smcpp.optimize.plugins.progress_printer INFO Starting EM algorithm...
+27641 smcpp.optimize.plugins.progress_printer INFO EM iteration 1 of 1...
+27641 smcpp.analysis.base INFO Running E-step
+27641 smcpp.analysis.base INFO E-step completed
+27641 smcpp.optimize.plugins.loglikelihood_monitor INFO Loglik: -27.012373
+27648 smcpp.optimize.plugins.parameter_optimizer INFO Updating rho, bounds (0.000001, 0.010000)
+27662 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0
+27662 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8
+27662 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0
+27662 smcpp._smcpp DEBUG im(('Pop1',)).q4: -14.3
+27662 smcpp.analysis.base DEBUG reg: 0.0 []
+27662 smcpp.analysis.base DEBUG Q:   -24.1 []
+27662 smcpp.optimize.plugins.parameter_optimizer DEBUG rho f(0.000100)=24.127843
+27662 smcpp.optimize.plugins.parameter_optimizer DEBUG Old rho: Q(0.000100)=24.127843
+27677 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0
+27677 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8
+27677 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0
+27677 smcpp._smcpp DEBUG im(('Pop1',)).q4: -11.2
+27677 smcpp.analysis.base DEBUG reg: 0.0 []
+27677 smcpp.analysis.base DEBUG Q:   -21.0 []
+27677 smcpp.optimize.plugins.parameter_optimizer DEBUG rho f(0.003820)=21.034179
+27691 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0
+27691 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8
+27691 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0
+27691 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.8
+27691 smcpp.analysis.base DEBUG reg: 0.0 []
+27691 smcpp.analysis.base DEBUG Q:   -20.6 []
+27691 smcpp.optimize.plugins.parameter_optimizer DEBUG rho f(0.006181)=20.607511
+27706 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0
+27706 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8
+27706 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0
+27706 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.6
+27706 smcpp.analysis.base DEBUG reg: 0.0 []
+27706 smcpp.analysis.base DEBUG Q:   -20.4 []
+27706 smcpp.optimize.plugins.parameter_optimizer DEBUG rho f(0.007640)=20.423974
+27720 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0
+27720 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8
+27720 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0
+27720 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.5
+27720 smcpp.analysis.base DEBUG reg: 0.0 []
+27721 smcpp.analysis.base DEBUG Q:   -20.3 []
+27721 smcpp.optimize.plugins.parameter_optimizer DEBUG rho f(0.008541)=20.329201
+27735 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0
+27735 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8
+27735 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0
+27735 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.5
+27735 smcpp.analysis.base DEBUG reg: 0.0 []
+27735 smcpp.analysis.base DEBUG Q:   -20.3 []
+27735 smcpp.optimize.plugins.parameter_optimizer DEBUG rho f(0.009098)=20.276216
+27749 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0
+27749 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8
+27749 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0
+27749 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4
+27749 smcpp.analysis.base DEBUG reg: 0.0 []
+27750 smcpp.analysis.base DEBUG Q:   -20.2 []
+27750 smcpp.optimize.plugins.parameter_optimizer DEBUG rho f(0.009443)=20.245336
+27764 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0
+27764 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8
+27764 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0
+27764 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4
+27764 smcpp.analysis.base DEBUG reg: 0.0 []
+27764 smcpp.analysis.base DEBUG Q:   -20.2 []
+27764 smcpp.optimize.plugins.parameter_optimizer DEBUG rho f(0.009656)=20.226910
+27778 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0
+27778 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8
+27778 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0
+27778 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4
+27778 smcpp.analysis.base DEBUG reg: 0.0 []
+27779 smcpp.analysis.base DEBUG Q:   -20.2 []
+27779 smcpp.optimize.plugins.parameter_optimizer DEBUG rho f(0.009787)=20.215762
+27793 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0
+27793 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8
+27793 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0
+27793 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4
+27793 smcpp.analysis.base DEBUG reg: 0.0 []
+27793 smcpp.analysis.base DEBUG Q:   -20.2 []
+27793 smcpp.optimize.plugins.parameter_optimizer DEBUG rho f(0.009868)=20.208962
+27807 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0
+27807 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8
+27807 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0
+27807 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4
+27807 smcpp.analysis.base DEBUG reg: 0.0 []
+27808 smcpp.analysis.base DEBUG Q:   -20.2 []
+27808 smcpp.optimize.plugins.parameter_optimizer DEBUG rho f(0.009919)=20.204792
+27822 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0
+27822 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8
+27822 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0
+27822 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4
+27822 smcpp.analysis.base DEBUG reg: 0.0 []
+27822 smcpp.analysis.base DEBUG Q:   -20.2 []
+27822 smcpp.optimize.plugins.parameter_optimizer DEBUG rho f(0.009950)=20.202228
+27836 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0
+27836 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8
+27836 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0
+27836 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4
+27836 smcpp.analysis.base DEBUG reg: 0.0 []
+27837 smcpp.analysis.base DEBUG Q:   -20.2 []
+27837 smcpp.optimize.plugins.parameter_optimizer DEBUG rho f(0.009969)=20.200648
+27851 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0
+27851 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8
+27851 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0
+27851 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4
+27851 smcpp.analysis.base DEBUG reg: 0.0 []
+27851 smcpp.analysis.base DEBUG Q:   -20.2 []
+27851 smcpp.optimize.plugins.parameter_optimizer DEBUG rho f(0.009981)=20.199673
+27865 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0
+27865 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8
+27865 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0
+27865 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4
+27866 smcpp.analysis.base DEBUG reg: 0.0 []
+27866 smcpp.analysis.base DEBUG Q:   -20.2 []
+27866 smcpp.optimize.plugins.parameter_optimizer DEBUG rho f(0.009988)=20.199072
+27880 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0
+27880 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8
+27880 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0
+27880 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4
+27880 smcpp.analysis.base DEBUG reg: 0.0 []
+27880 smcpp.analysis.base DEBUG Q:   -20.2 []
+27880 smcpp.optimize.plugins.parameter_optimizer DEBUG rho f(0.009993)=20.198700
+27894 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0
+27894 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8
+27894 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0
+27894 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4
+27895 smcpp.analysis.base DEBUG reg: 0.0 []
+27895 smcpp.analysis.base DEBUG Q:   -20.2 []
+27895 smcpp.optimize.plugins.parameter_optimizer DEBUG rho f(0.009996)=20.198427
+27895 smcpp.optimize.plugins.parameter_optimizer INFO New rho: 0.009996
+27932 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0
+27932 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8
+27932 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0
+27932 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4
+27933 smcpp.analysis.base DEBUG reg: 0.0 []
+27933 smcpp.analysis.base DEBUG Q:   -20.2 []
+27933 smcpp.optimize.plugins.scale_optimizer DEBUG scale Q(-0.236068)=-20.198427
+27970 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0
+27970 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8
+27970 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0
+27970 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4
+27970 smcpp.analysis.base DEBUG reg: 0.0 []
+27970 smcpp.analysis.base DEBUG Q:   -20.2 []
+27970 smcpp.optimize.plugins.scale_optimizer DEBUG scale Q(0.236068)=-20.198427
+28009 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0
+28009 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8
+28009 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0
+28009 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4
+28009 smcpp.analysis.base DEBUG reg: 0.0 []
+28009 smcpp.analysis.base DEBUG Q:   -20.2 []
+28009 smcpp.optimize.plugins.scale_optimizer DEBUG scale Q(0.527864)=-20.198427
+28046 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0
+28046 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8
+28046 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0
+28046 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4
+28047 smcpp.analysis.base DEBUG reg: 0.0 []
+28047 smcpp.analysis.base DEBUG Q:   -20.2 []
+28047 smcpp.optimize.plugins.scale_optimizer DEBUG scale Q(0.708204)=-20.198427
+28084 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0
+28084 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8
+28084 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0
+28084 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4
+28084 smcpp.analysis.base DEBUG reg: 0.0 []
+28084 smcpp.analysis.base DEBUG Q:   -20.2 []
+28084 smcpp.optimize.plugins.scale_optimizer DEBUG scale Q(0.819660)=-20.198427
+28122 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0
+28122 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8
+28122 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0
+28122 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4
+28122 smcpp.analysis.base DEBUG reg: 0.0 []
+28122 smcpp.analysis.base DEBUG Q:   -20.2 []
+28122 smcpp.optimize.plugins.scale_optimizer DEBUG scale Q(0.888544)=-20.198427
+28162 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0
+28162 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8
+28162 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0
+28162 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4
+28162 smcpp.analysis.base DEBUG reg: 0.0 []
+28162 smcpp.analysis.base DEBUG Q:   -20.2 []
+28162 smcpp.optimize.plugins.scale_optimizer DEBUG scale Q(0.931116)=-20.198427
+28200 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0
+28200 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8
+28200 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0
+28200 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4
+28200 smcpp.analysis.base DEBUG reg: 0.0 []
+28200 smcpp.analysis.base DEBUG Q:   -20.2 []
+28200 smcpp.optimize.plugins.scale_optimizer DEBUG scale Q(0.957428)=-20.198427
+28238 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0
+28238 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8
+28238 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0
+28238 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4
+28238 smcpp.analysis.base DEBUG reg: 0.0 []
+28238 smcpp.analysis.base DEBUG Q:   -20.2 []
+28238 smcpp.optimize.plugins.scale_optimizer DEBUG scale Q(0.973689)=-20.198427
+28275 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0
+28275 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8
+28275 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0
+28275 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4
+28276 smcpp.analysis.base DEBUG reg: 0.0 []
+28276 smcpp.analysis.base DEBUG Q:   -20.2 []
+28276 smcpp.optimize.plugins.scale_optimizer DEBUG scale Q(0.983739)=-20.198427
+28315 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0
+28315 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8
+28315 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0
+28315 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4
+28315 smcpp.analysis.base DEBUG reg: 0.0 []
+28315 smcpp.analysis.base DEBUG Q:   -20.2 []
+28315 smcpp.optimize.plugins.scale_optimizer DEBUG scale Q(0.989950)=-20.198427
+28353 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0
+28353 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8
+28353 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0
+28353 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4
+28353 smcpp.analysis.base DEBUG reg: 0.0 []
+28353 smcpp.analysis.base DEBUG Q:   -20.2 []
+28353 smcpp.optimize.plugins.scale_optimizer DEBUG scale Q(0.993789)=-20.198427
+28390 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0
+28390 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8
+28390 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0
+28390 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4
+28390 smcpp.analysis.base DEBUG reg: 0.0 []
+28390 smcpp.analysis.base DEBUG Q:   -20.2 []
+28390 smcpp.optimize.plugins.scale_optimizer DEBUG scale Q(0.996161)=-20.198427
+28427 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0
+28427 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8
+28427 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0
+28428 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4
+28428 smcpp.analysis.base DEBUG reg: 0.0 []
+28428 smcpp.analysis.base DEBUG Q:   -20.2 []
+28428 smcpp.optimize.plugins.scale_optimizer DEBUG scale Q(0.997628)=-20.198427
+28468 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0
+28468 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8
+28468 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0
+28468 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4
+28468 smcpp.analysis.base DEBUG reg: 0.0 []
+28468 smcpp.analysis.base DEBUG Q:   -20.2 []
+28468 smcpp.optimize.plugins.scale_optimizer DEBUG scale Q(0.998534)=-20.198427
+28505 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0
+28505 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8
+28505 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0
+28505 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4
+28506 smcpp.analysis.base DEBUG reg: 0.0 []
+28506 smcpp.analysis.base DEBUG Q:   -20.2 []
+28506 smcpp.optimize.plugins.scale_optimizer DEBUG scale Q(0.999094)=-20.198427
+28543 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0
+28543 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8
+28543 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0
+28543 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4
+28544 smcpp.analysis.base DEBUG reg: 0.0 []
+28544 smcpp.analysis.base DEBUG Q:   -20.2 []
+28544 smcpp.optimize.plugins.scale_optimizer DEBUG scale Q(0.999440)=-20.198427
+28581 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0
+28581 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8
+28581 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0
+28581 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4
+28582 smcpp.analysis.base DEBUG reg: 0.0 []
+28582 smcpp.analysis.base DEBUG Q:   -20.2 []
+28582 smcpp.optimize.plugins.scale_optimizer DEBUG scale Q(0.999654)=-20.198427
+28619 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0
+28619 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8
+28619 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0
+28619 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4
+28620 smcpp.analysis.base DEBUG reg: 0.0 []
+28620 smcpp.analysis.base DEBUG Q:   -20.2 []
+28620 smcpp.optimize.plugins.scale_optimizer DEBUG scale Q(0.999786)=-20.198427
+28657 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0
+28657 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8
+28657 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0
+28657 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4
+28657 smcpp.analysis.base DEBUG reg: 0.0 []
+28657 smcpp.analysis.base DEBUG Q:   -20.2 []
+28657 smcpp.optimize.plugins.scale_optimizer DEBUG scale Q(0.999868)=-20.198427
+28695 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0
+28695 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8
+28695 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0
+28695 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4
+28695 smcpp.analysis.base DEBUG reg: 0.0 []
+28695 smcpp.analysis.base DEBUG Q:   -20.2 []
+28695 smcpp.optimize.plugins.scale_optimizer DEBUG scale Q(0.999918)=-20.198427
+28732 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0
+28732 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8
+28732 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0
+28733 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4
+28733 smcpp.analysis.base DEBUG reg: 0.0 []
+28733 smcpp.analysis.base DEBUG Q:   -20.2 []
+28733 smcpp.optimize.plugins.scale_optimizer DEBUG scale Q(0.999949)=-20.198427
+28770 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0
+28770 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8
+28770 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0
+28770 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4
+28771 smcpp.analysis.base DEBUG reg: 0.0 []
+28771 smcpp.analysis.base DEBUG Q:   -20.2 []
+28771 smcpp.optimize.plugins.scale_optimizer DEBUG scale Q(0.999969)=-20.198427
+28808 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0
+28808 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8
+28808 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0
+28808 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4
+28809 smcpp.analysis.base DEBUG reg: 0.0 []
+28809 smcpp.analysis.base DEBUG Q:   -20.2 []
+28809 smcpp.optimize.plugins.scale_optimizer DEBUG scale Q(0.999981)=-20.198427
+28846 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0
+28846 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8
+28846 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0
+28846 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4
+28847 smcpp.analysis.base DEBUG reg: 0.0 []
+28847 smcpp.analysis.base DEBUG Q:   -20.2 []
+28847 smcpp.optimize.plugins.scale_optimizer DEBUG scale Q(0.999988)=-20.198427
+28884 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0
+28884 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8
+28884 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0
+28884 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4
+28884 smcpp.analysis.base DEBUG reg: 0.0 []
+28884 smcpp.analysis.base DEBUG Q:   -20.2 []
+28884 smcpp.optimize.plugins.scale_optimizer DEBUG scale Q(0.999993)=-20.198427
+28922 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0
+28922 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8
+28922 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0
+28922 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4
+28922 smcpp.analysis.base DEBUG reg: 0.0 []
+28922 smcpp.analysis.base DEBUG Q:   -20.2 []
+28922 smcpp.optimize.plugins.scale_optimizer DEBUG scale Q(0.999996)=-20.198427
+28923 smcpp.optimize.plugins.progress_printer DEBUG Optimizing coordinates [4]
+28923 smcpp.optimize.optimizers DEBUG bounds: [[8.150593357576586 9.210340371976184]]
+28923 smcpp.optimize.optimizers DEBUG x: 11.151
+29177 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+29177 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+29177 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+29177 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+29177 smcpp.analysis.base DEBUG reg: 0.0 [0.0]
+29177 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+29180 py.warnings  WARNING /home/pimbert/.local/lib/python3.8/site-packages/smcpp/optimize/optimizers.py:132: OptimizeWarning: Unknown solver options: xtol, ftol
+  res = scipy.optimize.minimize_scalar(
+
+29180 smcpp.optimize.optimizers DEBUG x: 8.555
+29429 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+29429 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+29429 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+29429 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+29429 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+29429 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+29429 smcpp.optimize.optimizers DEBUG x: 8.806
+29670 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+29670 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+29670 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+29670 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+29670 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+29670 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+29670 smcpp.optimize.optimizers DEBUG x: 8.960
+29917 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+29917 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+29917 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+29917 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+29917 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+29917 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+29918 smcpp.optimize.optimizers DEBUG x: 9.056
+30159 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+30159 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+30159 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+30159 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+30160 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+30160 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+30160 smcpp.optimize.optimizers DEBUG x: 9.115
+30407 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+30407 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+30407 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+30407 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+30407 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+30407 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+30407 smcpp.optimize.optimizers DEBUG x: 9.151
+30776 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+30776 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+30776 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+30776 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+30776 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+30776 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+30777 smcpp.optimize.optimizers DEBUG x: 9.174
+31120 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+31120 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+31120 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+31120 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+31121 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+31121 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+31121 smcpp.optimize.optimizers DEBUG x: 9.188
+31390 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+31390 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+31390 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+31390 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+31391 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+31391 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+31391 smcpp.optimize.optimizers DEBUG x: 9.196
+31695 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+31696 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+31696 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+31696 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+31696 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+31696 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+31696 smcpp.optimize.optimizers DEBUG x: 9.202
+31938 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+31938 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+31938 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+31938 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+31938 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+31938 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+31939 smcpp.optimize.optimizers DEBUG x: 9.205
+32180 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+32180 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+32180 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+32180 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+32181 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+32181 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+32181 smcpp.optimize.optimizers DEBUG x: 9.207
+32420 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+32420 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+32420 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+32420 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+32421 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+32421 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+32421 smcpp.optimize.optimizers DEBUG x: 9.208
+32684 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+32684 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+32685 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+32685 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+32685 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+32685 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+32685 smcpp.optimize.optimizers DEBUG x: 9.209
+32955 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+32955 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+32955 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+32956 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+32956 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+32956 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+32956 smcpp.optimize.optimizers DEBUG x: 9.210
+33197 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+33197 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+33197 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+33197 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+33197 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+33197 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+33197 smcpp.optimize.optimizers DEBUG x: 9.210
+33439 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+33439 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+33439 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+33439 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+33439 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+33439 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+33439 smcpp.optimize.optimizers DEBUG x: 9.210
+33706 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+33706 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+33706 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+33706 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+33706 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+33706 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+33706 smcpp.optimize.optimizers DEBUG x: 9.210
+33964 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+33964 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+33964 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+33964 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+33965 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+33965 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+33965 smcpp.optimize.optimizers DEBUG x: 9.210
+34238 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+34238 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+34239 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+34239 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+34239 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+34239 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+34239 smcpp.optimize.optimizers DEBUG x: 9.210
+34515 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+34515 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+34515 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+34515 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+34515 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+34515 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+34515 smcpp.optimize.optimizers DEBUG x: 9.210
+34785 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+34785 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+34785 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+34785 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+34785 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+34785 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+34785 smcpp.optimize.optimizers DEBUG x: 9.210
+35056 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+35056 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+35056 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+35056 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+35056 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+35056 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+35057 smcpp.optimize.optimizers DEBUG x: 9.210
+35327 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+35327 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+35327 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+35327 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+35327 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+35327 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+35327 smcpp.optimize.optimizers DEBUG x: 9.210
+35687 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+35687 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+35687 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+35687 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+35687 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+35687 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+35687 smcpp.optimize.optimizers DEBUG x: 9.210
+35960 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+35960 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+35960 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+35961 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+35961 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+35961 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+35961 smcpp.optimize.optimizers DEBUG      fun: 20.198577694228852
+ message: 'Solution found.'
+    nfev: 25
+  status: 0
+ success: True
+       x: array([9.21033405])
+35961 smcpp.optimize.optimizers DEBUG % improvement in f=-0.000007
+35962 smcpp.optimize.plugins.progress_printer DEBUG Results of optimizer:
+     fun: 20.198577694228852
+ message: 'Solution found.'
+    nfev: 25
+  status: 0
+ success: True
+       x: array([9.21033405])
+35998 smcpp.optimize.plugins.ascii_plotter DEBUG Plot of current model:
+
+
+  10000 ++---------+-----+----+--+--+-+-+-+-+---------+-----+----+--+--+-++
+        ++                                  +               Pop. 1 ****** +
+        +                B              B              B                  +
+        +                                                                 +
+        |                                                                 |
+   1000 ++                                                               ++
+        +                                                                 B
+        +                                                                 +
+        +                                                                 +
+    100 ++                                                               ++
+        *******************************************************************
+        +                                                                 +
+        +                                                                 +
+        ++                                  +                             +
+     10 ++---------+-----+----+--+--+-+-+-+-+---------+-----+----+--+--+-++
+        0.01                               0.1
+                                    Generations
+
+
+35998 smcpp.optimize.plugins.progress_printer DEBUG Optimizing coordinates [3]
+35998 smcpp.optimize.optimizers DEBUG bounds: [[8.150593357576586 9.210340371976184]]
+35999 smcpp.optimize.optimizers DEBUG x: 11.151
+36247 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+36247 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+36248 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+36248 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+36248 smcpp.analysis.base DEBUG reg: 0.0 [0.0]
+36248 smcpp.analysis.base DEBUG Q:   -20.2 [-0.0]
+36248 smcpp.optimize.optimizers DEBUG x: 8.555
+36491 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+36491 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+36491 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+36491 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+36491 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+36491 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+36492 smcpp.optimize.optimizers DEBUG x: 8.806
+36754 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+36754 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+36754 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+36754 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+36755 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+36755 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+36755 smcpp.optimize.optimizers DEBUG x: 8.960
+37007 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+37007 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+37007 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+37007 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+37007 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+37008 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+37008 smcpp.optimize.optimizers DEBUG x: 9.056
+37253 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+37253 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+37253 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+37253 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+37253 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+37253 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+37254 smcpp.optimize.optimizers DEBUG x: 9.115
+37494 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+37494 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+37494 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+37494 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+37494 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+37494 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+37494 smcpp.optimize.optimizers DEBUG x: 9.151
+37736 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+37736 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+37736 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+37736 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+37736 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+37736 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+37737 smcpp.optimize.optimizers DEBUG x: 9.174
+37996 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+37996 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+37996 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+37996 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+37997 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+37997 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+37997 smcpp.optimize.optimizers DEBUG x: 9.188
+38246 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+38246 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+38246 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+38246 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+38246 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+38246 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+38246 smcpp.optimize.optimizers DEBUG x: 9.196
+38518 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+38519 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+38519 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+38519 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+38522 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+38522 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+38524 smcpp.optimize.optimizers DEBUG x: 9.202
+38796 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+38796 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+38796 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+38796 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+38797 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+38797 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+38797 smcpp.optimize.optimizers DEBUG x: 9.205
+39056 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+39056 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+39056 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+39057 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+39057 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+39057 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+39057 smcpp.optimize.optimizers DEBUG x: 9.207
+39321 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+39321 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+39321 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+39321 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+39322 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+39322 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+39322 smcpp.optimize.optimizers DEBUG x: 9.208
+39584 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+39584 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+39584 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+39584 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+39585 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+39585 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+39585 smcpp.optimize.optimizers DEBUG x: 9.209
+39894 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+39894 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+39894 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+39894 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+39894 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+39894 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+39895 smcpp.optimize.optimizers DEBUG x: 9.210
+40165 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+40165 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+40165 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+40165 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+40165 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+40165 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+40165 smcpp.optimize.optimizers DEBUG x: 9.210
+40430 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+40430 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+40430 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+40430 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+40430 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+40430 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+40431 smcpp.optimize.optimizers DEBUG x: 9.210
+40677 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+40678 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+40678 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+40678 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+40678 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+40678 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+40679 smcpp.optimize.optimizers DEBUG x: 9.210
+40921 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+40921 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+40921 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+40921 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+40922 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+40922 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+40922 smcpp.optimize.optimizers DEBUG x: 9.210
+41177 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+41177 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+41177 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+41177 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+41177 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+41177 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+41178 smcpp.optimize.optimizers DEBUG x: 9.210
+41422 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+41422 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+41422 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+41423 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+41423 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+41423 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+41423 smcpp.optimize.optimizers DEBUG x: 9.210
+41672 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+41672 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+41672 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+41672 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+41672 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+41672 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+41673 smcpp.optimize.optimizers DEBUG x: 9.210
+41936 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+41937 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+41937 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+41937 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+41941 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+41941 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+41942 smcpp.optimize.optimizers DEBUG x: 9.210
+42193 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+42193 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+42193 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+42193 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+42193 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+42193 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+42194 smcpp.optimize.optimizers DEBUG x: 9.210
+42442 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+42442 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+42442 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+42442 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+42442 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+42442 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+42442 smcpp.optimize.optimizers DEBUG x: 9.210
+42707 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+42707 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+42707 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+42707 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+42708 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+42708 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+42708 smcpp.optimize.optimizers DEBUG      fun: 20.19872846979331
+ message: 'Solution found.'
+    nfev: 25
+  status: 0
+ success: True
+       x: array([9.21033405])
+42709 smcpp.optimize.optimizers DEBUG % improvement in f=-0.000007
+42710 smcpp.optimize.plugins.progress_printer DEBUG Results of optimizer:
+     fun: 20.19872846979331
+ message: 'Solution found.'
+    nfev: 25
+  status: 0
+ success: True
+       x: array([9.21033405])
+42743 smcpp.optimize.plugins.ascii_plotter DEBUG Plot of current model:
+
+
+  10000 ++---------+-----+----+--+--+-+-+-+-+---------+-----+----+--+--+-++
+        ++                                  +               Pop. 1 ****** +
+        +                B              B                                 +
+        +                                                                 +
+        |                                                                 |
+   1000 ++                                                               ++
+        +                                              B                  B
+        +                                                                 +
+        +                                                                 +
+    100 ++                                                               ++
+        *******************************************************************
+        +                                                                 +
+        +                                                                 +
+        ++                                  +                             +
+     10 ++---------+-----+----+--+--+-+-+-+-+---------+-----+----+--+--+-++
+        0.01                               0.1
+                                    Generations
+
+
+42743 smcpp.optimize.plugins.progress_printer DEBUG Optimizing coordinates [2]
+42744 smcpp.optimize.optimizers DEBUG bounds: [[8.150593357576586 9.210340371976184]]
+42744 smcpp.optimize.optimizers DEBUG x: 11.151
+42999 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+42999 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+42999 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+42999 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+42999 smcpp.analysis.base DEBUG reg: 0.0 [0.0]
+42999 smcpp.analysis.base DEBUG Q:   -20.2 [-0.0]
+43000 smcpp.optimize.optimizers DEBUG x: 8.555
+43272 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+43273 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+43273 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+43273 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+43275 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+43276 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+43276 smcpp.optimize.optimizers DEBUG x: 8.806
+43547 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+43548 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+43548 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+43548 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+43548 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+43548 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+43548 smcpp.optimize.optimizers DEBUG x: 8.960
+43818 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+43818 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+43818 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+43818 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+43819 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+43819 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+43819 smcpp.optimize.optimizers DEBUG x: 9.056
+44091 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+44092 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+44092 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+44092 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+44093 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+44093 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+44094 smcpp.optimize.optimizers DEBUG x: 9.115
+44464 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+44464 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+44464 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+44464 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+44464 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+44464 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+44465 smcpp.optimize.optimizers DEBUG x: 9.151
+44724 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+44724 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+44724 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+44724 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+44725 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+44725 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+44725 smcpp.optimize.optimizers DEBUG x: 9.174
+44965 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+44965 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+44965 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+44965 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+44966 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+44966 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+44966 smcpp.optimize.optimizers DEBUG x: 9.188
+45205 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+45205 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+45205 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+45205 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+45205 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+45205 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+45205 smcpp.optimize.optimizers DEBUG x: 9.196
+45448 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+45448 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+45448 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+45448 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+45448 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+45448 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+45448 smcpp.optimize.optimizers DEBUG x: 9.202
+45690 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+45690 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+45690 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+45690 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+45690 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+45690 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+45690 smcpp.optimize.optimizers DEBUG x: 9.205
+45932 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+45932 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+45932 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+45932 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+45932 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+45933 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+45933 smcpp.optimize.optimizers DEBUG x: 9.207
+46174 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+46174 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+46174 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+46174 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+46175 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+46175 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+46175 smcpp.optimize.optimizers DEBUG x: 9.208
+46416 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+46416 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+46416 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+46416 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+46417 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+46417 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+46417 smcpp.optimize.optimizers DEBUG x: 9.209
+46658 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+46658 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+46658 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+46659 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+46659 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+46659 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+46659 smcpp.optimize.optimizers DEBUG x: 9.210
+46902 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+46902 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+46902 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+46902 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+46902 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+46902 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+46902 smcpp.optimize.optimizers DEBUG x: 9.210
+47142 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+47143 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+47143 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+47143 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+47143 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+47143 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+47143 smcpp.optimize.optimizers DEBUG x: 9.210
+47385 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+47385 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+47385 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+47385 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+47385 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+47385 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+47385 smcpp.optimize.optimizers DEBUG x: 9.210
+47628 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+47628 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+47628 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+47628 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+47628 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+47628 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+47628 smcpp.optimize.optimizers DEBUG x: 9.210
+47869 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+47870 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+47870 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+47870 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+47870 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+47870 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+47870 smcpp.optimize.optimizers DEBUG x: 9.210
+48117 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+48117 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+48117 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+48117 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+48118 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+48118 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+48118 smcpp.optimize.optimizers DEBUG x: 9.210
+48364 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+48364 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+48364 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+48364 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+48364 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+48364 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+48364 smcpp.optimize.optimizers DEBUG x: 9.210
+48606 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+48606 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+48606 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+48606 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+48606 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+48606 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+48606 smcpp.optimize.optimizers DEBUG x: 9.210
+48849 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+48849 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+48849 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+48849 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+48849 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+48849 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+48849 smcpp.optimize.optimizers DEBUG x: 9.210
+49090 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+49090 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+49090 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+49090 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+49091 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+49091 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+49091 smcpp.optimize.optimizers DEBUG x: 9.210
+49335 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+49335 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+49335 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+49335 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+49335 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+49335 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+49335 smcpp.optimize.optimizers DEBUG      fun: 20.19872846979331
+ message: 'Solution found.'
+    nfev: 25
+  status: 0
+ success: True
+       x: array([9.21033405])
+49336 smcpp.optimize.optimizers DEBUG % improvement in f=0.000000
+49337 smcpp.optimize.plugins.progress_printer DEBUG Results of optimizer:
+     fun: 20.19872846979331
+ message: 'Solution found.'
+    nfev: 25
+  status: 0
+ success: True
+       x: array([9.21033405])
+49371 smcpp.optimize.plugins.ascii_plotter DEBUG Plot of current model:
+
+
+  10000 ++---------+-----+----+--+--+-+-+-+-+---------+-----+----+--+--+-++
+        ++                                  +               Pop. 1 ****** +
+        +                B                                                +
+        +                                                                 +
+        |                                                                 |
+   1000 ++                                                               ++
+        +                               B              B                  B
+        +                                                                 +
+        +                                                                 +
+    100 ++                                                               ++
+        *******************************************************************
+        +                                                                 +
+        +                                                                 +
+        ++                                  +                             +
+     10 ++---------+-----+----+--+--+-+-+-+-+---------+-----+----+--+--+-++
+        0.01                               0.1
+                                    Generations
+
+
+49371 smcpp.optimize.plugins.progress_printer DEBUG Optimizing coordinates [1]
+49371 smcpp.optimize.optimizers DEBUG bounds: [[8.150593357576586 9.210340371976184]]
+49371 smcpp.optimize.optimizers DEBUG x: 11.151
+49625 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+49625 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+49625 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+49625 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+49626 smcpp.analysis.base DEBUG reg: 0.0 [0.0]
+49626 smcpp.analysis.base DEBUG Q:   -20.2 [-0.0]
+49626 smcpp.optimize.optimizers DEBUG x: 8.555
+49874 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+49874 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+49874 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+49874 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+49875 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+49875 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+49875 smcpp.optimize.optimizers DEBUG x: 8.806
+50120 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+50120 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+50120 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+50120 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+50121 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+50121 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+50121 smcpp.optimize.optimizers DEBUG x: 8.960
+50369 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+50369 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+50369 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+50369 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+50370 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+50370 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+50370 smcpp.optimize.optimizers DEBUG x: 9.056
+50622 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+50623 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+50623 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+50623 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+50623 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+50623 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+50623 smcpp.optimize.optimizers DEBUG x: 9.115
+50870 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+50870 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+50870 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+50870 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+50870 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+50870 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+50870 smcpp.optimize.optimizers DEBUG x: 9.151
+51117 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+51117 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+51117 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+51117 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+51118 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+51118 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+51118 smcpp.optimize.optimizers DEBUG x: 9.174
+51368 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+51368 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+51368 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+51368 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+51368 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+51368 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+51368 smcpp.optimize.optimizers DEBUG x: 9.188
+51617 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+51617 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+51617 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+51617 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+51617 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+51617 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+51617 smcpp.optimize.optimizers DEBUG x: 9.196
+51867 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+51867 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+51867 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+51867 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+51867 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+51867 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+51868 smcpp.optimize.optimizers DEBUG x: 9.202
+52115 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+52115 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+52115 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+52115 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+52116 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+52116 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+52116 smcpp.optimize.optimizers DEBUG x: 9.205
+52363 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+52363 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+52363 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+52363 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+52363 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+52363 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+52363 smcpp.optimize.optimizers DEBUG x: 9.207
+52613 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+52613 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+52613 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+52613 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+52614 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+52614 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+52614 smcpp.optimize.optimizers DEBUG x: 9.208
+52862 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+52863 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+52863 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+52863 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+52863 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+52863 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+52863 smcpp.optimize.optimizers DEBUG x: 9.209
+53112 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+53112 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+53112 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+53112 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+53112 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+53112 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+53112 smcpp.optimize.optimizers DEBUG x: 9.210
+53362 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+53362 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+53362 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+53363 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+53363 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+53363 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+53363 smcpp.optimize.optimizers DEBUG x: 9.210
+53610 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+53610 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+53610 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+53610 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+53610 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+53610 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+53610 smcpp.optimize.optimizers DEBUG x: 9.210
+53860 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+53860 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+53860 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+53860 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+53860 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+53860 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+53860 smcpp.optimize.optimizers DEBUG x: 9.210
+54108 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+54108 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+54108 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+54108 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+54108 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+54108 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+54109 smcpp.optimize.optimizers DEBUG x: 9.210
+54357 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+54358 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+54358 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+54358 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+54358 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+54358 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+54358 smcpp.optimize.optimizers DEBUG x: 9.210
+54607 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+54607 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+54607 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+54607 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+54607 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+54607 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+54608 smcpp.optimize.optimizers DEBUG x: 9.210
+54854 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+54855 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+54855 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+54855 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+54855 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+54855 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+54855 smcpp.optimize.optimizers DEBUG x: 9.210
+55101 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+55101 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+55101 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+55101 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+55102 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+55102 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+55102 smcpp.optimize.optimizers DEBUG x: 9.210
+55350 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+55350 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+55350 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+55350 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+55350 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+55350 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+55351 smcpp.optimize.optimizers DEBUG x: 9.210
+55598 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+55598 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+55598 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+55598 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+55598 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+55598 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+55598 smcpp.optimize.optimizers DEBUG x: 9.210
+55848 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+55848 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+55848 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+55848 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+55849 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+55849 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+55849 smcpp.optimize.optimizers DEBUG      fun: 20.198577694228852
+ message: 'Solution found.'
+    nfev: 25
+  status: 0
+ success: True
+       x: array([9.21033405])
+55849 smcpp.optimize.optimizers DEBUG % improvement in f=0.000007
+55850 smcpp.optimize.plugins.progress_printer DEBUG Results of optimizer:
+     fun: 20.198577694228852
+ message: 'Solution found.'
+    nfev: 25
+  status: 0
+ success: True
+       x: array([9.21033405])
+55893 smcpp.optimize.plugins.ascii_plotter DEBUG Plot of current model:
+
+
+  1000 ++---------+------+---+--+--+--+-++-+----------+-----+---+---+--+-++
+       ++               B              B   +           B    Pop. 1 ****** B
+       +                                                                  +
+       +                                                                  +
+       +                                                                  +
+       +                                                                  +
+       |                                                                  |
+   100 ++                                                                ++
+       ********************************************************************
+       +                                                                  +
+       +                                                                  +
+       +                                                                  +
+       +                                                                  +
+       |+                                  +                              |
+    10 ++---------+------+---+--+--+--+-++-+----------+-----+---+---+--+-++
+       0.01                               0.1
+                                   Generations
+
+
+55893 smcpp.optimize.plugins.progress_printer DEBUG Optimizing coordinates [0]
+55893 smcpp.optimize.optimizers DEBUG bounds: [[8.150593357576586 9.210340371976184]]
+55894 smcpp.optimize.optimizers DEBUG x: 11.151
+56267 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+56267 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+56267 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+56267 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+56267 smcpp.analysis.base DEBUG reg: 0.0 [0.0]
+56267 smcpp.analysis.base DEBUG Q:   -20.2 [-0.0]
+56268 smcpp.optimize.optimizers DEBUG x: 8.555
+56559 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+56560 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+56560 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+56560 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+56560 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+56560 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+56560 smcpp.optimize.optimizers DEBUG x: 8.806
+56807 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+56807 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+56807 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+56807 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+56807 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+56807 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+56808 smcpp.optimize.optimizers DEBUG x: 8.960
+57057 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+57057 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+57057 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+57057 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+57057 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+57057 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+57057 smcpp.optimize.optimizers DEBUG x: 9.056
+57303 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+57303 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+57303 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+57303 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+57304 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+57304 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+57304 smcpp.optimize.optimizers DEBUG x: 9.115
+57551 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+57552 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+57552 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+57552 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+57552 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+57552 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+57552 smcpp.optimize.optimizers DEBUG x: 9.151
+57798 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+57798 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+57798 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+57798 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+57798 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+57798 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+57798 smcpp.optimize.optimizers DEBUG x: 9.174
+58048 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+58048 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+58048 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+58048 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+58048 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+58048 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+58048 smcpp.optimize.optimizers DEBUG x: 9.188
+58298 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+58298 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+58298 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+58298 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+58299 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+58299 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+58299 smcpp.optimize.optimizers DEBUG x: 9.196
+58544 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+58544 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+58544 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+58545 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+58545 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+58545 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+58545 smcpp.optimize.optimizers DEBUG x: 9.202
+58794 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+58794 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+58794 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+58794 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+58794 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+58794 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+58794 smcpp.optimize.optimizers DEBUG x: 9.205
+59042 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+59042 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+59042 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+59042 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+59042 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+59042 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+59042 smcpp.optimize.optimizers DEBUG x: 9.207
+59289 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+59289 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+59289 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+59289 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+59289 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+59289 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+59289 smcpp.optimize.optimizers DEBUG x: 9.208
+59539 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+59540 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+59540 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+59540 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+59540 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+59540 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+59540 smcpp.optimize.optimizers DEBUG x: 9.209
+59793 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+59793 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+59793 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+59793 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+59793 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+59793 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+59793 smcpp.optimize.optimizers DEBUG x: 9.210
+60043 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+60043 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+60043 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+60043 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+60043 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+60043 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+60043 smcpp.optimize.optimizers DEBUG x: 9.210
+60294 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+60294 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+60294 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+60294 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+60294 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+60294 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+60295 smcpp.optimize.optimizers DEBUG x: 9.210
+60542 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+60542 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+60542 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+60542 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+60542 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+60542 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+60542 smcpp.optimize.optimizers DEBUG x: 9.210
+60790 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+60790 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+60790 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+60790 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+60790 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+60790 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+60790 smcpp.optimize.optimizers DEBUG x: 9.210
+61037 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+61037 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+61037 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+61037 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+61037 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+61037 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+61037 smcpp.optimize.optimizers DEBUG x: 9.210
+61285 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+61285 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+61285 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+61286 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+61286 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+61286 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+61286 smcpp.optimize.optimizers DEBUG x: 9.210
+61535 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+61535 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+61535 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+61535 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+61535 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+61535 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+61536 smcpp.optimize.optimizers DEBUG x: 9.210
+61785 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+61785 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+61785 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+61785 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+61786 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+61786 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+61786 smcpp.optimize.optimizers DEBUG x: 9.210
+62034 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+62034 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+62034 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+62034 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+62034 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+62034 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+62034 smcpp.optimize.optimizers DEBUG x: 9.210
+62282 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+62282 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+62282 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+62282 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+62283 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+62283 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+62283 smcpp.optimize.optimizers DEBUG x: 9.210
+62530 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+62530 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+62530 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+62530 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+62530 smcpp.analysis.base DEBUG reg: 0.0 [-0.0]
+62530 smcpp.analysis.base DEBUG Q:   -20.2 [0.0]
+62530 smcpp.optimize.optimizers DEBUG x: 9.210
+62780 smcpp._smcpp DEBUG im(('Pop1',)).q1: -0.0 [0.0]
+62780 smcpp._smcpp DEBUG im(('Pop1',)).q2: -9.8 [0.0]
+62780 smcpp._smcpp DEBUG im(('Pop1',)).q3: 0.0 [0.0]
+62780 smcpp._smcpp DEBUG im(('Pop1',)).q4: -10.4 [0.0]
+62780 smcpp.analysis.base DEBUG reg: 0.0 [0.0]
+62780 smcpp.analysis.base DEBUG Q:   -20.2 [-0.0]
+62781 smcpp.optimize.optimizers DEBUG      fun: 20.198426918664396
+ message: 'Solution found.'
+    nfev: 26
+  status: 0
+ success: True
+       x: array([9.21033592])
+62781 smcpp.optimize.optimizers DEBUG % improvement in f=0.000007
+62782 smcpp.optimize.plugins.progress_printer DEBUG Results of optimizer:
+     fun: 20.198426918664396
+ message: 'Solution found.'
+    nfev: 26
+  status: 0
+ success: True
+       x: array([9.21033592])
+62813 smcpp.optimize.plugins.ascii_plotter DEBUG Plot of current model:
+
+
+  1000 ++---------+------+---+--+--+--+-++-+----------+-----+---+---+--+-++
+       ++               B              B   +           B    Pop. 1 ****** B
+       +                                                                  +
+       +                                                                  +
+       +                                                                  +
+       +                                                                  +
+       |                                                                  |
+   100 ++                                                                ++
+       ********************************************************************
+       +                                                                  +
+       +                                                                  +
+       +                                                                  +
+       +                                                                  +
+       |+                                  +                              |
+    10 ++---------+------+---+--+--+--+-++-+----------+-----+---+---+--+-++
+       0.01                               0.1
+                                   Generations
+
+
+62814 smcpp.optimize.plugins.progress_printer INFO Current model:
+
+ 9.21  9.21  9.21  9.21  9.21
+1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00 1000.00
+62848 smcpp.optimize.plugins.ascii_plotter INFO Plot of current model:
+
+
+  1000 ++---------+------+---+--+--+--+-++-+----------+-----+---+---+--+-++
+       ++               B              B   +           B    Pop. 1 ****** B
+       +                                                                  +
+       +                                                                  +
+       +                                                                  +
+       +                                                                  +
+       |                                                                  |
+   100 ++                                                                ++
+       ********************************************************************
+       +                                                                  +
+       +                                                                  +
+       +                                                                  +
+       +                                                                  +
+       |+                                  +                              |
+    10 ++---------+------+---+--+--+--+-++-+----------+-----+---+---+--+-++
+       0.01                               0.1
+                                   Generations
+
+
