@@ -23,6 +23,35 @@ def normalization(sfs):
 # SFS shape verification                                             #
 ######################################################################
 
+def sfs_label(length, title):
+    """
+    Set up sfs caption, label and title.
+
+    Parameter
+    ---------
+    length: length of the SFS
+    title: title of the plot
+    """
+    # Caption
+    plt.legend(loc="upper right", fontsize="x-large")
+
+    # Label axis
+    plt.xlabel("Allele frequency", fontsize="x-large")
+    plt.ylabel("Percent of SNPs", fontsize="x-large")
+
+    # X axis values
+    xtick_pas = 1 if length <= 10 else 2 if length < 20 else length%10+1
+
+    x_ax, x_values = [], []
+    for i in range(0, length, xtick_pas):
+        x_ax.append(i)
+        x_values.append("{}/{}".format(i+1, length+1))
+    plt.xticks(x_ax, x_values)
+
+    # Title + show
+    plt.title(title, fontsize="xx-large")
+
+
 # For observed SFS generated with msprime
 
 def plot_sfs(data, save=False):
@@ -70,24 +99,10 @@ def plot_sfs(data, save=False):
 
         cpt += 1
 
-    # Caption
-    plt.legend(loc="upper right", fontsize="x-large")
-
-    # Label axis
-    plt.xlabel("Allele frequency", fontsize="x-large")
-    plt.ylabel("Percent of SNPs", fontsize="x-large")
-
-    # X axis values
-    x_ax, x_values = [], []
-    for i in range(len(sfs)):
-        x_ax.append(i)
-        x_values.append("{}/{}".format(i+1, len(sfs)+1))
-    plt.xticks(x_ax, x_values)
-
-    # Title + show
+    # Label, caption and title
     title = "Unfold SFS for various scenario with Ne={}, mu={}, rcb={}, L={:.1E}" \
         .format(data[2]['Ne'], data[2]['mu'], data[2]['rcb_rate'], round(data[2]['length']))
-    plt.title(title, fontsize="xx-large")
+    sfs_label(length=len(sfs), title=title)
 
     if save:
         plt.savefig('./Figures/SFS-shape')
@@ -182,35 +197,23 @@ def plot_sfs_inference(data, parameters, colors, suptitle):
 
 # For SFS of real data
 
-def plot_species_sfs(data):
-    """
-    Plot the SFS of some real data.
-    """
+def plot_species_sfs(species, values):
     # Set up plot
-    _, axs = plt.subplots(5, 3, figsize=(22, 25))  # (width, height)
+    plt.figure(figsize=(12, 9), constrained_layout=True)
 
     # Color
     color = {"Increasing": 'tab:green', "Decreasing": 'tab:red', "Stable": 'tab:blue',
              "ras": 'tab:gray'}
 
-    cpt, cpt2, flag = 0, 0, 1
-    for species, values in data.items():
-        # Plot SFS
-        axs[cpt, cpt2].plot(normalization(values['SFS']), label=species,
-                            color=color[values['Status']])
+    # Plot SFS
+    plt.plot(normalization(values['SFS']), label=species, color=color[values['Status']])
 
-        # Plot theoritical SFS of any constant population
-        theoretical_sfs = compute_theoretical_sfs(len(values['SFS']))
-        axs[cpt, cpt2].plot(normalization(theoretical_sfs),
-                            label="Theoretical model - Fu, 1995")
+    # Plot theoritical SFS of any constant population
+    theoretical_sfs = compute_theoretical_sfs(len(values['SFS']))
+    plt.plot(normalization(theoretical_sfs), label="Theoretical model - Fu, 1995")
 
-        # Label
-        axs[cpt, cpt2].legend()
-
-        cpt2 += 1
-        if cpt2 == 3:
-            cpt, cpt2 = flag, 0
-            flag += 1
+    # Label, caption and title
+    sfs_label(length=len(theoretical_sfs), title="SFS of {}".format(species))
 
     plt.show()
     plt.clf()

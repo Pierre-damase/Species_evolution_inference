@@ -9,7 +9,7 @@
 # -N smc_cst
 
 # Number of separate submissions to the cluster
-#$ -t 1-2
+#$ -t 1-5
 
 # Short pour un job < 12h
 #$ -q short.q
@@ -28,8 +28,8 @@
 
 conda activate sei-3.8.5
 python /home/pimbert/work/Species_evolution_inference/sei/sei_migale.py inf -dadi --model migration --job $SGE_TASK_ID
-#python /home/pimbert/work/Species_evolution_inference/sei/sei_migale.py inf -dadi --model migration --job $SGE_TASK_ID --param tau --value 0.0
-#python /home/pimbert/work/Species_evolution_inference/sei/sei_migale.py inf -dadi --model migration --job $SGE_TASK_ID --param kappa --value 0.0
+#python /home/pimbert/work/Species_evolution_inference/sei/sei_migale.py inf -dadi --model migration --job $SGE_TASK_ID --param m12 --value 0.0
+#python /home/pimbert/work/Species_evolution_inference/sei/sei_migale.py inf -dadi --model migration --job $SGE_TASK_ID --param kappa --value 0.3
 
 #python /home/pimbert/work/Species_evolution_inference/sei/sei_migale.py optsmc --model decline --data
 #python /home/pimbert/work/Species_evolution_inference/sei/sei_migale.py optsmc --model growth --data

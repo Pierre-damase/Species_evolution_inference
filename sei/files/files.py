@@ -371,11 +371,11 @@ def export_simulation_files(typ, job, path_data, param=None, value=None):
         simulation = pd.read_json("{}{}".format(path_data, fichiers[job]))
 
     # Return the SFS
-    if typ == 'SFS':
-        return simulation[['Parameters', 'SFS observed', 'SNPs', 'Time']].iloc[0]
+    # if typ == 'SFS':
+    return simulation[['Parameters', 'SFS observed', 'SNPs', 'Time']].iloc[0]
 
     # Return the VCF
-    return simulation[['Parameters', 'Variants', 'SNPs', 'Time']].iloc[0]
+    # return simulation[['Parameters', 'Variants', 'SNPs', 'Time']].iloc[0]
 
 
 def export_inference_files(model, fold, param, value=None):

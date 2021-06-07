@@ -2,6 +2,7 @@
 Decline estimation from genomic data.
 """
 
+import copy
 import os
 import sys
 import time
@@ -159,7 +160,7 @@ def generate_sfs(params, model, nb_simu, path_data, path_length):
     Generate a set of unfolded sfs of fixed SNPs size with msprime.
     """
     # Define length
-    length = length_from_file(path_length, params, mu=8e-2, snp=1000)
+    length = length_from_file(path_length, params, mu=8e-2, snp=500)
 
     # Convert params from log scale
     params.update({k: (np.power(10, v) if k != 'm21' else v) for k, v in params.items()})
@@ -168,16 +169,11 @@ def generate_sfs(params, model, nb_simu, path_data, path_length):
     params.update(
         simulation_parameters(sample=20, ne=1, rcb_rate=8e-2, mu=8e-2, length=length))
 
-    sfs, snp, variants, execution = [], [], [], []
+    sfs, snp, execution = [], [], []
     for i in range(nb_simu):
         start_time = time.time()
 
-        # Store variants only for one simulation (storage pace efficiency)
-        if i == 0:
-            sfs_observed, variants_observed = ms.msprime_simulation(model=model, params=params)
-            variants = variants_observed  # variants = variants_observed
-        else:
-            sfs_observed, _ = ms.msprime_simulation(model=model, params=params)
+        sfs_observed = ms.msprime_simulation(model=model, params=params)
             
         sfs.append(sfs_observed)
         snp.append(sum(sfs_observed))
@@ -185,7 +181,7 @@ def generate_sfs(params, model, nb_simu, path_data, path_length):
 
     # Create DataFrame from dictionary
     dico = {
-        'Parameters': [params], 'SNPs': [snp], 'SFS observed': [sfs], 'Variants': [variants],
+        'Parameters': [params], 'SNPs': [snp], 'SFS observed': [sfs],
         'Time': [round(np.mean(execution), 4)]
     }
     data = pd.DataFrame(dico)
@@ -458,7 +454,7 @@ def compute_dadi_inference(sfs_observed, models, sample, fold, path_data, job, d
 
             # Pairs (Log-likelihood, Inferred SFS, Params)
             tmp = dadi.inference(pts_list, models['Inference'], fixed=fixed, value=value,
-                                 path=path_data, name=dadi_file)
+                                 path=path_data, name=dadi_file, verbose=True)
 
             m1_inferences.append(tmp)
             m1_execution.append(time.time() - start_inference)
@@ -488,8 +484,7 @@ def compute_dadi_inference(sfs_observed, models, sample, fold, path_data, job, d
             weighted_square_distance({'M0': data['M0']['SFS'][i], 'M1': data['M1']['SFS'][i]})
         )  # d2 between the inferred SFS of two models - M0 & M1
 
-        if i == 2:
-            break
+        break
 
     # Mean execution time for the inference
     data['Time'] = round(sum(execution) / len(sfs_observed), 4)
@@ -875,7 +870,7 @@ def save_smc_inference(simulation, model):
     # Remove
     os.system("rm -rf {}{}*".format(path_data, fichier))  # VCF and index file
     os.remove("{}smc_{}.gz".format(path_data, fichier.split('_', 1)[1]))  # SMC file
-
+    
 
 ######################################################################
 # Optimization of inference with SMC++                               #
@@ -889,7 +884,7 @@ def data_optimization_smc(model):
     # Set up (Tau, Kappa) & length
     if model == 'decline':  # sudden decline
         params = {'Tau': 0., 'Kappa': 1.}
-    elif model == 'growth' == 2:  # sudden growth
+    elif model == 'growth':  # sudden growth
         params = {'Tau': 0., 'Kappa': -1.}
     else:  # constant
         params = {'Tau': 0., 'Kappa': 0.}  # Constant
@@ -901,19 +896,22 @@ def data_optimization_smc(model):
 
     data = pd.DataFrame()
 
+    print(model)
     for i, length in enumerate(lengths):
-        print("\n\n\n###\nLength {}/{}\n###\n\n".format(i+1, len(lengths)))
+        print("\n\n\n###\nLength={:.1e} ({}/{})\n###\n\n".format(length, i+1, len(lengths)))
 
         # Parameters for the simulation
-        params.update(
+        tmp = copy.deepcopy(params)
+        tmp.update(
             simulation_parameters(sample=20, ne=1, rcb_rate=8e-2, mu=8e-2, length=length)
         )
 
         # Generation of data
-        sfs, variants = ms.msprime_simulate_variants(params, debug=False)
+        sfs, variants = ms.msprime_simulate_variants(tmp, debug=False)
 
+        # Save data
         dico = {
-            'Parameters': params, 'SNPs': sum(sfs), 'SFS observed': sfs, 'Variants': variants
+            'Parameters': tmp, 'SNPs': sum(sfs), 'SFS observed': sfs, 'Variants': variants
         }
         data = data.append(dico, ignore_index=True)
 

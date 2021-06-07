@@ -2,6 +2,7 @@
 Migale version.
 """
 
+import copy
 import os
 import random
 import time
@@ -246,6 +247,8 @@ def compute_dadi_inference(sfs_observed, models, sample, fold, path_data, job, d
     pts_list = [sample*10, sample*10 + 10, sample*10 + 20]
 
     for i, sfs in enumerate(sfs_observed):
+        print("SFS {}/{}".format(i+1, 100))
+
         # Generate the SFS file compatible with dadi
         dadi_file = "SFS-{}".format(job) if value is None else "SFS_{}-{}".format(value, job)
         f.dadi_data(sfs, models['Inference'].__name__, fold, path=path_data, name=dadi_file)
@@ -612,7 +615,7 @@ def data_optimization_smc(model):
     # Set up (Tau, Kappa) & length
     if model == 'decline':  # sudden decline
         params = {'Tau': 0., 'Kappa': 1.}
-    elif model == 'growth' == 2:  # sudden growth
+    elif model == 'growth':  # sudden growth
         params = {'Tau': 0., 'Kappa': -1.}
     else:  # constant
         params = {'Tau': 0., 'Kappa': 0.}  # Constant
@@ -625,22 +628,21 @@ def data_optimization_smc(model):
     data = pd.DataFrame()
 
     for i, length in enumerate(lengths):
-        print("\n\n\n###\nLength {}/{}\n###\n\n".format(i+1, len(lengths)))
+        print("\n\n\n###\nLength={:.1e} ({}/{})\n###\n\n".format(length, i+1, len(lengths)))
 
         # Parameters for the simulation
-        params.update(
+        tmp = copy.deepcopy(params)
+        tmp.update(
             simulation_parameters(sample=20, ne=1, rcb_rate=8e-2, mu=8e-2, length=length)
         )
 
         # Generation of data
-        sfs, variants = ms.msprime_simulate_variants(params, debug=False)
+        sfs, variants = ms.msprime_simulate_variants(tmp, debug=False)
 
         dico = {
-            'Parameters': params, 'SNPs': sum(sfs), 'SFS observed': sfs, 'Variants': variants
+            'Parameters': tmp, 'SNPs': sum(sfs), 'SFS observed': sfs, 'Variants': variants
         }
         data = data.append(dico, ignore_index=True)
-
-        break
 
     # Save data
     path_data = \
@@ -669,10 +671,10 @@ def compute_optimization_smc(model):
                         "optimization_smc/data/vcf_{}.zip".format(model))
 
     for i, row in data.iterrows():
-        print("\n\n\n###\nFile {}/{}\n###\n\n".format(i+1, len(data)))
+        print("\n###\nFile {}/{}\n###".format(i+1, len(data)))
 
         # File
-        filout = "vcf_length={:.0e}".format(row['Parameters']['length'])
+        filout = "vcf_length={:.1e}".format(row['Parameters']['length'])
         
         # Folder
         folder = "{}{}".format(path_data, filout.split('_')[1])
@@ -690,7 +692,7 @@ def compute_optimization_smc(model):
         
         # Inference
         for knot in [2, 3, 4, 5, 6, 7, 8]:
-            print("\n\n\n###\nKnot {}\n###\n\n".format(knot))
+            print("\n###\nKnot {}\n###".format(knot))
 
             # Estimation
             smc_estimate = (
@@ -705,8 +707,6 @@ def compute_optimization_smc(model):
                 "{0}.{1}-KNOTS={2}/model.final.json"
             ).format(path_data, filout.split('_')[1], knot)
             os.system(smc_plot)
-
-            break
 
     # Remove vcf, smc and index file
     os.system("rm -rf {}*gz*".format(path_data))
@@ -790,4 +790,5 @@ if __name__ == "__main__":
 
         if args.data:
             data_optimization_smc(args.model)
-        compute_optimization_smc(args.model)
+        else:
+            compute_optimization_smc(args.model)

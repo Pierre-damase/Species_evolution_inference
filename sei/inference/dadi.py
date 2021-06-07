@@ -60,7 +60,7 @@ def params_model(params):
     elif FIXED == 'kappa':  # Fixed param: (Kappa), the decline force
         return VALUE, params
     elif FIXED == 'm12':  # Fixed param: (m12), the migration rate into 1 from 2
-        return params, VALUE
+        return params[0], VALUE
     else:
         return params
 
@@ -122,7 +122,7 @@ def twopops_migration_model(params, ns, pts):
     """
     # Params: (kappa, m12) - with m21 = 0.0
     kappa, m12 = params_model(params)
-    m21 = 0
+    m21 = 0.0
     tau = 10.0  # time in the past of split
 
     if FIXED == 'kappa':
@@ -138,6 +138,7 @@ def twopops_migration_model(params, ns, pts):
     phi = dadi.PhiManip.phi_1D_to_2D(grid, phi_ancestral)
 
     # Define the sudden decline event at a time tau in past
+
     phi = dadi.Integration.two_pops(phi, grid, tau, nu1=1.0, nu2=1.0*kappa, m12=m12, m21=m21)
 
     # Remove population 2 from phi
@@ -197,7 +198,7 @@ def parameters_optimization(p0, sfs, model_func, pts_list, lower_bound, upper_bo
 
     popt = dadi.Inference.optimize_log(p0, sfs, model_func, pts_list,
                                        lower_bound=lower_bound, upper_bound=upper_bound,
-                                       verbose=verbose, maxiter=3)
+                                       verbose=verbose, maxiter=1)
 
     if verbose:
         # The verbose argument controls how often progress of the optimizer should be
@@ -266,7 +267,7 @@ def inference(pts_list, model_func, fixed=None, value=None, verbose=0, path="./D
 
         popt = parameters_optimization(p0, observed_sfs, model_func_extrapolated, pts_list,
                                        lower_bound, upper_bound, verbose=verbose)
-
+        
         # Simulated frequency spectrum
         inferred_sfs = model_func_extrapolated(popt, ns, pts_list)
 
@@ -294,6 +295,7 @@ def inference(pts_list, model_func, fixed=None, value=None, verbose=0, path="./D
     # Return
     if model_func.__name__ == 'constant_model':
         return ll_model, inferred_sfs
+    
     params_estimated['Theta'] = theta
     return ll_model, inferred_sfs, params_estimated
 

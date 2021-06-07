@@ -202,7 +202,7 @@ def msprime_simulation(model, params, debug=False):
     if debug:
         print(tree_seq.first().draw(format="unicode"))
 
-    variants = []
+    # variants = []
 
     sfs = [0] * (params["sample_size"] - 1)
     for variant in tree_seq.variants():
@@ -212,9 +212,9 @@ def msprime_simulation(model, params, debug=False):
         sfs[freq_mutation] += 1
 
         # Store for each variant, the position and the genotypes
-        variants.append((variant.position, variant.genotypes))
+        # variants.append((variant.position, variant.genotypes))
         
-    return sfs, variants
+    return sfs  #, variants
 
 
 def msprime_simulate_variants(params, debug=False):
