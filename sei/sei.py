@@ -945,7 +945,7 @@ def compute_optimization_smc(model):
         print("\n\n\n###\nFile {}/{}\n###\n\n".format(i+1, len(data)))
 
         # File
-        filout = "vcf_length={:.0e}".format(row['Parameters']['length'])
+        filout = "vcf_length={:.1e}".format(row['Parameters']['length'])
         
         # Folder
         folder = "{}{}".format(path_data, filout.split('_')[1])
@@ -1133,7 +1133,8 @@ def main():
 
         if args.data:
             data_optimization_smc(args.model)
-        compute_optimization_smc(args.model)
+        else:
+            compute_optimization_smc(args.model)
 
 
 if __name__ == "__main__":
