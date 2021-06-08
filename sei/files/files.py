@@ -359,23 +359,21 @@ def export_simulation_files(typ, job, path_data, param=None, value=None):
     param
     value
     """
-    # Selection of the file
-    if param is None:
-        fichier = os.listdir("{}".format(path_data))[job]
-        simulation = pd.read_json("{}{}".format(path_data, fichier))
+    fichiers = [filin for filin in os.listdir(path_data) if filin.startswith(typ.upper())]
 
-    else:
+    # Selection of the file
+    if param is not None:
         fichiers = [
             fil for fil in os.listdir(path_data) if extract_param(fil)[param] == value
         ]
-        simulation = pd.read_json("{}{}".format(path_data, fichiers[job]))
 
-    # Return the SFS
-    # if typ == 'SFS':
-    return simulation[['Parameters', 'SFS observed', 'SNPs', 'Time']].iloc[0]
+    # Load Data
+    simulation = pd.read_json("{}{}".format(path_data, fichiers[job]))
+    
+    if typ == 'SFS':
+        return simulation[['Parameters', 'SFS observed', 'SNPs', 'Time']].iloc[0]
 
-    # Return the VCF
-    # return simulation[['Parameters', 'Variants', 'SNPs', 'Time']].iloc[0]
+    return simulation.iloc[0]
 
 
 def export_inference_files(model, fold, param, value=None):
@@ -524,7 +522,7 @@ def export_stairway_files(model, fold):
 # SMC++ file                                                        #
 ######################################################################
 
-def variants_to_vcf(variants, param, fichier, path_data, multiplier, ploidy=2):
+def variants_to_vcf(variants, param, fichier, path_data, ploidy=2):
     """
     Writes a VCF formatted file from variants generated with msprime.
 
@@ -549,7 +547,7 @@ def variants_to_vcf(variants, param, fichier, path_data, multiplier, ploidy=2):
         filout.write("##fileformat=VCFv4.2\n")
         filout.write("##source=tskit 0.3.4\n")
         filout.write("##FILTER=<ID=PASS,Description=\"All filters passed\">\n")
-        filout.write("##contig=<ID=1,length={}>\n".format(round(param['length'] * multiplier)))
+        filout.write("##contig=<ID=1,length={}>\n".format(param['length']))
         filout.write("##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">\n")
 
         # Write the genotype
@@ -559,7 +557,7 @@ def variants_to_vcf(variants, param, fichier, path_data, multiplier, ploidy=2):
 
         for variant in variants:
             value = [
-                '1', str(round(variant[0] * multiplier)), '.', '0', '1', '.', 'PASS', '.', 'GT'
+                '1', str(variant[0]), '.', '0', '1', '.', 'PASS', '.', 'GT'
             ]
             if ploidy == 1:
                 value += [str(genotype) for genotype in variant[1]]
@@ -586,8 +584,9 @@ def vcf_to_smc(fichier, path_data):
     os.system("bcftools index -cf {}{}.gz".format(path_data, fichier))
 
     # VCF file to SMC++ format - generate the command
-    command = "smc++ vcf2smc {0}{1}.gz {0}smc_{2}.gz {contig} " \
-        .format(path_data, fichier, fichier.split('_', 1)[1], contig=1)
+    command = (
+        "smc++ vcf2smc {0}{1}.gz {0}smc_{2}.gz {contig} "
+    ).format(path_data, fichier, fichier.split('_', 1)[1], contig=1)
 
     command += "Pop1:"
     for member in line:

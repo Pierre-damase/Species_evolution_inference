@@ -51,6 +51,11 @@ def arguments():
         help="Determine the length factor for each (tau, kappa) pairs"
     )
 
+    data.add_argument(
+        '--typ', dest='typ', required=True, choices=['sfs', 'vcf'], default='sfs',
+        help="Generate a set of SFS for Dadi & Stairway or a set of VCF for SMC++"
+    )
+
     #############################################
     # Msprime verification                      #
     #############################################

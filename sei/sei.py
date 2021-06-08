@@ -136,7 +136,7 @@ def generate_set_sfs():
 
 
 ######################################################################
-# Generate a set of SFS with msprime                                 #
+# Generate a set of Data with msprime                                #
 ######################################################################
 
 def length_from_file(fichier, params, mu, snp):
@@ -155,12 +155,12 @@ def length_from_file(fichier, params, mu, snp):
     return (snp / factor) / (4 * 1 * mu)
 
 
-def generate_sfs(params, model, nb_simu, path_data, path_length):
+def generate_data(params, model, nb_simu, path_data, path_length, typ):
     """
-    Generate a set of unfolded sfs of fixed SNPs size with msprime.
+    Generate a set of data with msprime.
     """
     # Define length
-    length = length_from_file(path_length, params, mu=8e-2, snp=500)
+    length = length_from_file(path_length, params, mu=8e-2, snp=10000) if typ == 'sfs' else 1e3
 
     # Convert params from log scale
     params.update({k: (np.power(10, v) if k != 'm21' else v) for k, v in params.items()})
@@ -169,12 +169,33 @@ def generate_sfs(params, model, nb_simu, path_data, path_length):
     params.update(
         simulation_parameters(sample=20, ne=1, rcb_rate=8e-2, mu=8e-2, length=length))
 
+    if typ == 'sfs':
+        data = generate_sfs(params, model, nb_simu)
+
+    else:
+        data = generate_vcf(params)
+
+    print("SNPs: {}".format(round(np.mean(data['SNPs'][0]))))
+    
+    # Export DataFrame to json file
+    data.to_json(path_data)
+
+    # Zip file
+    f.zip_file(data=path_data)
+
+
+# Generate SFS
+
+def generate_sfs(params, model, nb_simu):
+    """
+    Generate a set of unfolded sfs of fixed SNPs size with msprime.
+    """
     sfs, snp, execution = [], [], []
     for i in range(nb_simu):
         start_time = time.time()
 
         sfs_observed = ms.msprime_simulation(model=model, params=params)
-            
+
         sfs.append(sfs_observed)
         snp.append(sum(sfs_observed))
         execution.append(time.time() - start_time)
@@ -184,15 +205,25 @@ def generate_sfs(params, model, nb_simu, path_data, path_length):
         'Parameters': [params], 'SNPs': [snp], 'SFS observed': [sfs],
         'Time': [round(np.mean(execution), 4)]
     }
-    data = pd.DataFrame(dico)
+    return pd.DataFrame(dico)
 
-    print("SNPs: {}".format(round(np.mean(snp))))
 
-    # Export DataFrame to json file
-    data.to_json("{}".format(path_data))
+# Generate VCF
 
-    # Zip file
-    f.zip_file(data=path_data)
+def generate_vcf(params):
+    """
+    Generate a set of unfolded sfs of fixed SNPs size with msprime.
+    """
+    start_time = time.time()
+
+    sfs, variants = ms.msprime_simulate_variants(params, debug=True)
+            
+    # Create DataFrame from dictionary
+    dico = {
+        'Parameters': [params], 'SNPs': [sum(sfs)], 'SFS observed': [sfs],
+        'Variants': [variants], 'Time': [time.time() - start_time]
+    }
+    return pd.DataFrame(dico)
 
 
 ######################################################################
@@ -344,8 +375,8 @@ def likelihood_ratio_test(ll_m0, ll_m1, dof):
     p_value = chi2.sf(lrt, dof)  # Chi2 test
 
     if p_value > 0.05:
-        return 0  # test insignificant and no reject of h0
-    return 1  # test significant and reject of h0
+        return 0  # test insignificant and no reject of H0
+    return 1  # test significant and reject of H0
 
 
 def weighted_square_distance(sfs):
@@ -431,7 +462,10 @@ def compute_dadi_inference(sfs_observed, models, sample, fold, path_data, job, d
     execution = []
 
     # Grid point for the extrapolation
-    pts_list = [sample*10, sample*10 + 10, sample*10 + 20]
+    if models['Inference'].__name__.split('_', 1)[0] == 'twopops':  # migration
+        pts_list = [round(sample/2), round(sample/2) + 10, round(sample/2) + 20]
+    else:  # suddden decline or growth
+        pts_list = [sample*10, sample*10 + 10, sample*10 + 20]
 
     for i, sfs in enumerate(sfs_observed):
         print("SFS observed {}".format(i))
@@ -449,7 +483,7 @@ def compute_dadi_inference(sfs_observed, models, sample, fold, path_data, job, d
         # Dadi inference for M1
         m1_inferences, m1_execution = [], []
 
-        for _ in range(1):  # Run 1000 inferences with dadi from the observed sfs
+        for _ in range(2):  # Run 1000 inferences with dadi from the observed sfs
             start_inference = time.time()
 
             # Pairs (Log-likelihood, Inferred SFS, Params)
@@ -775,31 +809,32 @@ def stairway_distance_ne(data):
 # Inference with SMC++                                               #
 ######################################################################
 
-def compute_smc_inference(fichier, path_data, mu, knots, folder):
+def compute_smc_inference(simulation, param, filout, path_data):
     """
-    Inference with SMC++
+    Inference with SMC++:
+      - Generation of the data in the format compatible with the SMC++ software.
+      - Perform the inference
     """
-    tau = float(fichier.split('_')[1].split('=')[1])
-    kappa = float(fichier.split('_')[2].split('=')[1])
+    # Generate the VCF file format
+    f.variants_to_vcf(simulation['Variants'], param, filout, path_data, ploidy=2)
 
-    # Inference
-    em = 1 if knots == 1 else 100
-    cmd = "smc++ estimate --em-iterations {4} -o {0}{1}-KNOTS={3}/ --knots {3} {2} {0}smc_{1}.gz" \
-        .format(path_data, fichier.split('_', 1)[1], mu, knots, em)
-    os.system(cmd)
+    # VCF file to SMC++ format
+    f.vcf_to_smc(filout, path_data)
+
+    # Estimation
+    smc_estimate = (
+        "smc++ estimate --em-iterations 1 -o {0}{1} --knots 8 {2} {0}smc_{1}.gz"
+    ).format(path_data, filout.split('_', 1)[1], 8e-4)
+    os.system(smc_estimate)
 
     # Plot
-    cmd = "smc++ plot -c {0}{1}-KNOTS={2}/tmp0_tau={3}_kappa={4}-knots={2}.png {0}{1}-KNOTS={2}/.model.iter0.json" \
-        .format(path_data, fichier.split('_', 1)[1], knots, tau, kappa)
-    os.system(cmd)
+    smc_plot = (
+        "smc++ plot -c {0}{1}/{1}.png {0}{1}/model.final.json"
+    ).format(path_data, filout.split('_', 1)[1])
+    os.system(smc_plot)
 
-    # Plot
-    cmd = "smc++ plot -c {0}{1}-KNOTS={2}/plot_tau={3}_kappa={4}-knots={2}.png {0}{1}-KNOTS={2}/model.final.json" \
-        .format(path_data, fichier.split('_', 1)[1], knots, tau, kappa)
-    os.system(cmd)
-
-    # Remove
-    os.system("mv {0}{1}-KNOTS={2}/*.png {3}".format(path_data, fichier.split('_', 1)[1], knots, folder))
+    # Remove vcf, smc and index file
+    os.system("rm -rf {0}*{1}.gz*".format(path_data, filout.split('_', 1)[1]))
 
 
 def save_smc_inference(simulation, model):
@@ -825,52 +860,24 @@ def save_smc_inference(simulation, model):
     if model == 'decline':
         param = {k: round(np.log10(v), 2) for k, v in simulation['Parameters'].items()
                  if k in ['Tau', 'Kappa']}
-        fichier = "vcf_tau={}_kappa={}".format(param['Tau'], param['Kappa'])
+        filout = "vcf_tau={}_kappa={}".format(param['Tau'], param['Kappa'])
 
     elif model == 'migration':
         param = {k: round(np.log10(v), 2) for k, v in simulation['Parameters'].items()
                  if k in ['m12', 'Kappa']}
-        fichier = "vcf_m12={}_kappa={}".format(param['m12'], param['Kappa'])
+        filout = "vcf_m12={}_kappa={}".format(param['m12'], param['Kappa'])
 
     else:
-        fichier = "vcf_ne={}".format(simulation['Parameters']['Ne'])
+        filout = "vcf_ne={}".format(simulation['Parameters']['Ne'])
 
     # Select sample size and length
     param = {
         k: v for k, v in simulation['Parameters'].items() if k in ['sample_size', 'length']
     }
-    
-    # vcf2smc skipps all but first if multiple entries in the VCF, i.e. same position (round)
-    # for several genotype
-    # To avoid this, length and position are multiplied by 10 000
-    # This number is a good trade off between a small number of multiple entries and execution
-    # time
-    multiplier = 10000
 
-    # Generate the VCF file format
-    f.variants_to_vcf(simulation['Variants'][0], param, fichier, path_data, multiplier,
-                      ploidy=2)
+    # Inference
+    compute_smc_inference(simulation, param, filout, path_data)
 
-    # VCF file to SMC++ format
-    f.vcf_to_smc(fichier, path_data)
-
-    folder = path_data + fichier.split('_', 1)[1] + "/"
-    if os.path.isdir(folder):
-        os.system("rm -rf {}".format(folder))
-    os.mkdir(folder)
-
-    # Inference with SMC++
-    for knot in [2, 3, 4, 5, 6, 7, 8]:
-        print("\n\n\n\n#####\nKNOTS={}\n#####\n\n\n\n".format(knot))
-        compute_smc_inference(fichier, path_data, mu=8e-2/multiplier, knots=knot, folder=folder)
-
-    # Zip
-    # f.zip_file("{}{}".format(path_data, fichier.split('_', 1)[1]))
-
-    # Remove
-    os.system("rm -rf {}{}*".format(path_data, fichier))  # VCF and index file
-    os.remove("{}smc_{}.gz".format(path_data, fichier.split('_', 1)[1]))  # SMC file
-    
 
 ######################################################################
 # Optimization of inference with SMC++                               #
@@ -972,8 +979,7 @@ def compute_optimization_smc(model):
 
             # Plot
             smc_plot = (
-                "smc++ plot -c {0}{1}/plot_knot={2}.png "
-                "{0}.{1}-KNOTS={2}/model.final.json"
+                "smc++ plot -c {0}{1}/plot_knot={2}.png {0}.{1}-KNOTS={2}/model.final.json"
             ).format(path_data, filout.split('_')[1], knot)
             os.system(smc_plot)
 
@@ -1071,8 +1077,9 @@ def main():
         if args.model == 'decline':
             params = define_parameters(args.model)
             params, model = params[args.job-1], ms.sudden_decline_model
-            path_data = "./Data/Msprime/{0}/SFS_{0}_tau={1}_kappa={2}"\
-                .format(args.model, params['Tau'], params['Kappa'])
+            path_data = (
+                "./Data/Msprime/{0}/{3}_{0}_tau={1}_kappa={2}"
+            ).format(args.model, params['Tau'], params['Kappa'], args.typ.upper())
 
         # Simulation of two populations migration models for various migration into 1 from
         # 2 (with m12 the migration rate) and no migration into 2 from 1
@@ -1081,12 +1088,14 @@ def main():
             params = define_parameters(args.model)
             params, model = params[args.job-1], ms.twopops_migration_model
 
-            path_data = "./Data/Msprime/{0}/SFS_{0}_m12={1}_kappa={2}"\
-                .format(args.model, params['m12'], params['Kappa'])
+            path_data = (
+                "./Data/Msprime/{0}/{3}_{0}_m12={1}_kappa={2}"
+            ).format(args.model, params['m12'], params['Kappa'], args.typ.upper())
 
         path_length = "./Data/Msprime/length_factor-{}".format(args.model)
 
-        generate_sfs(params, model, nb_simu=2, path_data=path_data, path_length=path_length)
+        generate_data(params, model, nb_simu=2, path_data=path_data, path_length=path_length,
+                      typ=args.typ)
 
     elif args.analyse == 'opt':
         dadi_params_optimisation(args.number)
