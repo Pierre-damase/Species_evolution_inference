@@ -884,7 +884,7 @@ def save_smc_inference(simulation, model):
 ######################################################################
 
 
-def data_optimization_smc(model):
+def data_optimization_smc(model, filout):
     """
     Genertate the data for the optimization for various sequence length - from 1e2 to 1e6.
     """
@@ -896,41 +896,32 @@ def data_optimization_smc(model):
     else:  # constant
         params = {'Tau': 0., 'Kappa': 0.}  # Constant
 
-    lengths = [1e3, 1e4, 2.5e4, 5e4, 7.5e4, 1e5, 2.5e5, 5e5, 7.5e5, 1e6]
-
     # Convert params from log scale
     params.update({k: np.power(10, v) for k, v in params.items()})
 
-    data = pd.DataFrame()
+    # Parameters for the simulation
+    length = float(filout.split('=')[1])
+    params.update(
+        simulation_parameters(sample=20, ne=1, rcb_rate=8e-2, mu=8e-2, length=length)
+    )
 
-    print(model)
-    for i, length in enumerate(lengths):
-        print("\n\n\n###\nLength={:.1e} ({}/{})\n###\n\n".format(length, i+1, len(lengths)))
-
-        # Parameters for the simulation
-        tmp = copy.deepcopy(params)
-        tmp.update(
-            simulation_parameters(sample=20, ne=1, rcb_rate=8e-2, mu=8e-2, length=length)
-        )
-
-        # Generation of data
-        sfs, variants = ms.msprime_simulate_variants(tmp, debug=False)
-
-        # Save data
-        dico = {
-            'Parameters': tmp, 'SNPs': sum(sfs), 'SFS observed': sfs, 'Variants': variants
-        }
-        data = data.append(dico, ignore_index=True)
-
-        break
+    # Generation of data
+    sfs, variants = ms.msprime_simulate_variants(params, debug=True)
 
     # Save data
-    path_data = "./Data/SMC/optimization_smc/data/vcf_{}".format(model)
-    data.to_json(path_data)
-    f.zip_file(path_data)
+    dico = {
+        'Parameters': [params], 'SNPs': [sum(sfs)], 'SFS observed': [sfs], 'Variants': [variants]
+    }
+    data = pd.DataFrame(dico)
 
+    # DataFrame to json
+    data.to_json(filout)
 
-def compute_optimization_smc(model):
+    # Zip file
+    f.zip_file(filout)
+
+    
+def compute_optimization_smc(filin, path_data):
     """
     Optimization of inference with SMC++ with various sequence length and SNPs for simple
     scenario:
@@ -940,50 +931,43 @@ def compute_optimization_smc(model):
 
     For each test there 7 inference with knots from 2 to 8 (default value).
     """
-    # Path of data
-    path_data = "./Data/SMC/optimization_smc/{}/".format(model)
-
     # Load data
-    data = pd.read_json("./Data/SMC/optimization_smc/data/vcf_{}.zip".format(model))
+    data = pd.read_json(filin).iloc[0]
 
-    for i, row in data.iterrows():
-        print("\n\n\n###\nFile {}/{}\n###\n\n".format(i+1, len(data)))
+    # Set up file & folder
+    filout = "vcf_length={:.1e}".format(data['Parameters']['length'])
+    folder = "{}{}".format(path_data, filout.split('_')[1])
 
-        # File
-        filout = "vcf_length={:.1e}".format(row['Parameters']['length'])
-        
-        # Folder
-        folder = "{}{}".format(path_data, filout.split('_')[1])
-        if not os.path.isdir(folder):
-            os.mkdir(folder)
+    if os.path.isdir(folder):
+        os.system("rm -rf {}".format(folder))
+    os.mkdir(folder)
 
-        # Variants to VCF format file
-        f.variants_to_vcf(
-            variants=row['Variants'], param=row['Parameters'], fichier=filout,
-            path_data=path_data, multiplier=1
-        )
+    # Variants to VCF format file
+    f.variants_to_vcf(
+        variants=data['Variants'], param=data['Parameters'], fichier=filout, path_data=path_data
+    )
 
-        # VCF to SMC++ file
-        f.vcf_to_smc(fichier=filout, path_data=path_data)
-        
-        # Inference
-        for knot in [2, 3, 4, 5, 6, 7, 8]:
-            print("\n\n\n###\nKnot {}\n###\n\n".format(knot))
+    # VCF to SMC++ file
+    f.vcf_to_smc(fichier=filout, path_data=path_data)
 
-            # Estimation
-            smc_estimate = (
-                "smc++ estimate --em-iterations 1 -o {0}.{1}-KNOTS={2}/ --knots {2} {3} "
-                "{0}smc_{1}.gz"
-            ).format(path_data, filout.split('_')[1], knot, 8e-4)
-            os.system(smc_estimate)
+    # Inference for various knot value
+    for knot in [2, 3, 4, 5, 6, 7, 8]:
+        print("\n\n\n###\nKnot {}\n###\n\n".format(knot))
 
-            # Plot
-            smc_plot = (
-                "smc++ plot -c {0}{1}/plot_knot={2}.png {0}.{1}-KNOTS={2}/model.final.json"
-            ).format(path_data, filout.split('_')[1], knot)
-            os.system(smc_plot)
+        # Estimation
+        smc_estimate = (
+            "smc++ estimate --em-iterations 1 -o {0}.{1}-KNOTS={2}/ --knots {2} {3} "
+            "{0}smc_{1}.gz"
+        ).format(path_data, filout.split('_')[1], knot, 8e-4)
+        os.system(smc_estimate)
 
-            break
+        # Plot
+        smc_plot = (
+            "smc++ plot -c {0}{1}/plot_knot={2}.png {0}.{1}-KNOTS={2}/model.final.json"
+        ).format(path_data, filout.split('_')[1], knot)
+        os.system(smc_plot)
+
+        break
 
     # Remove vcf, smc and index file
     os.system("rm -rf {}*gz*".format(path_data))
@@ -1137,11 +1121,20 @@ def main():
             save_smc_inference(simulation, model=args.model)
 
     elif args.analyse == 'optsmc':
+        length = [1e2, 2.5e4, 5e4, 7.5e4, 1e5, 2.5e5, 5e5, 7.5e5, 1e6, 2.5e6, 5e6][args.job-1]
 
-        if args.data:
-            data_optimization_smc(args.model)
-        else:
-            compute_optimization_smc(args.model)
+        # Set up path and file
+        path_data = "./Data/SMC/optimization_smc/{}/".format(args.model)
+        filout = (
+            "./Data/SMC/optimization_smc/data/vcf_{}_length={:.1e}"
+        ).format(args.model, length)
+
+        if "{}.zip".format(filout.rsplit('/', 1)[1]) \
+           not in os.listdir("./Data/SMC/optimization_smc/data/"):
+            # Generate data
+            data_optimization_smc(args.model, filout)
+
+        compute_optimization_smc(filin="{}.zip".format(filout), path_data=path_data)
 
 
 if __name__ == "__main__":

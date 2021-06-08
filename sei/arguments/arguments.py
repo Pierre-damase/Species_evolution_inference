@@ -83,8 +83,11 @@ def arguments():
         "(Tau=0., Kappa=-1.) or constant (Tau=0., Kappa=0.) model"
     )
     optsmc.add_argument(
-        '--data', dest="data", action='store_true', help="Generate the set of data"
+        '--job', dest='job', type=data_type, required=True, help="file to analyse"
     )
+    # optsmc.add_argument(
+    #     '--data', dest="data", action='store_true', help="Generate the set of data"
+    # )
     
     #############################################
     # Inference of demographic history          #
