@@ -708,13 +708,13 @@ def compute_optimization_smc(filin, path_data):
     )
 
     # VCF to SMC++ file
-    f.vcf_to_smc(fichier=filout, path_data=path_data)
+    vcf_to_smc(fichier=filout, path_data=path_data)
 
     # Inference for various knot value
     for knot in [2, 3, 4, 5, 6, 7, 8]:
         # Estimation
         smc_estimate = (
-            "smc++ estimate --em-iterations 1 -o {0}.{1}-KNOTS={2}/ --knots {2} {3} "
+            "smc++ estimate --em-iterations 100 -o {0}.{1}-KNOTS={2}/ --knots {2} {3} "
             "{0}smc_{1}.gz"
         ).format(path_data, filout.split('_')[1], knot, 8e-4)
         os.system(smc_estimate)
@@ -819,7 +819,7 @@ if __name__ == "__main__":
         ).format(args.model)
 
         filout = (
-            "./home/pimbert/work/Species_evolution_inference/Data/SMC/optimization_smc/data/"
+            "/home/pimbert/work/Species_evolution_inference/Data/SMC/optimization_smc/data/"
             "vcf_{}_length={:.1e}"
         ).format(args.model, length)
 
