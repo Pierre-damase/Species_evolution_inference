@@ -41,23 +41,26 @@ def simulation_parameters(sample, ne, rcb_rate, mu, length):
     return params
 
 
-def define_parameters(model):
+def define_parameters(model, typ):
     """
     Define pairs of (Tau, Kappa) - sudden decline/growth model - and (m12, Kappa) - migration
     model.
     """
+    tau_range = np.arange(-4, 2.5, 0.1) if typ == 'sfs' else np.arange(-2, 1.1, 0.1)
+    kappa_range = np.arange(-3.5, 3, 0.1) if typ == 'sfs' else np.arange(-1.5, 1.6, 0.1)
+
     if model == 'decline':
         # Range of value for tau & kappa
         params = []
-        for tau in np.arange(-4, 2.5, 0.1):
-            for kappa in np.arange(-3.5, 3, 0.1):
+        for tau in tau_range:
+            for kappa in kappa_range:
                 params.append({'Tau': round(tau, 2), 'Kappa': round(kappa, 2)})
 
     else:
         # Range of value for m12 & kappa
         params = []
-        for m12 in np.arange(-4, 2.5, 0.1):
-            for kappa in np.arange(-3.5, 3, 0.1):
+        for m12 in tau_range:
+            for kappa in kappa_range:
                 params.append({'m12': round(m12, 2), 'm21': 0.0, 'Kappa': round(kappa, 2)})
 
     return params
@@ -743,7 +746,7 @@ if __name__ == "__main__":
 
         # Simulation of sudden decline model with msprime for various tau & kappa
         if args.model == 'decline':
-            params = define_parameters(args.model)
+            params = define_parameters(args.model, args.typ)
             params, model = params[args.job-1], ms.sudden_decline_model
             path_data = (
                 "/home/pimbert/work/Species_evolution_inference/Data/Msprime/{0}/"
@@ -754,7 +757,7 @@ if __name__ == "__main__":
         # 2 (with m12 the migration rate) and no migration into 2 from 1
         # Population 1 size is pop1 and population 2 size is pop2 = kappa*pop1
         elif args.model == 'migration':
-            params = define_parameters(args.model)
+            params = define_parameters(args.model, args.typ)
             params, model = params[args.job-1], ms.twopops_migration_model
             path_data = (
                 "/home/pimbert/work/Species_evolution_inference/Data/Msprime/{0}/"
