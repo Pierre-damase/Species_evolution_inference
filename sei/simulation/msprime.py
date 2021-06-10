@@ -187,10 +187,10 @@ def msprime_simulation(model, params, debug=False):
     debug: Boolean
         1: print msprime debugger, 0: nothing
 
-    Msprime 0.x
-      - sample_size
-        The number of monoploid genomes
-        So if sample_size is set to 20 that means there are 10 diploid genomes
+    Some notes about the simulation of ancestry with the method simulate of Msprime 0.x:
+        - sample_size
+          The sample_size is the number of monoploid genomes.
+          So if sample_size is set to 20 that means there are 2N=20 genomes sampled
 
     Return
     ------
@@ -243,6 +243,20 @@ def msprime_simulate_variants(params, debug=False):
     debug: Boolean
         1: print msprime debugger, 0: nothing
 
+    Some notes about the simulation of ancestry with the method sim_ancestry() of Msprime 1.x
+      - samples
+        The number of individual instead of the number of monoploid genomes (msprime 0.x)
+      - ploidy
+        Sets the default number of sample nodes (i.e. monoploid genomes) per individual
+        Ploidy set to 2 means time to common ancestor in a population of size N is 2N
+        generations (which is the same as msprime 0.x)
+      - discrete_genome
+        If True that means mutations are placed at discrete, integer coordinates
+        If False that means mutations are placed at continuous, float coordinates (msprime 0.x)
+
+      If samples is set to 10 and ploidy to 1 there are N=10 genomes sampled
+      If samples is set to 10 and ploidy to 2 there are 2N=20 genomes sampled
+
     Return
     ------
     sfs: list
@@ -265,18 +279,7 @@ def msprime_simulate_variants(params, debug=False):
     if debug:
         print(demography.debug())
 
-    # Simulation of the ancestry
-    #   - samples
-    #     The number of individual instead of the number of monoploid genomes (msprime 0.x)
-    #   - ploidy
-    #     Sets the default number of sample nodes (i.e. monoploid genomes) per individual
-    #     Ploidy set to 2 means time to common ancestor in a population of size N is 2N
-    #     generations (which is the same as msprime 0.x)
-    #   - discrete_genome
-    #     If True that means mutations are placed at discrete, integer coordinates
-    #     If False that means mutations are placed at continuous, float coordinates (msprime 0.x)
-    #   If samples is set to 20 and ploidy to 1 there are N=20 genomes
-    #   If samples is set to 20 and ploidy to 2 there are 2N=40 genomes
+    # Simulation of ancestry
     ts = msprime.sim_ancestry(
         samples=int(params['sample_size'] / 2), demography=demography, ploidy=2,
         sequence_length=params['length'], discrete_genome=True,
@@ -296,8 +299,6 @@ def msprime_simulate_variants(params, debug=False):
         _, counts = np.unique(variant.genotypes, return_counts=True)
 
         if len(counts) != 1:
-            print(variant)
-            sys.exit()
             # SFS
             freq_mutation = counts[1]
             sfs[freq_mutation-1] += 1

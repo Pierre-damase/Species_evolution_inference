@@ -381,6 +381,13 @@ def heatmap_axis(ax, xaxis, yaxis, cbar):
     # Set colorbar label & font size
     ax.figure.axes[-1].set_ylabel(cbar, fontsize="large")
 
+    # Set axis label of kappa = 0.0, i.e. constant model
+    index = [
+        i for i, ele in enumerate(plt.gca().get_yticklabels()) if ele.get_text() == "0.0"
+    ][0]  # get the index of kappa = 0.0
+    plt.gca().get_yticklabels()[index].set_color('#8b1538')  # set the color
+    plt.gca().get_yticklabels()[index].set_fontsize('medium')  # set the size
+
 
 ######################################################################
 # SNPs distribution                                                  #

@@ -761,7 +761,7 @@ def stairway_ll_test(data, model):
         dico = {}
         for param in row['Parameters'].keys():
             dico[param] = round(np.log10(row['Parameters'][param]), 2)
-        
+
         # Compute log-likelihood ratio test
         # For some inference there are only 1 dimension, in this case the LL of M1 is None
         if model == 'm1':
@@ -776,11 +776,11 @@ def stairway_ll_test(data, model):
                 for ll_m1, ll_final, dof in zip(row['M1']['LL'], row['Final']['LL'], dimensions)
             ]
 
-        dico['Positive hit'] = sum(lrt)
-        
+        dico['Positive hit'] = (sum(lrt) * 100) / 200
+
         # Add to pandas DataFrame df
         df = df.append(dico, ignore_index=True)
-        
+
     return df
 
 
@@ -879,7 +879,9 @@ def save_smc_inference(simulation, model):
     }
 
     # Inference
-    compute_smc_inference(simulation, param, filout, path_data)
+    for i in range(1):
+        print("Simulation: {}/1".format(i+1))
+        compute_smc_inference(simulation, param, filout, path_data)
 
 
 ######################################################################
@@ -889,7 +891,7 @@ def save_smc_inference(simulation, model):
 
 def data_optimization_smc(model, filout):
     """
-    Genertate the data for the optimization for various sequence length - from 1e2 to 1e6.
+    Generate the data for the optimization for various sequence length - from 1e2 to 5e6.
     """
     # Set up (Tau, Kappa) & length
     if model == 'decline':  # sudden decline
@@ -930,9 +932,12 @@ def compute_optimization_smc(filin, path_data):
     scenario:
       - Sudden decline with tau = 0 & kappa = 1 - decline of force 10 at a time 1 in the past
       - Sudden growth with tau = 0 & kappa = -1 - growth of force 10 at a time 1 in the past
-      - Constant model
+      - Constant model with kappa = 0 - so there are no change in the population size in the past
 
-    For each test there 7 inference with knots from 2 to 8 (default value).
+    Important
+    Each value of tau & kappa are given in log scale.
+
+    For each data, various inference are done with knot value from 2 to 8.
     """
     # Load data
     data = pd.read_json(filin).iloc[0]
