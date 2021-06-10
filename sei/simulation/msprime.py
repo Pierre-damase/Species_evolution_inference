@@ -166,7 +166,11 @@ def twopops_migration_model(params, debug):
 
 def msprime_simulation(model, params, debug=False):
     """
-    Population simulation with msprime.
+    Population simulation with msprime (msprime 0;x).
+
+    IMPORTANT
+    This function is deprecated (but supported indefinitely); msprime_simulate_variants use
+    sim_ancestry() of msprime 1.x.
 
     Parameter
     ---------
@@ -182,6 +186,11 @@ def msprime_simulation(model, params, debug=False):
     kappa: the growth or decline force
     debug: Boolean
         1: print msprime debugger, 0: nothing
+
+    Msprime 0.x
+      - sample_size
+        The number of monoploid genomes
+        So if sample_size is set to 20 that means there are 10 diploid genomes
 
     Return
     ------
@@ -202,8 +211,6 @@ def msprime_simulation(model, params, debug=False):
     if debug:
         print(tree_seq.first().draw(format="unicode"))
 
-    # variants = []
-
     sfs = [0] * (params["sample_size"] - 1)
     for variant in tree_seq.variants():
         # Generate SFS
@@ -211,15 +218,12 @@ def msprime_simulation(model, params, debug=False):
         freq_mutation = counts[1]-1
         sfs[freq_mutation] += 1
 
-        # Store for each variant, the position and the genotypes
-        # variants.append((variant.position, variant.genotypes))
-        
     return sfs  #, variants
 
 
 def msprime_simulate_variants(params, debug=False):
     """
-    Population simulation with msprime for SMC++.
+    Population simulation with msprime for SMC++ (msprime 1.x).
 
     In this case, mutations are placed at discrete, integer coordinates => Msprime 1.01 is
     therefore needed (update of Msprime and tskit).
@@ -262,8 +266,19 @@ def msprime_simulate_variants(params, debug=False):
         print(demography.debug())
 
     # Simulation of the ancestry
+    #   - samples
+    #     The number of individual instead of the number of monoploid genomes (msprime 0.x)
+    #   - ploidy
+    #     Sets the default number of sample nodes (i.e. monoploid genomes) per individual
+    #     Ploidy set to 2 means time to common ancestor in a population of size N is 2N
+    #     generations (which is the same as msprime 0.x)
+    #   - discrete_genome
+    #     If True that means mutations are placed at discrete, integer coordinates
+    #     If False that means mutations are placed at continuous, float coordinates (msprime 0.x)
+    #   If samples is set to 20 and ploidy to 1 there are N=20 genomes
+    #   If samples is set to 20 and ploidy to 2 there are 2N=40 genomes
     ts = msprime.sim_ancestry(
-        samples=params['sample_size'], demography=demography, ploidy=1,
+        samples=int(params['sample_size'] / 2), demography=demography, ploidy=2,
         sequence_length=params['length'], discrete_genome=True,
         recombination_rate=params['rcb_rate']
     )
@@ -281,6 +296,8 @@ def msprime_simulate_variants(params, debug=False):
         _, counts = np.unique(variant.genotypes, return_counts=True)
 
         if len(counts) != 1:
+            print(variant)
+            sys.exit()
             # SFS
             freq_mutation = counts[1]
             sfs[freq_mutation-1] += 1

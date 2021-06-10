@@ -555,9 +555,14 @@ def variants_to_vcf(variants, param, fichier, path_data, ploidy=2):
         header += ['tsk_{}'.format(i) for i in range(round(param['sample_size'] / ploidy))]
         filout.write("\t".join(header) + "\n")
 
+        # For SMC++, discrete_genome parameter of the method sim_ancestry() of Msprime is set to
+        # True, i.e. mutations are placed at discrete, integer coordinates
+        # For Msprime, the coordinate's range is [0, L-1] with L the size of the sequence
+        #   For SMC++, the coordinate's range is [1, L]
+        # So each position is increased by 1
         for variant in variants:
             value = [
-                '1', str(variant[0]), '.', '0', '1', '.', 'PASS', '.', 'GT'
+                '1', str(variant[0] + 1), '.', '0', '1', '.', 'PASS', '.', 'GT'
             ]
             if ploidy == 1:
                 value += [str(genotype) for genotype in variant[1]]
