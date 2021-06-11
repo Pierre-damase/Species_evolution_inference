@@ -978,9 +978,9 @@ def compute_optimization_smc(filin, path_data):
         break
 
     # Remove vcf, smc and index file
-    os.system("rm -rf {}*gz*".format(path_data))
+    os.system("rm -rf {}*{}.gz*".format(path_data, filout.split('_')[1]))
 
-        
+
 ######################################################################
 # Main                                                               #
 ######################################################################
