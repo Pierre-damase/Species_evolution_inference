@@ -776,7 +776,7 @@ def stairway_ll_test(data, model):
                 for ll_m1, ll_final, dof in zip(row['M1']['LL'], row['Final']['LL'], dimensions)
             ]
 
-        dico['Positive hit'] = (sum(lrt) * 100) / 200
+        dico['Positive hit'] = (sum(lrt) * 100) / 200  # pourcentage
 
         # Add to pandas DataFrame df
         df = df.append(dico, ignore_index=True)

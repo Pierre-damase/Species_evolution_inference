@@ -23,7 +23,7 @@ def normalization(sfs):
 # SFS shape verification                                             #
 ######################################################################
 
-def sfs_label(length, title):
+def sfs_label(length, title, save=False):
     """
     Set up sfs caption, label and title.
 
@@ -36,11 +36,15 @@ def sfs_label(length, title):
     plt.legend(loc="upper right", fontsize="x-large")
 
     # Label axis
-    plt.xlabel("Allele frequency", fontsize="x-large")
-    plt.ylabel("Percent of SNPs", fontsize="x-large")
+    if save:
+        plt.xlabel("Fréquence allélique", fontsize="x-large")
+        plt.ylabel("SNPs - pourcentage", fontsize="x-large")
+    else:
+        plt.xlabel("Allele frequency", fontsize="x-large")
+        plt.ylabel("Percent of SNPs", fontsize="x-large")
 
     # X axis values
-    xtick_pas = 1 if length <= 10 else 2 if length < 20 else length%10+1
+    xtick_pas = 1 if length <= 10 else 2 if length < 20 else length % 10 + 1
 
     x_ax, x_values = [], []
     for i in range(0, length, xtick_pas):
@@ -49,7 +53,7 @@ def sfs_label(length, title):
     plt.xticks(x_ax, x_values)
 
     # Title + show
-    plt.title(title, fontsize="xx-large")
+    plt.title(title, fontsize="x-large", fontweight='bold')
 
 
 # For observed SFS generated with msprime
@@ -70,6 +74,8 @@ def plot_sfs(data, save=False):
         If set to True save the plot in ./Figures/SFS-shape
     """
     color = ["tab:blue", "tab:orange", "tab:red", "tab:green", "tab:gray"]
+    labels = ['Modèle constant', 'Modèle théorique', 'Modèle déclin',
+              'Modèle croissance']
 
     # Set up plot
     plt.figure(figsize=(12, 9), constrained_layout=True)
@@ -80,13 +86,11 @@ def plot_sfs(data, save=False):
         normalized_sfs = [ele / sum(sfs) for ele in sfs]
 
         # Label
-        if key == 'Constant model':
-            label = key
-        elif key == 'Theoretical model':
-            label = "{} - Fu, 1995".format(key)
-        else:
-            #data[1][key] = {k: "{:.1e}".format(v) for k, v in data[1][key].items()}
-            label = "{} - ".format(key)
+        label = labels[cpt] if save else key
+        if key == 'Theoretical model':
+            label += " - Fu, 1995"
+        elif not key == 'Constant model':
+            label += " - "
             for param, value in data[1][key].items():
                 label += "{}={}".format(param, value)
                 if param != list(data[1][key].keys())[-1]:
@@ -100,12 +104,20 @@ def plot_sfs(data, save=False):
         cpt += 1
 
     # Label, caption and title
-    title = "Unfold SFS for various scenario with Ne={}, mu={}, rcb={}, L={:.1E}" \
-        .format(data[2]['Ne'], data[2]['mu'], data[2]['rcb_rate'], round(data[2]['length']))
-    sfs_label(length=len(sfs), title=title)
+    if save:
+        title = (
+            "SFS non plié pour différents scénarios avec Ne={}, mu={}, taux de recombinaison={}"
+            " & L={:.1e}"
+        ).format(data[2]['Ne'], data[2]['mu'], data[2]['rcb_rate'], data[2]['length'])
+    else:
+        title = (
+            "Unfold SFS with Ne={}, mutation rate mu={}, recombination rate={} & L={:.1e}"
+        ).format(data[2]['Ne'], data[2]['mu'], data[2]['rcb_rate'], data[2]['length'])
+
+    sfs_label(length=len(sfs), title=title, save=save)
 
     if save:
-        plt.savefig('./Figures/SFS-shape')
+        plt.savefig('./Figures/SFS-shape.png', format='png', dpi=150)
     plt.show()
     plt.clf()
 
@@ -388,6 +400,10 @@ def heatmap_axis(ax, xaxis, yaxis, cbar):
     plt.gca().get_yticklabels()[index].set_color('#8b1538')  # set the color
     plt.gca().get_yticklabels()[index].set_fontsize('medium')  # set the size
 
+    # Hlines for kappa = 0
+    ax.hlines([35, 36], *ax.get_xlim(), colors="white", lw=2.)
+    ax.vlines([0, 65], ymin=35, ymax=36, color="white", lw=2.)
+
 
 ######################################################################
 # SNPs distribution                                                  #
@@ -459,7 +475,7 @@ def plot_snp_distribution(model, filin, path_data):
 
 # Weighted square distance #
 
-def plot_weighted_square_distance_heatmap(data, d2, models):
+def plot_weighted_square_distance_heatmap(data, d2, models, title, save=False):
     """
     Heatmap of weighted square distance for various (tau, kappa) or (m12, kappa)
 
@@ -471,7 +487,7 @@ def plot_weighted_square_distance_heatmap(data, d2, models):
     models: either (observed, inferred) or (m0, m1)
     """
     # Set-up plot
-    plt.figure(figsize=(12,9), constrained_layout=True)
+    plt.figure(figsize=(12, 9), constrained_layout=True)
     sns.set_theme(style='whitegrid')
 
     # Data
@@ -486,13 +502,18 @@ def plot_weighted_square_distance_heatmap(data, d2, models):
     ax = sns.heatmap(df, cmap="coolwarm")
 
     # Heatmap x and y-axis personnalization
-    heatmap_axis(ax=ax, xaxis=df.columns.name, yaxis=df.index.name,
-                 cbar='Weighted square distance - log scale')
+    if save:
+        cbar = "Distance au carré en échelle logarithmique"
+    else:
+        cbar = "Weighted square distance - log scale"
+    heatmap_axis(ax=ax, xaxis=df.columns.name, yaxis=df.index.name, cbar=cbar)
 
     # Title
-    title = "Weighted square d2 of {} & {} models".format(models[0], models[1])
-    plt.title(title, fontsize="x-large", color="#8b1538")
+    plt.title(title, fontsize="large", fontweight='bold')
 
+    if save:
+        plt.savefig('./Figures/Dadi/heatmap_d2-{}.png'.format("_".join(d2.split(' '))),
+                    format='png', dpi=150)
     plt.plot()
 
 
@@ -542,7 +563,7 @@ def plot_weighted_square_distance(data, fixed, labels, suptitle):
 
 # Log-likelihood ratio test #
 
-def plot_likelihood_heatmap(data):
+def plot_likelihood_heatmap(data, title, save=False):
     """
     Heatmap of log-likelihood ratio test for various (tau, kappa) or (m12, kappa)
 
@@ -566,13 +587,18 @@ def plot_likelihood_heatmap(data):
     ax = sns.heatmap(df, cmap="coolwarm")
 
     # Heatmap x and y-axis personnalization
-    heatmap_axis(ax=ax, xaxis=df.columns.name, yaxis=df.index.name,
-                 cbar='Significant log-likelihood ratio test out of 100 tests')
+    if save:
+        cbar = "Nombre de test du rapport de vraisemblance significatif sur 100 tests"
+    else:
+        cbar = "Significant log-likelihood ratio test out of 100 tests"
+    heatmap_axis(ax=ax, xaxis=df.columns.name, yaxis=df.index.name, cbar=cbar)
 
     # Title
     title = "Log likelihood ratio test for various tau & kappa with p.value = 0.05"
     plt.title(title, fontsize="x-large", color="#8b1538")
 
+    if save:
+        plt.savefig("./Figures/Dadi/heatmap_lrt.png", format='png', dpi=150)
     plt.plot()
 
 
@@ -627,14 +653,15 @@ def extract_parameters(data, key):
 
     for _, row in data.iterrows():
         parameters['Observed'].append(row['Parameters'][key])
-        parameters['Estimated'].append(
-            np.mean([estimated[key] for estimated in row['M1']['Estimated']])
-        )
+        parameters['Estimated'].append([estimated[key] for estimated in row['M1']['Estimated']])
+        # parameters['Estimated'].append(
+        #     np.mean([estimated[key] for estimated in row['M1']['Estimated']])
+        # )
 
     return parameters
 
 
-def plot_parameters_evaluation_heatmap(data, key):
+def plot_parameters_evaluation_heatmap(data, key, save=False):
     """
     Heatmap of weighted square distance for various (tau, kappa) or (m12, kappa)
 
@@ -669,13 +696,22 @@ def plot_parameters_evaluation_heatmap(data, key):
     ax = sns.heatmap(df, cmap="coolwarm")
 
     # Heatmap x and y-axis personnalization
-    heatmap_axis(ax=ax, xaxis=df.columns.name, yaxis=df.index.name,
-                 cbar='Distance between observed and estimated {} - log scale'.format(key))
+    if save:
+        cbar = "Distance entre les {} observés et estimés - échelle logarithmique".format(key)
+    else:
+        cbar = "Distance between observed and estimated {} - log scale".format(key)
+    plot.heatmap_axis(ax=ax, xaxis=df.columns.name, yaxis=df.index.name, cbar=cbar)
 
     # Title
-    title = "Estimated {0} en fonction de observed {0}".format(key)
+    if save:
+        title = "Evaluation des {} estimés par rapport à ceux observés".format(key)
+    else:
+        title = "Evaluation of estimated vs observed {}".format(key)
     plt.title(title, fontsize="x-large", color="#8b1538")
 
+    if save:
+        plt.savefig("./Figures/Dadi/heatmap_parameters={}.png".format(key), format='png',
+                    dpi=150)
     plt.plot()
 
 
@@ -722,7 +758,7 @@ def plot_parameters_evaluation(data, key, fixed):
 # Stairway inference                                                 #
 ######################################################################
 
-def plot_stairway_heatmap(data, title, cbar):
+def plot_stairway_heatmap(data, title, cbar, save=False):
     """
     Heatmap for stairway data
 
@@ -751,6 +787,8 @@ def plot_stairway_heatmap(data, title, cbar):
     #title = "Distance between min & max Ne"
     plt.title(title, fontsize="x-large", color="#8b1538")
 
+    if save:
+        plt.savefig("./Figures/Stairway/Heatmap/heatmap.png", format='png', dpi=150)
     plt.plot()
 
 
