@@ -53,7 +53,7 @@ def sfs_label(length, title, save=False):
     plt.xticks(x_ax, x_values)
 
     # Title + show
-    plt.title(title, fontsize="x-large", fontweight='bold')
+    plt.title(title, fontsize="x-large", fontweight='bold', y=1.01)
 
 
 # For observed SFS generated with msprime
@@ -92,7 +92,9 @@ def plot_sfs(data, save=False):
         elif not key == 'Constant model':
             label += " - "
             for param, value in data[1][key].items():
-                label += "{}={}".format(param, value)
+                label += "{}={}".format(
+                    'τ' if param == 'Tau' else 'κ' if param == 'Kappa' else param, value
+                )
                 if param != list(data[1][key].keys())[-1]:
                     label += ", "
 
@@ -372,7 +374,10 @@ def heatmap_axis(ax, xaxis, yaxis, cbar):
         colormap label
     """
     # Name
-    names = ["Log10({})".format(xaxis), "Log10({})".format(yaxis)]  # (xaxis, yaxis)
+    names = [
+        "$Log_{10}$" + "({})".format('τ' if xaxis == 'Tau' else xaxis),
+        "$Log_{10}$" + "({})".format('κ' if yaxis == 'Kappa' else yaxis)
+    ]  # (xaxis, yaxis)
 
     # x-axis
     plt.xticks(
@@ -399,6 +404,7 @@ def heatmap_axis(ax, xaxis, yaxis, cbar):
     ][0]  # get the index of kappa = 0.0
     plt.gca().get_yticklabels()[index].set_color('#8b1538')  # set the color
     plt.gca().get_yticklabels()[index].set_fontsize('medium')  # set the size
+    plt.gca().get_yticklabels()[index].set_fontweight('bold')  # set the weight
 
     # Hlines for kappa = 0
     ax.hlines([35, 36], *ax.get_xlim(), colors="white", lw=2.)
@@ -509,7 +515,7 @@ def plot_weighted_square_distance_heatmap(data, d2, models, title, save=False):
     heatmap_axis(ax=ax, xaxis=df.columns.name, yaxis=df.index.name, cbar=cbar)
 
     # Title
-    plt.title(title, fontsize="large", fontweight='bold')
+    plt.title(title, fontsize="large", fontweight='bold', pad=10.5)
 
     if save:
         plt.savefig('./Figures/Dadi/heatmap_d2-{}.png'.format("_".join(d2.split(' '))),
@@ -594,8 +600,7 @@ def plot_likelihood_heatmap(data, title, save=False):
     heatmap_axis(ax=ax, xaxis=df.columns.name, yaxis=df.index.name, cbar=cbar)
 
     # Title
-    title = "Log likelihood ratio test for various tau & kappa with p.value = 0.05"
-    plt.title(title, fontsize="x-large", color="#8b1538")
+    plt.title(title, fontsize="large", fontweight='bold', pad=10.5)
 
     if save:
         plt.savefig("./Figures/Dadi/heatmap_lrt.png", format='png', dpi=150)
@@ -654,9 +659,6 @@ def extract_parameters(data, key):
     for _, row in data.iterrows():
         parameters['Observed'].append(row['Parameters'][key])
         parameters['Estimated'].append([estimated[key] for estimated in row['M1']['Estimated']])
-        # parameters['Estimated'].append(
-        #     np.mean([estimated[key] for estimated in row['M1']['Estimated']])
-        # )
 
     return parameters
 
@@ -681,15 +683,17 @@ def plot_parameters_evaluation_heatmap(data, key, save=False):
         df[parameter] = data['Parameters'].apply(lambda ele: round(np.log10(ele[parameter]), 2))
 
     # Compute the distance between the observed and estimated parameter key
-    df['Distance'] = [
-        np.log10(np.power(estimated - observed, 2) / estimated) for observed, estimated in
-        zip(parameters['Observed'], parameters['Estimated'])
-    ]
+    distance = []
+    for observed, estimated in zip(parameters['Observed'], parameters['Estimated']):
+        distance.append(
+            np.mean([np.log10(np.power(ele - observed, 2) / ele) for ele in estimated])
+        )
+    df['Distance'] = distance
 
     df = df.pivot(index=df.columns[1], columns=df.columns[0], values="Distance")
 
     # Set-up plot
-    plt.figure(figsize=(12,9), constrained_layout=True)
+    plt.figure(figsize=(12, 9), constrained_layout=True)
     sns.set_theme(style='whitegrid')
 
     # Plot
@@ -700,14 +704,16 @@ def plot_parameters_evaluation_heatmap(data, key, save=False):
         cbar = "Distance entre les {} observés et estimés - échelle logarithmique".format(key)
     else:
         cbar = "Distance between observed and estimated {} - log scale".format(key)
-    plot.heatmap_axis(ax=ax, xaxis=df.columns.name, yaxis=df.index.name, cbar=cbar)
+    heatmap_axis(ax=ax, xaxis=df.columns.name, yaxis=df.index.name, cbar=cbar)
 
     # Title
     if save:
-        title = "Evaluation des {} estimés par rapport à ceux observés".format(key)
+        title = "Evaluation des {} estimés par rapport à ceux observés"\
+            .format('τ' if key == 'Tau' else 'κ' if key == 'Kappa' else key)
     else:
-        title = "Evaluation of estimated vs observed {}".format(key)
-    plt.title(title, fontsize="x-large", color="#8b1538")
+        title = "Evaluation of estimated vs observed {}" \
+            .format('τ' if key == 'Tau' else 'κ' if key == 'Kappa' else key)
+    plt.title(title, fontsize="large", fontweight='bold', pad=10.5)
 
     if save:
         plt.savefig("./Figures/Dadi/heatmap_parameters={}.png".format(key), format='png',
@@ -784,8 +790,7 @@ def plot_stairway_heatmap(data, title, cbar, save=False):
     heatmap_axis(ax=ax, xaxis=df.columns.name, yaxis=df.index.name, cbar=cbar)
 
     # Title
-    #title = "Distance between min & max Ne"
-    plt.title(title, fontsize="x-large", color="#8b1538")
+    plt.title(title, fontsize="large", fontweight='bold', pad=10.5)
 
     if save:
         plt.savefig("./Figures/Stairway/Heatmap/heatmap.png", format='png', dpi=150)
