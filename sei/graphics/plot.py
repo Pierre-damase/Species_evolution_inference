@@ -461,7 +461,7 @@ def plot_snp_distribution(model, filin, path_data):
     sns.set_theme(style='whitegrid')
 
     # Plot
-    ax = sns.heatmap(data, cmap="coolwarm")
+    ax = sns.heatmap(data, cmap="viridis")
 
     # Heatmap x and y-axis personnalization
     heatmap_axis(ax=ax, xaxis=data.columns.name, yaxis=data.index.name,
@@ -505,7 +505,7 @@ def plot_weighted_square_distance_heatmap(data, d2, models, title, save=False):
     df = df.pivot(index=df.columns[1], columns=df.columns[0], values=d2)
 
     # Plot
-    ax = sns.heatmap(df, cmap="coolwarm")
+    ax = sns.heatmap(df, cmap="viridis")
 
     # Heatmap x and y-axis personnalization
     if save:
@@ -590,7 +590,7 @@ def plot_likelihood_heatmap(data, title, save=False):
     df = df.pivot(index=df.columns[1], columns=df.columns[0], values='Positive hit')
 
     # Plot
-    ax = sns.heatmap(df, cmap="coolwarm")
+    ax = sns.heatmap(df, cmap="viridis")
 
     # Heatmap x and y-axis personnalization
     if save:
@@ -697,7 +697,7 @@ def plot_parameters_evaluation_heatmap(data, key, save=False):
     sns.set_theme(style='whitegrid')
 
     # Plot
-    ax = sns.heatmap(df, cmap="coolwarm")
+    ax = sns.heatmap(df, cmap="viridis")
 
     # Heatmap x and y-axis personnalization
     if save:
@@ -784,7 +784,7 @@ def plot_stairway_heatmap(data, title, cbar, save=False):
     df = data.pivot(index=data.columns[1], columns=data.columns[0], values=data.columns[2])
 
     # Plot
-    ax = sns.heatmap(df, cmap='coolwarm')
+    ax = sns.heatmap(df, cmap='viridis')
 
     # Heatmap x and y-axis personnalization
     heatmap_axis(ax=ax, xaxis=df.columns.name, yaxis=df.index.name, cbar=cbar)
