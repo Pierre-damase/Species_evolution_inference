@@ -37,8 +37,8 @@ def sfs_label(length, title, save=False):
 
     # Label axis
     if save:
-        plt.xlabel("Fréquence allélique", fontsize="x-large")
-        plt.ylabel("SNPs - pourcentage", fontsize="x-large")
+        plt.xlabel("Fréquence allélique", fontsize="xx-large")
+        plt.ylabel("SNPs - pourcentage", fontsize="xx-large")
     else:
         plt.xlabel("Allele frequency", fontsize="x-large")
         plt.ylabel("Percent of SNPs", fontsize="x-large")
@@ -50,10 +50,10 @@ def sfs_label(length, title, save=False):
     for i in range(0, length, xtick_pas):
         x_ax.append(i)
         x_values.append("{}/{}".format(i+1, length+1))
-    plt.xticks(x_ax, x_values)
+    plt.xticks(x_ax, x_values, fontsize="x-large")
 
     # Title + show
-    plt.title(title, fontsize="x-large", fontweight='bold', y=1.01)
+    plt.title(title, fontsize="xx-large", fontweight='bold', y=1.01)
 
 
 # For observed SFS generated with msprime
@@ -74,7 +74,7 @@ def plot_sfs(data, save=False):
         If set to True save the plot in ./Figures/SFS-shape
     """
     color = ["tab:blue", "tab:orange", "tab:red", "tab:green", "tab:gray"]
-    labels = ['Modèle constant', 'Modèle théorique', 'Modèle déclin',
+    labels = ['Modèle constant', 'Modèle théorique constant', 'Modèle déclin',
               'Modèle croissance']
 
     # Set up plot
@@ -119,7 +119,7 @@ def plot_sfs(data, save=False):
     sfs_label(length=len(sfs), title=title, save=save)
 
     if save:
-        plt.savefig('./Figures/SFS-shape.png', format='png', dpi=150)
+        plt.savefig('./Figures/SFS/SFS-shape.png', format='png', dpi=150)
     plt.show()
     plt.clf()
 
@@ -211,7 +211,7 @@ def plot_sfs_inference(data, parameters, colors, suptitle):
 
 # For SFS of real data
 
-def plot_species_sfs(species, values):
+def plot_species_sfs(species, values, save=False):
     # Set up plot
     plt.figure(figsize=(12, 9), constrained_layout=True)
 
@@ -220,15 +220,22 @@ def plot_species_sfs(species, values):
              "ras": 'tab:gray'}
 
     # Plot SFS
-    plt.plot(normalization(values['SFS']), label=species, color=color[values['Status']])
+    espece = "{} {}".format(species.split(' ')[0], species.split(' ')[1].lower())
+    with plt.style.context('seaborn-whitegrid'): 
+        plt.plot(normalization(values['SFS']), label=espece, color=color[values['Status']])
 
     # Plot theoritical SFS of any constant population
     theoretical_sfs = compute_theoretical_sfs(len(values['SFS']))
-    plt.plot(normalization(theoretical_sfs), label="Theoretical model - Fu, 1995")
+    with plt.style.context('seaborn-whitegrid'): 
+        plt.plot(normalization(theoretical_sfs), label="Modèle théorique constant - Fu, 1995",
+                 color="tab:orange", linestyle="dashed")
 
     # Label, caption and title
-    sfs_label(length=len(theoretical_sfs), title="SFS of {}".format(species))
+    sfs_label(length=len(theoretical_sfs), title="SFS de l'espèce {}".format(espece), save=save)
 
+    if save:
+        plt.savefig("./Figures/SFS/{}.png".format("_".join(species.split(' '))), format='png',
+                    dpi=150)
     plt.show()
     plt.clf()
 
@@ -358,7 +365,7 @@ def plot_error_rate(sample):
 # Common method for all heatmap                                      #
 ######################################################################
 
-def heatmap_axis(ax, xaxis, yaxis, cbar):
+def heatmap_axis(ax, xaxis, yaxis, cbar, lrt=False):
     """
     Heatmap customization.
 
@@ -397,6 +404,9 @@ def heatmap_axis(ax, xaxis, yaxis, cbar):
 
     # Set colorbar label & font size
     ax.figure.axes[-1].set_ylabel(cbar, fontsize="large")
+    if lrt:
+        ax.collections[0].colorbar.set_ticks([0, 20., 40., 60., 80., 100.])
+        ax.collections[0].colorbar.set_ticklabels(['0%', '20%', '40%', '60%', '80%', '100%'])
 
     # Set axis label of kappa = 0.0, i.e. constant model
     index = [
@@ -461,7 +471,7 @@ def plot_snp_distribution(model, filin, path_data):
     sns.set_theme(style='whitegrid')
 
     # Plot
-    ax = sns.heatmap(data, cmap="coolwarm")
+    ax = sns.heatmap(data, cmap="viridis")
 
     # Heatmap x and y-axis personnalization
     heatmap_axis(ax=ax, xaxis=data.columns.name, yaxis=data.index.name,
@@ -488,9 +498,14 @@ def plot_weighted_square_distance_heatmap(data, d2, models, title, save=False):
     Parameter
     ---------
     data: pandas DataFrame of inference with Dadi
-    d2: either d2 observed inferred if plotting weighted square distance between observed and
-        inferred model or d2 models if plotting weighted square distance between m0 and m1
-    models: either (observed, inferred) or (m0, m1)
+    d2: either
+      - d2 observed inferred
+        if plotting weighted square distance between observed and inferred model
+      - d2 models
+        if plotting weighted square distance between m0 and m1
+      - d2 observed theoretical
+        if plotting weighted square distance between observed SFS and the theoretical one
+    models: either ['observed', 'inferred'], ['m0', 'm1'] or ['observed', 'theoretical']
     """
     # Set-up plot
     plt.figure(figsize=(12, 9), constrained_layout=True)
@@ -505,7 +520,7 @@ def plot_weighted_square_distance_heatmap(data, d2, models, title, save=False):
     df = df.pivot(index=df.columns[1], columns=df.columns[0], values=d2)
 
     # Plot
-    ax = sns.heatmap(df, cmap="coolwarm")
+    ax = sns.heatmap(df, cmap="viridis")
 
     # Heatmap x and y-axis personnalization
     if save:
@@ -590,14 +605,14 @@ def plot_likelihood_heatmap(data, title, save=False):
     df = df.pivot(index=df.columns[1], columns=df.columns[0], values='Positive hit')
 
     # Plot
-    ax = sns.heatmap(df, cmap="coolwarm")
+    ax = sns.heatmap(df, cmap="viridis")
 
     # Heatmap x and y-axis personnalization
     if save:
         cbar = "Nombre de test du rapport de vraisemblance significatif sur 100 tests"
     else:
         cbar = "Significant log-likelihood ratio test out of 100 tests"
-    heatmap_axis(ax=ax, xaxis=df.columns.name, yaxis=df.index.name, cbar=cbar)
+    heatmap_axis(ax=ax, xaxis=df.columns.name, yaxis=df.index.name, cbar=cbar, lrt=True)
 
     # Title
     plt.title(title, fontsize="large", fontweight='bold', pad=10.5)
@@ -683,10 +698,13 @@ def plot_parameters_evaluation_heatmap(data, key, save=False):
         df[parameter] = data['Parameters'].apply(lambda ele: round(np.log10(ele[parameter]), 2))
 
     # Compute the distance between the observed and estimated parameter key
+    # d = (false - true)^2 / true with 
+    #   - true the observed parameter (used to generate the data)
+    #   - false the estimated paramter (estimated by dadi)
     distance = []
     for observed, estimated in zip(parameters['Observed'], parameters['Estimated']):
         distance.append(
-            np.mean([np.log10(np.power(ele - observed, 2) / ele) for ele in estimated])
+            np.mean([np.log10(np.power(ele - observed, 2) / observed) for ele in estimated])
         )
     df['Distance'] = distance
 
@@ -697,13 +715,17 @@ def plot_parameters_evaluation_heatmap(data, key, save=False):
     sns.set_theme(style='whitegrid')
 
     # Plot
-    ax = sns.heatmap(df, cmap="coolwarm")
+    ax = sns.heatmap(df, cmap="viridis")
 
     # Heatmap x and y-axis personnalization
     if save:
-        cbar = "Distance entre les {} observés et estimés - échelle logarithmique".format(key)
+        cbar = (
+            "Distance entre les {} observés et estimés - échelle logarithmique"
+        ).format('τ' if key == 'Tau' else 'κ' if key == 'Kappa' else key)
     else:
-        cbar = "Distance between observed and estimated {} - log scale".format(key)
+        cbar = (
+            "Distance between observed and estimated {} - log scale"
+        ).format('τ' if key == 'Tau' else 'κ' if key == 'Kappa' else key)
     heatmap_axis(ax=ax, xaxis=df.columns.name, yaxis=df.index.name, cbar=cbar)
 
     # Title
@@ -764,7 +786,7 @@ def plot_parameters_evaluation(data, key, fixed):
 # Stairway inference                                                 #
 ######################################################################
 
-def plot_stairway_heatmap(data, title, cbar, save=False):
+def plot_stairway_heatmap(data, title, cbar, save=False, lrt=False):
     """
     Heatmap for stairway data
 
@@ -777,17 +799,17 @@ def plot_stairway_heatmap(data, title, cbar, save=False):
           - 3rd column: Either Positive hit or Ne
     """
     # Set up plot
-    plt.figure(figsize=(12,9), constrained_layout=True)
+    plt.figure(figsize=(12, 9), constrained_layout=True)
     sns.set_theme(style='whitegrid')
 
     # Pre-processing data
     df = data.pivot(index=data.columns[1], columns=data.columns[0], values=data.columns[2])
 
     # Plot
-    ax = sns.heatmap(df, cmap='coolwarm')
+    ax = sns.heatmap(df, cmap='viridis')
 
     # Heatmap x and y-axis personnalization
-    heatmap_axis(ax=ax, xaxis=df.columns.name, yaxis=df.index.name, cbar=cbar)
+    heatmap_axis(ax=ax, xaxis=df.columns.name, yaxis=df.index.name, cbar=cbar, lrt=lrt)
 
     # Title
     plt.title(title, fontsize="large", fontweight='bold', pad=10.5)

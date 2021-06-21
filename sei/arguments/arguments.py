@@ -64,7 +64,7 @@ def arguments():
     )
 
     #############################################
-    # Optimisation                              #
+    # Optimisation Dadi (old)                   #
     #############################################
     opt = subparsers.add_parser('opt', help="Compute optimisation of dadi's parameters")
     opt.add_argument(
@@ -85,9 +85,27 @@ def arguments():
     optsmc.add_argument(
         '--job', dest='job', type=data_type, required=True, help="file to analyse"
     )
-    # optsmc.add_argument(
-    #     '--data', dest="data", action='store_true', help="Generate the set of data"
-    # )
+
+    #############################################
+    # Optimisation SNPs                         #
+    #############################################
+    optsnp = subparsers.add_parser('optsnp', help="Compute optimization for smc++")
+    optsnp.add_argument(
+        '--job', dest='job', type=data_type, required=True, help="file to analyse"
+    )
+
+    #############################################
+    # Optimisation SNPs for Dadi and msprime    #
+    #############################################
+    optdadi = subparsers.add_parser('optdadi', help="Compute optimization for dadi & msprime")
+    optdadi.add_argument(
+        '--model', dest="model", choices=['decline', 'growth', 'cst'], required=True,
+        help="Perform the optimization for a sudden decline (Tau=0., Kappa=1.), sudden growth "
+        "(Tau=0., Kappa=-1.) or constant (Tau=0., Kappa=0.) model"
+    )
+    optdadi.add_argument(
+        '--job', dest='job', type=data_type, required=True, help="file to analyse"
+    )
     
     #############################################
     # Inference of demographic history          #

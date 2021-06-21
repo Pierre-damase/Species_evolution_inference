@@ -406,9 +406,98 @@ def save_dadi_inference(simulation, models, fold, path_data, job, fixed, value):
 
 
 ######################################################################
-# Inference with stairway plot 2                                     #
+# Optimization of inference with Dadi                                #
 ######################################################################
 
+def data_optimization_dadi(model, filout, path_length):
+    """
+    Generate the data for the optimization of dadi for various SNPs' values - from 1e4 to 5e5. 
+    """
+    # Set up (Tau, Kappa) & length
+    if model == 'decline':  # sudden decline
+        params = {'Tau': 0., 'Kappa': 1.}
+    elif model == 'growth':  # sudden growth
+        params = {'Tau': 0., 'Kappa': -1.}
+    else:  # constant
+        params = {'Tau': 0., 'Kappa': 0.}  # Constant
+
+    # Define length
+    snp = float(filout.split('=')[1])
+    length = length_from_file(path_length, params, mu=8e-2, snp=snp)
+
+    # Convert params from log scale
+    params.update({k: np.power(10, v) for k, v in params.items()})
+
+    # Parameters for the simulation
+    params.update(
+        simulation_parameters(sample=20, ne=1, rcb_rate=8e-2, mu=8e-2, length=length)
+    )
+
+    # Generation of data
+    data = generate_sfs(params, model=ms.sudden_decline_model, nb_simu=20)
+
+    # DataFrame to json
+    data.to_json(filout)
+
+    # Zip file
+    f.zip_file(filout)
+
+
+def compute_optimization_dadi(filin, path_data, models, job):
+    """
+    Optimization of inference with SMC++ with various SNPs for simple scenario:
+
+      - Sudden decline with tau = 0 & kappa = 1, decline of force 10 at a time 1 in the past
+      - Sudden growth with tau = 0 & kappa = -1, growth of force 10 at a time 1 in the past
+      - Constant model with kappa = 0, so there are no change in the population size in the past
+
+    Important
+    Each value of tau & kappa are given in log scale.
+    """
+    # Load data
+    simulation = pd.read_json(filin).iloc[0]
+
+    # Set up file
+    filout = "{}{}".format(path_data, filin.rsplit('/', 1)[1].rsplit('.', 1)[0])
+
+    # Inference with dadi
+    sfs_observed, sample = simulation['SFS observed'], simulation['Parameters']['sample_size']
+
+    inf = compute_dadi_inference(
+        sfs_observed, models, sample, fold=False, path_data=path_data, job=job, dof=2,
+        fixed=None, value=None
+    )
+
+    # Save data
+    params = {
+        k: v for k, v in simulation['Parameters'].items() if k in ['Tau', 'Kappa', 'm12',
+                                                                   'm21']
+    }
+    params['Theta'] = 4 * 1 * 8e-2 * simulation['Parameters']['length']  # 4 * Ne * mu * L
+
+    # Create DataFrame from dictionary
+    dico = {
+        'Parameters': [params], 'Positive hit': [sum(inf['LRT'])],
+        'SNPs': [simulation['SNPs']], 'SFS observed': [sfs_observed], 'M0': [inf['M0']],
+        'M1': [inf['M1']], 'Time': [inf['Time']],
+        'd2 observed inferred': [np.mean(inf['d2 observed inferred'])],
+        'd2 models': [np.mean(inf['d2 models'])]
+    }
+    data = pd.DataFrame(dico)
+
+    # Export DataFrame to json
+    data.to_json("{}".format(filout))
+
+    # Zip file
+    f.zip_file(data="{}".format(filout))
+
+    # Remove SFS file
+    os.remove("{}SFS-{}.fs".format(path_data, job))
+
+
+######################################################################
+# Inference with stairway plot 2                                     #
+######################################################################
 
 def compute_stairway_inference(simulation, path_stairway, path_data, fold):
     """
@@ -836,3 +925,67 @@ if __name__ == "__main__":
             data_optimization_smc(args.model, filout)
 
         compute_optimization_smc(filin="{}.zip".format(filout), path_data=path_data)
+
+    elif args.analyse == 'optdadi':
+        snps = [1e4, 2.5e4, 5e4, 7.5e4, 1e5, 2e5, 3e5, 4e5, 5e5][args.job-1]
+
+        # Set up path and file
+        path_data = (
+            "/home/pimbert/work/Species_evolution_inference/Data/Dadi/optimization_dadi/{}/"
+        ).format(args.model)
+        filout = (
+            "/home/pimbert/work/Species_evolution_inference/Data/Dadi/optimization_dadi/data/"
+            "sfs_{}_snps={:.1e}"
+        ).format(args.model, snps)
+
+        path_length = \
+            "/home/pimbert/work/Species_evolution_inference/Data/Msprime/length_factor-decline"
+
+        if "{}.zip".format(filout.rsplit('/', 1)[1]) \
+           not in os.listdir(
+               "/home/pimbert/work/Species_evolution_inference/Data/Dadi/optimization_dadi/data/"
+           ):
+            # Generate data
+            data_optimization_dadi(args.model, filout, path_length)
+
+        models = \
+            {'Inference': dadi.sudden_decline_model, 'Control': dadi.constant_model}
+
+        compute_optimization_dadi(
+            filin="{}.zip".format(filout), path_data=path_data, models=models, job=args.job
+        )
+
+    elif args.analyse == 'optsnp':
+        snps = [1e4, 2e4, 5e4, 7.5e4, 1e5, 2e5, 3e5, 4e5, 5e5]
+        tmp = define_parameters(model='decline', typ='sfs')[args.job-1]
+
+        # Set up path and file
+        filout = (
+            "/home/pimbert/work/Species_evolution_inference/Data/optimization_snps/"
+            "sfs_tau={}_kappa={}"
+        ).format(tmp['Tau'], tmp['Kappa'])
+        path_length = \
+            "/home/pimbert/work/Species_evolution_inference/Data/Msprime/length_factor-decline"
+
+        data = pd.DataFrame()
+        for snp in snps:
+            # Define length
+            length = length_from_file(path_length, tmp, mu=8e-2, snp=snp)
+
+            # Convert params from log scale
+            params = ({k: np.power(10, v) for k, v in tmp.items()})
+
+            # Parameters for the simulation
+            params.update(
+                simulation_parameters(sample=20, ne=1, rcb_rate=8e-2, mu=8e-2, length=length)
+            )
+
+            # Generation of data
+            simulation = generate_sfs(params, model=ms.sudden_decline_model, nb_simu=1)
+            data = data.append(simulation, ignore_index=True)
+
+        # DataFrame to json
+        data.to_json(filout)
+
+        # Zip file
+        f.zip_file(filout)
