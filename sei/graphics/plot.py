@@ -609,7 +609,7 @@ def plot_likelihood_heatmap(data, title, save=False):
 
     # Heatmap x and y-axis personnalization
     if save:
-        cbar = "Nombre de test du rapport de vraisemblance significatif sur 100 tests"
+        cbar = "Test du rapport de vraisemblance significatif parmi 100"
     else:
         cbar = "Significant log-likelihood ratio test out of 100 tests"
     heatmap_axis(ax=ax, xaxis=df.columns.name, yaxis=df.index.name, cbar=cbar, lrt=True)
