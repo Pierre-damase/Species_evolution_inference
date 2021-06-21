@@ -326,8 +326,7 @@ def read_stairway_summary(fichier):
     data = {
         'Ne': (minimum[0], maximum[0]),
         'Ne initial': ne_list[0], 'Ne ancestral': ne_list[-1], 'Ne mean': np.mean(ne_list),
-        'Year': (np.mean([year_list[i] for i in minimum[1]]),
-                 np.mean([year_list[i] for i in maximum[1]]))
+        'Year': ([year_list[i] for i in minimum[1]], [year_list[i] for i in maximum[1]])
     }
 
     return data
