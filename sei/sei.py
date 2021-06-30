@@ -947,7 +947,7 @@ def stairway_dimension_comparaison(data):
         dim_m1 = 2
         
         dimensions = [
-            0 if ll_m1 is None else dim - dim_m1 for ll_m1, dim in
+            -1 if ll_m1 is None else dim - dim_m1 for ll_m1, dim in 
             zip(row['M1']['LL'], dim_final)
         ]
         

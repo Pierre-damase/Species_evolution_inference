@@ -78,7 +78,7 @@ def plot_sfs(data, save=False):
               'Modèle croissance']
 
     # Set up plot
-    plt.figure(figsize=(12, 9), constrained_layout=True)
+    plt.figure(figsize=(12, 9))  #, constrained_layout=True)
 
     cpt = 0
     for key, sfs in data[0].items():
@@ -395,7 +395,7 @@ def heatmap_axis(ax, xaxis, yaxis, cbar, lrt=False):
     plt.xlabel(names[0], fontsize="large")
 
     # y-axis
-    ax.set_ylim(ax.get_ylim()[::-1])  # reverse y-axis
+    # ax.set_ylim(ax.get_ylim()[::-1])  # reverse y-axis
     plt.yticks(
         np.arange(64, step=7) + 0.5,
         labels=[round(ele, 2) for ele in np.arange(-3.5, 3, 0.7)]
