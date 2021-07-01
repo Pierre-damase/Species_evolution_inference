@@ -20,94 +20,6 @@ def normalization(sfs):
 
 
 ######################################################################
-# Heatmap                                                            #
-######################################################################
-
-def heatmap_axis(ax, xaxis, yaxis, cbar, lrt=False):
-    """
-    Heatmap customization.
-
-    Parameter
-    ---------
-    ax: matplotlib.axes.Axes
-        ax to modify
-    xaxis: str
-        x-axis label
-    yaxis: str
-        y-axis label
-    cbar: str
-        colormap label
-    """
-    # Name
-    names = [
-        "$Log_{10}$" + "({})".format('τ' if xaxis == 'Tau' else xaxis),
-        "$Log_{10}$" + "({})".format('κ' if yaxis == 'Kappa' else yaxis)
-    ]  # (xaxis, yaxis)
-
-    # x-axis
-    plt.xticks(
-        np.arange(64, step=7) + 0.5,
-        labels=[round(ele, 2) for ele in np.arange(-4, 2.5, 0.7)],
-        rotation='horizontal'
-    )
-    plt.xlabel(names[0], fontsize="large")
-
-    # y-axis
-    # ax.set_ylim(ax.get_ylim()[::-1])  # reverse y-axis
-    plt.yticks(
-        np.arange(64, step=7) + 0.5,
-        labels=[round(ele, 2) for ele in np.arange(-3.5, 3, 0.7)]
-    )
-    plt.ylabel(names[1], fontsize="large")
-
-    # Set colorbar label & font size
-    ax.figure.axes[-1].set_ylabel(cbar, fontsize="large")
-    if lrt:
-        ax.collections[0].colorbar.set_ticks([0, 20., 40., 60., 80., 100.])
-        ax.collections[0].colorbar.set_ticklabels(['0%', '20%', '40%', '60%', '80%', '100%'])
-
-    # Set axis label of kappa = 0.0, i.e. constant model
-    index = [
-        i for i, ele in enumerate(plt.gca().get_yticklabels()) if ele.get_text() == "0.0"
-    ][0]  # get the index of kappa = 0.0
-    plt.gca().get_yticklabels()[index].set_color('#8b1538')  # set the color
-    plt.gca().get_yticklabels()[index].set_fontsize('medium')  # set the size
-    plt.gca().get_yticklabels()[index].set_fontweight('bold')  # set the weight
-
-    # Hlines for kappa = 0
-    ax.hlines([35, 36], *ax.get_xlim(), colors="white", lw=2.)
-    ax.vlines([0, 65], ymin=35, ymax=36, color="white", lw=2.)
-
-
-def plot_heatmap(data, title, cbar, filout="./Figures/heatmap.png", lrt=False):
-    """
-    Heatmap
-
-    Parameter
-    ---------
-    data: pandas DataFrame
-    """
-    # Set up plot
-    plt.figure(figsize=(12, 9), constrained_layout=True)
-    sns.set_theme(style='whitegrid')
-
-    # Pre-processing data
-    df = data.pivot(index=data.columns[1], columns=data.columns[0], values=data.columns[2])
-
-    # Plot
-    ax = sns.heatmap(df, cmap='viridis')
-
-    # Heatmap x and y-axis personnalization
-    heatmap_axis(ax=ax, xaxis=df.columns.name, yaxis=df.index.name, cbar=cbar, lrt=lrt)
-
-    # Title
-    plt.title(title, fontsize="large", fontweight='bold', pad=10.5)
-
-    plt.savefig(filout, format='png', dpi=150)
-    plt.plot()
-
-
-######################################################################
 # SFS shape verification                                             #
 ######################################################################
 
@@ -450,6 +362,66 @@ def plot_error_rate(sample):
 
 
 ######################################################################
+# Common method for all heatmap                                      #
+######################################################################
+
+def heatmap_axis(ax, xaxis, yaxis, cbar, lrt=False):
+    """
+    Heatmap customization.
+
+    Parameter
+    ---------
+    ax: matplotlib.axes.Axes
+        ax to modify
+    xaxis: str
+        x-axis label
+    yaxis: str
+        y-axis label
+    cbar: str
+        colormap label
+    """
+    # Name
+    names = [
+        "$Log_{10}$" + "({})".format('τ' if xaxis == 'Tau' else xaxis),
+        "$Log_{10}$" + "({})".format('κ' if yaxis == 'Kappa' else yaxis)
+    ]  # (xaxis, yaxis)
+
+    # x-axis
+    plt.xticks(
+        np.arange(64, step=7) + 0.5,
+        labels=[round(ele, 2) for ele in np.arange(-4, 2.5, 0.7)],
+        rotation='horizontal'
+    )
+    plt.xlabel(names[0], fontsize="large")
+
+    # y-axis
+    # ax.set_ylim(ax.get_ylim()[::-1])  # reverse y-axis
+    plt.yticks(
+        np.arange(64, step=7) + 0.5,
+        labels=[round(ele, 2) for ele in np.arange(-3.5, 3, 0.7)]
+    )
+    plt.ylabel(names[1], fontsize="large")
+
+    # Set colorbar label & font size
+    ax.figure.axes[-1].set_ylabel(cbar, fontsize="large")
+    if lrt:
+        ax.collections[0].colorbar.set_ticks([0, 20., 40., 60., 80., 100.])
+        ax.collections[0].colorbar.set_ticklabels(['0%', '20%', '40%', '60%', '80%', '100%'])
+
+    # Set axis label of kappa = 0.0, i.e. constant model
+    index = [
+        i for i, ele in enumerate(plt.gca().get_yticklabels()) if ele.get_text() == "0.0"
+    ][0]  # get the index of kappa = 0.0
+    plt.gca().get_yticklabels()[index].set_color('#8b1538')  # set the color
+    plt.gca().get_yticklabels()[index].set_fontsize('medium')  # set the size
+    plt.gca().get_yticklabels()[index].set_fontweight('bold')  # set the weight
+
+    # Hlines for kappa = 0
+    ax.hlines([35, 36], *ax.get_xlim(), colors="white", lw=2.)
+    ax.vlines([0, 65], ymin=35, ymax=36, color="white", lw=2.)
+
+
+######################################################################
 # SNPs distribution                                                  #
 ######################################################################
 
@@ -519,6 +491,53 @@ def plot_snp_distribution(model, filin, path_data):
 
 # Weighted square distance #
 
+def plot_weighted_square_distance_heatmap(data, d2, models, title, save=False):
+    """
+    Heatmap of weighted square distance for various (tau, kappa) or (m12, kappa)
+
+    Parameter
+    ---------
+    data: pandas DataFrame of inference with Dadi
+    d2: either
+      - d2 observed inferred
+        if plotting weighted square distance between observed and inferred model
+      - d2 models
+        if plotting weighted square distance between m0 and m1
+      - d2 observed theoretical
+        if plotting weighted square distance between observed SFS and the theoretical one
+    models: either ['observed', 'inferred'], ['m0', 'm1'] or ['observed', 'theoretical']
+    """
+    # Set-up plot
+    plt.figure(figsize=(12, 9), constrained_layout=True)
+    sns.set_theme(style='whitegrid')
+
+    # Data
+    df = pd.DataFrame()
+    for param in [key for key in data.iloc[0]['Parameters'] if key != 'Theta']:  # compute log10
+        df[param] = data['Parameters'].apply(lambda ele: round(np.log10(ele[param]), 2))
+    df[d2] = data[d2].apply(np.log10)  # Compute log of weighted square distance
+
+    df = df.pivot(index=df.columns[1], columns=df.columns[0], values=d2)
+
+    # Plot
+    ax = sns.heatmap(df, cmap="viridis")
+
+    # Heatmap x and y-axis personnalization
+    if save:
+        cbar = "Distance au carré en échelle logarithmique"
+    else:
+        cbar = "Weighted square distance - log scale"
+    heatmap_axis(ax=ax, xaxis=df.columns.name, yaxis=df.index.name, cbar=cbar)
+
+    # Title
+    plt.title(title, fontsize="large", fontweight='bold', pad=10.5)
+
+    if save:
+        plt.savefig('./Figures/Dadi/heatmap_d2-{}.png'.format("_".join(d2.split(' '))),
+                    format='png', dpi=150)
+    plt.plot()
+
+
 def plot_weighted_square_distance(data, fixed, labels, suptitle):
     """
     Lineplot of weighted square distance for a fixed parameter.
@@ -565,6 +584,44 @@ def plot_weighted_square_distance(data, fixed, labels, suptitle):
 
 # Log-likelihood ratio test #
 
+def plot_likelihood_heatmap(data, title, save=False):
+    """
+    Heatmap of log-likelihood ratio test for various (tau, kappa) or (m12, kappa)
+
+    Parameter
+    ---------
+    data: pandas DataFrame of inference with Dadi
+    """
+    # Set up plot
+    plt.figure(figsize=(12,9), constrained_layout=True)
+    sns.set_theme(style='whitegrid')
+
+    # Pre-processing data
+    df = pd.DataFrame()
+    for key in data['Parameters'][0].keys():  # Log10 of parameters
+        df[key] = data['Parameters'].apply(lambda param: np.log10(param[key]))
+    df['Positive hit'] = data['Positive hit']  # Add positive hit columns to df
+
+    df = df.pivot(index=df.columns[1], columns=df.columns[0], values='Positive hit')
+
+    # Plot
+    ax = sns.heatmap(df, cmap="viridis")
+
+    # Heatmap x and y-axis personnalization
+    if save:
+        cbar = "Test du rapport de vraisemblance significatif parmi 100"
+    else:
+        cbar = "Significant log-likelihood ratio test out of 100 tests"
+    heatmap_axis(ax=ax, xaxis=df.columns.name, yaxis=df.index.name, cbar=cbar, lrt=True)
+
+    # Title
+    plt.title(title, fontsize="large", fontweight='bold', pad=10.5)
+
+    if save:
+        plt.savefig("./Figures/Dadi/heatmap_lrt.png", format='png', dpi=150)
+    plt.plot()
+
+
 def plot_likelihood(data, fixed, labels, suptitle):
     """
     Lineplot of log-likelihood ratio test for a fixed parameter.
@@ -598,6 +655,93 @@ def plot_likelihood(data, fixed, labels, suptitle):
 
 
 # Evaluation of estimated parameters #
+
+def extract_parameters(data, key):
+    """
+    Extract from the pandas DataFrame data, the observed parameters key for each simulation and
+    the estimated one of each inferrence (the mean of inferred key for the 100 inferrence).
+
+    Return the parameters estimated and observed in log10 scale.
+
+    Return
+    ------
+    parameters: dict
+      - Observed: the observed parameters key of each simulation
+      - Estimated: the estimated parameters key of each inferrence (the mean)
+    """
+    parameters = {'Observed': [], 'Estimated': []}
+
+    for _, row in data.iterrows():
+        parameters['Observed'].append(row['Parameters'][key])
+        parameters['Estimated'].append([estimated[key] for estimated in row['M1']['Estimated']])
+
+    return parameters
+
+
+def plot_parameters_evaluation_heatmap(data, key, save=False):
+    """
+    Heatmap of weighted square distance for various (tau, kappa) or (m12, kappa)
+
+    Parameter
+    ---------
+    data: pandas DataFrame of inference with Dadi
+    key: the parameters to check - either Tau, Kappa, m12 or Theta
+    """
+    # Extract the parameter key (observed and estimated) from data
+    parameters = extract_parameters(data, key)
+
+    # Pre-porocessinf of the data for the heatmap
+    df = pd.DataFrame()
+
+    # Compute log10 of parameters
+    for parameter in [key for key in data.iloc[0]['Parameters'] if key != 'Theta']:
+        df[parameter] = data['Parameters'].apply(lambda ele: round(np.log10(ele[parameter]), 2))
+
+    # Compute the distance between the observed and estimated parameter key
+    # d = (false - true)^2 / true with 
+    #   - true the observed parameter (used to generate the data)
+    #   - false the estimated paramter (estimated by dadi)
+    distance = []
+    for observed, estimated in zip(parameters['Observed'], parameters['Estimated']):
+        distance.append(
+            np.mean([np.log10(np.power(ele - observed, 2) / observed) for ele in estimated])
+        )
+    df['Distance'] = distance
+
+    df = df.pivot(index=df.columns[1], columns=df.columns[0], values="Distance")
+
+    # Set-up plot
+    plt.figure(figsize=(12, 9), constrained_layout=True)
+    sns.set_theme(style='whitegrid')
+
+    # Plot
+    ax = sns.heatmap(df, cmap="viridis")
+
+    # Heatmap x and y-axis personnalization
+    if save:
+        cbar = (
+            "Distance entre les {} observés et estimés - échelle logarithmique"
+        ).format('τ' if key == 'Tau' else 'κ' if key == 'Kappa' else key)
+    else:
+        cbar = (
+            "Distance between observed and estimated {} - log scale"
+        ).format('τ' if key == 'Tau' else 'κ' if key == 'Kappa' else key)
+    heatmap_axis(ax=ax, xaxis=df.columns.name, yaxis=df.index.name, cbar=cbar)
+
+    # Title
+    if save:
+        title = "Evaluation des {} estimés par rapport à ceux observés"\
+            .format('τ' if key == 'Tau' else 'κ' if key == 'Kappa' else key)
+    else:
+        title = "Evaluation of estimated vs observed {}" \
+            .format('τ' if key == 'Tau' else 'κ' if key == 'Kappa' else key)
+    plt.title(title, fontsize="large", fontweight='bold', pad=10.5)
+
+    if save:
+        plt.savefig("./Figures/Dadi/heatmap_parameters={}.png".format(key), format='png',
+                    dpi=150)
+    plt.plot()
+
 
 def plot_parameters_evaluation(data, key, fixed):
     """
@@ -638,111 +782,41 @@ def plot_parameters_evaluation(data, key, fixed):
     plt.plot()
 
 
-# Plot some inferred (dadi) or observed (msprime) SFS
+######################################################################
+# Stairway inference                                                 #
+######################################################################
 
-def get_data(df, sfs):
+def plot_stairway_heatmap(data, title, cbar, save=False, lrt=False):
     """
-    Return
-    ------
-    data: dico
-      - key: for which data we want to plot the SFS
-      - value: list of {Parameters used with msprime, SFS observed}
-    """
-    parameters = [0., 1., -1.]
-    data = {key: [] for key in parameters}
-    
-    for _, row in df.iterrows():
-        param = {
-            k: round(np.log10(v), 2) for k, v in row['Parameters'].items() if k != 'Theta'
-        }
-        if param['Tau'] in parameters and param['Kappa'] in parameters:
-            if sfs == 'observed':
-                data[param['Tau']].append({'Parameters': param, 'SFS': row['SFS observed'][0]})
-            else:
-                data[param['Tau']].append({'Parameters': param, 'SFS': row['M1']['SFS'][0]})
+    Heatmap for stairway data
 
-    return data
-
-
-def plot_sfs(data, ax, title, xaxis=True):
-    for value in data:
-        # Normalization of the SFS
-        normalized_sfs = normalization(value['SFS'])
-            
-        # Label and color
-        if value['Parameters']['Kappa'] > 0:
-            label = 'Scénario de décroissance avec $log_{10}(κ) = $' \
-                + '{}'.format(value['Parameters']['Kappa'])
-            color = 'red'
-        elif value['Parameters']['Kappa'] < 0:
-            label = 'Scénario de croissance avec $log_{10}(κ) = $' \
-                + '{}'.format(value['Parameters']['Kappa'])
-            color = 'green'
-        else:
-            label = 'Scénario constant avec $log_{10}(κ) = $' \
-                + '{}'.format(value['Parameters']['Kappa'])
-            color= 'blue'
-            
-        # Plot
-        ax.plot(normalized_sfs, label=label, color=color)
-        
-    # Plot theoretical SFS
-    theoretical_sfs = normalization(compute_theoretical_sfs(len(normalized_sfs)))
-    ax.plot(theoretical_sfs, color='orange', marker="o",
-            label="SFS théorique constant - Fu, 1995")
-    
-    # Compute X axis ticks & values
-    x_ax, x_values = [], []
-    for i in range(10):
-        x_ax.append(i+i)
-        x_values.append("{}/{}".format(i*2+1, len(theoretical_sfs)+1))
-        
-    # X axis ticks & labels
-    ax.set_xticks(x_ax)
-    ax.set_xticklabels(x_values)
-
-    # Label axis
-    if xaxis:
-        ax.set_xlabel("Fréquence allélique", fontsize="x-large")
-    ax.set_ylabel("SNPs - pourcentage", fontsize="x-large")
-
-    # Title
-    ax.set_title(title, fontsize='xx-large')
-
-
-def plot_all_sfs(df, suptitle, sfs, filout):
-    """
-    Plot the theoretical SFS vs the observed ones.
-    
-    Parameters
-    ----------
-    sfs: either observed or inferred
+    Parameter
+    ---------
+    data: pandas DataFrame
+        DataFrame of 4225 rows and 3 columns
+          - 1st column: Either Tau or m12
+          - 2nd column: Kappa
+          - 3rd column: Either Positive hit or Ne
     """
     # Set up plot
-    _,  ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(20, 14), sharey=True)
-    ax4.set_visible(False)
-    plt.subplots_adjust(hspace=0.16)
-    
-    # SFS to select fo each ax
-    data = get_data(df, sfs)
-    
-    key = list(data.keys())
-    title = "Scénario de changement de taille de population pour $log_{10}(τ) = $"
-    plot_sfs(data[key[0]], ax1, title=title + "{}".format(key[0]), xaxis=False)
-    plot_sfs(data[key[1]], ax2, title=title + "{}".format(key[1]))
-    plot_sfs(data[key[2]], ax3, title=title + "{}".format(key[2]))
+    plt.figure(figsize=(12, 9), constrained_layout=True)
+    sns.set_theme(style='whitegrid')
 
-    # Sup title
-    plt.suptitle(suptitle, fontsize='xx-large', fontweight='bold', y=0.936)
+    # Pre-processing data
+    df = data.pivot(index=data.columns[1], columns=data.columns[0], values=data.columns[2])
 
-    # Common legend
-    lines, labels = ax1.get_legend_handles_labels()
-    #plt.figlegend(lines, labels, loc = 'lower center', ncol=5, labelspacing=0. )
-    plt.figlegend(lines, labels, fontsize='x-large', loc='center right', ncol=1,
-                  bbox_to_anchor=(0.18, 0., 0.52, 0.4))
-    
-    plt.savefig(filout, format='png', dpi=150, bbox_inches='tight')
-    plt.show()
+    # Plot
+    ax = sns.heatmap(df, cmap='viridis')
+
+    # Heatmap x and y-axis personnalization
+    heatmap_axis(ax=ax, xaxis=df.columns.name, yaxis=df.index.name, cbar=cbar, lrt=lrt)
+
+    # Title
+    plt.title(title, fontsize="large", fontweight='bold', pad=10.5)
+
+    if save:
+        plt.savefig("./Figures/Stairway/Heatmap/heatmap.png", format='png', dpi=150)
+    plt.plot()
 
 
 if __name__ == "__main__":
